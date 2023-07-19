@@ -6,42 +6,25 @@
   &__body {
     background: #fff;
     overflow: scroll;
-
     .astro-chatbot {
       align-items: flex-end;
       margin-right: 40px;
-      .astro-chatbot-icon {
-        padding-top: 6px;
-        width: 40px;
-        --pf-c-icon--Width: 20rem;
-      }
+      margin-bottom: 12px;
       .astro-chatbot-dialog {
         margin-right: 40px;
-        padding-bottom: 24px;
       }
     }
-
     .astro-user {
       align-items: flex-end;
       justify-content: flex-end;
-      .astro-use-icon {
-        padding-top: 6px;
-        width: 40px;
-        --pf-c-icon--Width: 20rem;
-      }
-      .astro-user-dialog {
-        margin-left: 40px;
-        padding-bottom: 24px;
-      }
-    }
-
-    .astro-options {
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       margin-left: 40px;
     }
+    .astro-options {
+      margin-right: 40px;
+      margin-bottom: 12px;
+    }
   };
-
-
 
   &__footer {
     .pf-c-input-group {
@@ -57,46 +40,16 @@
 
   .bubble {
     position: relative;
-    font-family: sans-serif;
     font-size: 14px;
-    line-height: 24px;
     min-width: 140px;
     background: var(--pf-global--BackgroundColor--200);
-    border-radius: 6px;
-    padding: 8px;
-    text-align: center;
+    border-radius: 16px;
+    padding: 10px 16px 10px 16px;
     color: #000;
   }
 
   .bubble-user {
-    background: var(--pf-global--active-color--300);
-    color: #fff;
-  }
-
-  .bubble-bottom-bot:before {
-    content: "";
-    width: 0;
-    height: 0;
-    position: absolute;
-    border-left: 16px solid var(--pf-global--BackgroundColor--200);
-    border-right: 12px solid transparent;
-    border-top: 12px solid var(--pf-global--BackgroundColor--200);
-    border-bottom: 20px solid transparent;
-    left: 8px;
-    bottom: -14px;
-  }
-
-  .bubble-bottom-user:before {
-    content: "";
-    width: 0;
-    height: 0;
-    position: absolute;
-    border-right: 16px solid var(--pf-global--active-color--300);
-    border-left: 12px solid transparent;
-    border-top: 12px solid var(--pf-global--active-color--300);
-    border-bottom: 20px solid transparent;
-    right: 8px;
-    bottom: -14px;
+    background: var(--pf-global--active-color--100);
     color: #fff;
   }
 
