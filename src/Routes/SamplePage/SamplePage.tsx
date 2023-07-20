@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { FunctionComponent, KeyboardEventHandler, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
@@ -19,7 +19,6 @@ import {
   Text,
   TextContent,
   TextInput,
-  Title,
 } from '@patternfly/react-core';
 
 import RedoIcon from '@patternfly/react-icons/dist/esm/icons/redo-icon';
@@ -28,6 +27,88 @@ import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 import MinimizeIcon from '@patternfly/react-icons/dist/esm/icons/window-minimize-icon';
 
 import './sample-page.scss';
+import { postTalk } from '../../api/PostTalk';
+import { produce } from 'immer';
+
+enum From {
+  ASSISTANT = 'assistant',
+  USER = 'user',
+}
+
+// Base
+interface BaseMessage {
+  from: unknown;
+  content: string;
+}
+
+// Brand Assistant
+interface AssistantMessage extends BaseMessage {
+  from: From.ASSISTANT;
+  options?: Array<string>;
+  isLoading: boolean;
+}
+
+// Brand User
+interface UserMessage extends BaseMessage {
+  from: From.USER;
+}
+
+type Message = AssistantMessage | UserMessage;
+
+interface MessageProps<Message> {
+  message: Message;
+}
+
+interface AssistantMessageProps extends MessageProps<AssistantMessage> {
+  ask: (message: string) => unknown;
+}
+
+const VirtualAssistantMessage: FunctionComponent<AssistantMessageProps> = ({ message, ask }) => {
+  return (
+    <>
+      <Split className="astro-chatbot">
+        <SplitItem className="astro-chatbot-dialog bubble">{message.content}</SplitItem>
+      </Split>
+
+      {message.options && (
+        <div className="astro-options">
+          {message.options.map((option) => (
+            <Label
+              key={option}
+              render={({ className, content, componentRef }) => (
+                <a className={className} ref={componentRef} onClick={() => ask(option)}>
+                  {content}
+                </a>
+              )}
+            >
+              {option}
+            </Label>
+          ))}
+        </div>
+      )}
+    </>
+  );
+};
+
+const UserAssistantMessage: FunctionComponent<MessageProps<UserMessage>> = ({ message }) => {
+  return (
+    <>
+      <Split className="astro-user">
+        <SplitItem className="astro-user-dialog bubble bubble-user">{message.content}</SplitItem>
+      </Split>
+    </>
+  );
+};
+
+const MESSAGE_CONTAINER = 'virtual-assistant-message-container';
+
+const scrollMessageContainer = () => {
+  const messageContainer = document.getElementById(MESSAGE_CONTAINER);
+
+  if (messageContainer) {
+    messageContainer.scrollTo(0, messageContainer.scrollHeight);
+  }
+};
 
 /**
  * A smart component that handles all the api calls and data needed by the dumb components.
@@ -40,6 +121,64 @@ const SamplePage = () => {
   useEffect(() => {
     insights?.chrome?.appAction?.('sample-page');
   }, []);
+
+  const [messages, setMessages] = useState<Array<Message>>([
+    {
+      from: From.ASSISTANT,
+      content: 'Which set of Hybrid Cloud Console services can I help you with?',
+      options: ['OpenShift', 'Ansible', 'RHEL', 'Cloud Native Development', 'Console Services'],
+      isLoading: false,
+    },
+  ]);
+
+  const [input, setInput] = useState<string>('');
+
+  useLayoutEffect(() => {
+    scrollMessageContainer();
+  }, [messages]);
+
+  const ask = async (optionalMessage?: string) => {
+    const message = optionalMessage ?? input;
+    if (message) {
+      setMessages(
+        produce((draft) => {
+          draft.push(
+            {
+              from: From.USER,
+              content: message,
+            },
+            {
+              from: From.ASSISTANT,
+              content: '',
+              isLoading: true,
+            }
+          );
+        })
+      );
+
+      setInput('');
+      const response = await postTalk(message);
+      setMessages(
+        produce((draft) => {
+          draft.pop();
+
+          draft.push(
+            ...response.map((response) => ({
+              from: From.ASSISTANT,
+              isLoading: false,
+              content: response.text,
+            }))
+          );
+        })
+      );
+    }
+  };
+
+  const handleKeyPress: KeyboardEventHandler<HTMLInputElement> = (event) => {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+      ask();
+    }
+  };
 
   return (
     <React.Fragment>
@@ -65,35 +204,33 @@ const SamplePage = () => {
               </SplitItem>
             </Split>
           </StackItem>
-          <StackItem className="astro-l-stack__body pf-u-p-md pf-m-scrollable" isFilled>
-            {/*chat content area*/}
-
-            <Split className="astro-chatbot">
-              <SplitItem className="astro-chatbot-dialog bubble">Which set of Hybrid Cloud Console services can I help you with?</SplitItem>
-            </Split>
-
-            <div className="astro-options">
-              <Label>OpenShift</Label>
-              <Label>Ansible</Label>
-              <Label>RHEL</Label>
-              <Label>Cloud Native Development</Label>
-              <Label>Console Services</Label>
-            </div>
-
-            <Split className="astro-user">
-              <SplitItem className="astro-user-dialog bubble bubble-user">OpenShift</SplitItem>
-            </Split>
-
-            {/* end chat content area*/}
+          <StackItem id={MESSAGE_CONTAINER} className="astro-l-stack__body pf-u-p-md pf-m-scrollable" isFilled>
+            {messages.map((message) => {
+              switch (message.from) {
+                case From.ASSISTANT:
+                  return <VirtualAssistantMessage message={message} ask={ask} />;
+                case From.USER:
+                  return <UserAssistantMessage message={message} />;
+              }
+            })}
           </StackItem>
           <StackItem className="astro-l-stack__footer">
             <InputGroup>
-              <TextInput placeholder="Type a message..." name="" id="" type="text" aria-label="" />
+              <TextInput
+                value={input}
+                onChange={setInput}
+                onKeyPress={handleKeyPress}
+                placeholder="Type a message..."
+                name=""
+                id=""
+                type="text"
+                aria-label=""
+              />
               <InputGroupText id="username">
                 <Button variant="plain" className="pf-u-px-sm">
                   <RedoIcon />
                 </Button>
-                <Button variant="plain" className="pf-u-px-sm">
+                <Button onClick={() => ask()} variant="plain" className="pf-u-px-sm">
                   <PlaneIcon />
                 </Button>
               </InputGroupText>
