@@ -65,6 +65,16 @@ interface AssistantMessageProps extends MessageProps<AssistantMessage> {
 }
 
 const VirtualAssistantMessage: FunctionComponent<AssistantMessageProps> = ({ message, ask }) => {
+  if (message.isLoading) {
+    return (
+      <Split className="astro-chatbot">
+        <SplitItem className="astro-user-icon">
+          <Spinner size="sm" />
+        </SplitItem>
+      </Split>
+    );
+  }
+
   return (
     <>
       <Split className="astro-chatbot">
@@ -112,6 +122,9 @@ const UserAssistantMessage: FunctionComponent<MessageProps<UserMessage>> = ({ me
 };
 
 const MESSAGE_CONTAINER = 'virtual-assistant-message-container';
+const MIN_DELAY_PER_RESPONSE_MS = 750;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const scrollMessageContainer = () => {
   const messageContainer = document.getElementById(MESSAGE_CONTAINER);
@@ -168,20 +181,40 @@ const SamplePage = () => {
       );
 
       setInput('');
-      const response = await postTalk(message);
-      setMessages(
-        produce((draft) => {
-          draft.pop();
 
-          draft.push(
-            ...response.map((response) => ({
+      const startTime = new Date().getTime();
+      const response = await postTalk(message);
+
+      let time = Math.max(MIN_DELAY_PER_RESPONSE_MS - (new Date().getTime() - startTime), 0);
+
+      for (let i = 0; i < response.length; i++) {
+        const message = response[i];
+        await sleep(time);
+        setMessages(
+          produce((draft) => {
+            const last = draft[draft.length - 1];
+            if (last.from === From.ASSISTANT && last.isLoading) {
+              draft.pop();
+            }
+
+            draft.push({
               from: From.ASSISTANT,
               isLoading: false,
-              content: response.text,
-            }))
-          );
-        })
-      );
+              content: message.text,
+            });
+
+            if (i < response.length - 1) {
+              draft.push({
+                from: From.ASSISTANT,
+                isLoading: true,
+                content: '',
+              });
+            }
+          })
+        );
+
+        time = MIN_DELAY_PER_RESPONSE_MS;
+      }
     }
   };
 
