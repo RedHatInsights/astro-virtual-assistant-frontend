@@ -26,6 +26,9 @@ import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 import MinimizeIcon from '@patternfly/react-icons/dist/esm/icons/window-minimize-icon';
 import UserIcon from '@patternfly/react-icons/dist/esm/icons/outlined-user-circle-icon';
 import RedHatIcon from '@patternfly/react-icons/dist/js/icons/redhat-icon';
+import ThumbsUpIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-down-icon';
+import ThumbsDownIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-up-icon';
+
 
 import './sample-page.scss';
 import { postTalk } from '../../api/PostTalk';
@@ -92,6 +95,24 @@ const VirtualAssistantMessage: FunctionComponent<AssistantMessageProps> = ({ mes
           ))}
         </div>
       )}
+
+      <Split className="astro-chatbot">
+        <SplitItem className="astro-user-icon">
+          <Icon size="lg" className="pf-u-mr-sm">
+            <RedHatIcon />
+          </Icon>
+        </SplitItem>
+        <SplitItem className="astro-chatbot-dialog bubble pf-u-text-nowrap">
+          Are these results helpful?
+          <Button variant="plain" className="pf-u-pr-xs pf-u-py-0">
+            <ThumbsUpIcon />
+          </Button>
+          <Button variant="plain" className="pf-u-pl-xs pf-u-py-0">
+            <ThumbsDownIcon />
+          </Button>
+        </SplitItem>
+      </Split>
+
     </>
   );
 };
