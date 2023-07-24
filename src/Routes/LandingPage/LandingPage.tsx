@@ -17,7 +17,7 @@ import { AssistantMessageEntry } from '../../Components/Message/AssistantMessage
 import { UserMessageEntry } from '../../Components/Message/UserMessageEntry';
 
 const MESSAGE_CONTAINER = 'virtual-assistant-message-container';
-const MIN_DELAY_PER_RESPONSE_MS = 750;
+const MIN_DELAY_PER_RESPONSE_MS = 2000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
