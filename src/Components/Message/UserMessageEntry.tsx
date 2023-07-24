@@ -1,10 +1,10 @@
 import React, { FunctionComponent } from 'react';
 import { Icon, Split, SplitItem } from '@patternfly/react-core';
-import UserIcon from '@patternfly/react-icons/dist/esm/icons/outlined-user-circle-icon';
+import { UserIcon } from '@patternfly/react-icons';
 import { MessageProps } from './MessageProps';
 import { UserMessage } from '../../types/Message';
 
-export const UserAssistantMessageEntry: FunctionComponent<MessageProps<UserMessage>> = ({ message }) => {
+export const UserMessageEntry: FunctionComponent<MessageProps<UserMessage>> = ({ message }) => {
   return (
     <>
       <Split className="astro-user">

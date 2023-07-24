@@ -14,7 +14,7 @@ import { postTalk } from '../../api/PostTalk';
 import { produce } from 'immer';
 import { From, Message } from '../../types/Message';
 import { AssistantMessageEntry } from '../../Components/Message/AssistantMessageEntry';
-import { UserAssistantMessageEntry } from '../../Components/Message/UserMessageEntry';
+import { UserMessageEntry } from '../../Components/Message/UserMessageEntry';
 
 const MESSAGE_CONTAINER = 'virtual-assistant-message-container';
 const MIN_DELAY_PER_RESPONSE_MS = 750;
@@ -149,7 +149,7 @@ const LandingPage = () => {
                 case From.ASSISTANT:
                   return <AssistantMessageEntry message={message} ask={ask} />;
                 case From.USER:
-                  return <UserAssistantMessageEntry message={message} />;
+                  return <UserMessageEntry message={message} />;
               }
             })}
           </StackItem>
