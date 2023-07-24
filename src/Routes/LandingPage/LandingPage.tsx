@@ -130,7 +130,7 @@ const LandingPage = () => {
             <Split hasGutter>
               <SplitItem isFilled>
                 <TextContent className="pf-u-p-md pf-u-color-light-100">
-                  <Text>Answer Blaster 3000-Ultra 2.0</Text>
+                  <Text>Answer Blaster 3000</Text>
                 </TextContent>
               </SplitItem>
               <SplitItem>
@@ -143,7 +143,7 @@ const LandingPage = () => {
               </SplitItem>
             </Split>
           </StackItem>
-          <StackItem id={MESSAGE_CONTAINER} className="astro-l-stack__body pf-u-p-md pf-m-scrollable" isFilled>
+          <StackItem id={MESSAGE_CONTAINER} className="astro-l-stack__body pf-u-p-md pf-m-scrollable pf-u-background-color-100" isFilled>
             {messages.map((message) => {
               switch (message.from) {
                 case From.ASSISTANT:
