@@ -2,8 +2,6 @@
   width: 400px;
   height: 500px;
   overflow: hidden;
-  &__header {
-  };
   &__body {
     background: #fff;
     overflow-y: scroll;
@@ -25,7 +23,7 @@
       margin-right: 40px;
       margin-bottom: 12px;
     }
-  };
+  }
 
   &__footer {
     .pf-c-input-group {
@@ -34,9 +32,9 @@
     .pf-c-form-control:not(textarea) {
       height: 100%;
     }
-  };
+  }
   .pf-c-label {
-    margin:  4px; 
+    margin:  4px;
   }
 
   .bubble {
@@ -55,7 +53,7 @@
   }
 
   .pf-c-divider {
-    --pf-c-divider--BackgroundColor: #fff;;
+    --pf-c-divider--BackgroundColor: #fff;
     margin: 4px 0 4px 0;
   }
 
