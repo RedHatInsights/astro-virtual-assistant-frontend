@@ -1,6 +1,7 @@
 export enum From {
   ASSISTANT = 'assistant',
   USER = 'user',
+  FEEDBACK = 'feedback',
 }
 
 // Base
@@ -21,4 +22,10 @@ export interface UserMessage extends BaseMessage {
   from: From.USER;
 }
 
-export type Message = AssistantMessage | UserMessage;
+// Brand feedback
+export interface FeedbackMessage extends BaseMessage {
+  from: From.FEEDBACK;
+  isLoading: boolean;
+}
+
+export type Message = AssistantMessage | UserMessage | FeedbackMessage;

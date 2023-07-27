@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler, useEffect, useLayoutEffect, useState } from 'react';
+import React, { KeyboardEventHandler, useEffect, useLayoutEffect } from 'react';
 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
@@ -10,16 +10,14 @@ import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 import MinimizeIcon from '@patternfly/react-icons/dist/esm/icons/window-minimize-icon';
 
 import './landing-page.scss';
-import { postTalk } from '../../api/PostTalk';
-import { produce } from 'immer';
-import { From, Message } from '../../types/Message';
+import { From } from '../../types/Message';
 import { AssistantMessageEntry } from '../../Components/Message/AssistantMessageEntry';
 import { UserMessageEntry } from '../../Components/Message/UserMessageEntry';
+import { LoadingMessageEntry } from '../../Components/Message/LoadingMessageEntry';
+import { FeedbackAssistantEntry } from '../../Components/Message/FeedbackMessageEntry';
+import { useAstro } from './useAstro';
 
 const MESSAGE_CONTAINER = 'virtual-assistant-message-container';
-const MIN_DELAY_PER_RESPONSE_MS = 2000;
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const scrollMessageContainer = () => {
   const messageContainer = document.getElementById(MESSAGE_CONTAINER);
@@ -41,77 +39,11 @@ const LandingPage = () => {
     insights?.chrome?.appAction?.('sample-page');
   }, []);
 
-  const [messages, setMessages] = useState<Array<Message>>([
-    {
-      from: From.ASSISTANT,
-      content: 'Which set of Hybrid Cloud Console services can I help you with?',
-      options: ['OpenShift', 'Ansible', 'RHEL', 'Cloud Native Development', 'Console Services'],
-      isLoading: false,
-    },
-  ]);
-
-  const [input, setInput] = useState<string>('');
+  const { messages, input, setInput, ask } = useAstro();
 
   useLayoutEffect(() => {
     scrollMessageContainer();
   }, [messages]);
-
-  const ask = async (optionalMessage?: string) => {
-    const message = optionalMessage ?? input;
-    if (message) {
-      setMessages(
-        produce((draft) => {
-          draft.push(
-            {
-              from: From.USER,
-              content: message,
-            },
-            {
-              from: From.ASSISTANT,
-              content: '',
-              isLoading: true,
-            }
-          );
-        })
-      );
-
-      setInput('');
-
-      const startTime = new Date().getTime();
-      const response = await postTalk(message);
-
-      let time = Math.max(MIN_DELAY_PER_RESPONSE_MS - (new Date().getTime() - startTime), 0);
-
-      for (let i = 0; i < response.length; i++) {
-        const message = response[i];
-        await sleep(time);
-        setMessages(
-          produce((draft) => {
-            const last = draft[draft.length - 1];
-            if (last.from === From.ASSISTANT && last.isLoading) {
-              draft.pop();
-            }
-
-            draft.push({
-              from: From.ASSISTANT,
-              isLoading: false,
-              content: message.text,
-            });
-
-            if (i < response.length - 1) {
-              draft.push({
-                from: From.ASSISTANT,
-                isLoading: true,
-                content: '',
-              });
-            }
-          })
-        );
-
-        time = MIN_DELAY_PER_RESPONSE_MS;
-      }
-    }
-  };
 
   const handleKeyPress: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' || event.keyCode === 13) {
@@ -144,12 +76,18 @@ const LandingPage = () => {
             </Split>
           </StackItem>
           <StackItem id={MESSAGE_CONTAINER} className="astro-l-stack__body pf-u-p-md pf-m-scrollable pf-u-background-color-100" isFilled>
-            {messages.map((message) => {
+            {messages.map((message, index) => {
+              if ('isLoading' in message && message.isLoading) {
+                return <LoadingMessageEntry key={index} />;
+              }
+
               switch (message.from) {
                 case From.ASSISTANT:
-                  return <AssistantMessageEntry message={message} ask={ask} />;
+                  return <AssistantMessageEntry message={message} ask={ask} key={index} />;
                 case From.USER:
-                  return <UserMessageEntry message={message} />;
+                  return <UserMessageEntry message={message} key={index} />;
+                case From.FEEDBACK:
+                  return <FeedbackAssistantEntry key={index} />;
               }
             })}
           </StackItem>
