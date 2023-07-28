@@ -1,13 +1,18 @@
 import { produce } from 'immer';
-import { From, Message } from '../../types/Message';
-import { postTalk } from '../../api/PostTalk';
+import { AssistantMessage, FeedbackMessage, From, Message } from '../../types/Message';
+import { PostTalkResponse, postTalk } from '../../api/PostTalk';
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
 
 type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
 
-const loadMessage = async (from: From.ASSISTANT | From.FEEDBACK, content: Promise<string> | string, setMessages: SetMessages, minTimeout: number) => {
+const loadMessage = async (
+  from: From.ASSISTANT | From.FEEDBACK,
+  content: Promise<PostTalkResponse> | PostTalkResponse | string | undefined,
+  setMessages: SetMessages,
+  minTimeout: number
+) => {
   setMessages(
     produce((draft) => {
       draft.push({
@@ -26,16 +31,32 @@ const loadMessage = async (from: From.ASSISTANT | From.FEEDBACK, content: Promis
 
   await asyncSleep(remainingTime);
 
-  setMessages(
-    produce((draft) => {
-      draft.pop();
-      draft.push({
-        from,
-        isLoading: false,
-        content: resolvedContent,
-      });
-    })
-  );
+  if (resolvedContent !== undefined) {
+    const contentString = typeof resolvedContent === 'string' ? resolvedContent : resolvedContent.text;
+
+    const message: AssistantMessage | FeedbackMessage = {
+      from,
+      isLoading: false,
+      content: contentString,
+    };
+
+    if (typeof resolvedContent !== 'string' && from === From.ASSISTANT && resolvedContent.buttons) {
+      (message as AssistantMessage).options = resolvedContent.buttons.map((b) => b.title);
+    }
+
+    setMessages(
+      produce((draft) => {
+        draft.pop();
+        draft.push(message);
+      })
+    );
+  } else {
+    setMessages(
+      produce((draft) => {
+        draft.pop();
+      })
+    );
+  }
 };
 
 export const useAstro = () => {
@@ -64,18 +85,19 @@ export const useAstro = () => {
 
         setInput('');
 
-        const response = postTalk(message);
+        const postTalkResponse = postTalk(message);
 
         await loadMessage(
           From.ASSISTANT,
-          response.then((v) => v[0].text),
+          postTalkResponse.then((r) => r[0]),
           setMessages,
           Config.messages.delays.minAssistantResponse
         );
 
-        const responses = await response;
+        // responses has already been resolved
+        const responses = await postTalkResponse;
         for (let i = 1; i < responses.length; i++) {
-          await loadMessage(From.ASSISTANT, responses[i].text, setMessages, Config.messages.delays.minAssistantResponse);
+          await loadMessage(From.ASSISTANT, responses[i], setMessages, Config.messages.delays.minAssistantResponse);
         }
 
         await loadMessage(From.FEEDBACK, '', setMessages, Config.messages.delays.feedback);
