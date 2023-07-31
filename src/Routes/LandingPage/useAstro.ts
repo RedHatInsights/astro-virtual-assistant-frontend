@@ -41,7 +41,7 @@ const loadMessage = async (
     };
 
     if (typeof resolvedContent !== 'string' && from === From.ASSISTANT && resolvedContent.buttons) {
-      (message as AssistantMessage).options = resolvedContent.buttons.map((b) => b.title);
+      (message as AssistantMessage).options = resolvedContent.buttons.map((b) => b.payload);
     }
 
     setMessages(

@@ -5,6 +5,7 @@ export interface PostTalkResponse {
   text: string;
   buttons?: Array<{
     title: string;
+    payload: string;
   }>;
 }
 
