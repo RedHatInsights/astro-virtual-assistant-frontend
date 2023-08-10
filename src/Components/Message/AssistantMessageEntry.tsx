@@ -1,8 +1,9 @@
 import { MessageProps } from './MessageProps';
 import React, { FunctionComponent } from 'react';
-import { Icon, Label, Split, SplitItem } from '@patternfly/react-core';
+import { Icon, Label, Split, SplitItem, TextContent } from '@patternfly/react-core';
 import RedHatIcon from '@patternfly/react-icons/dist/js/icons/redhat-icon';
 import { AssistantMessage } from '../../types/Message';
+import ReactMarkdown from 'react-markdown';
 
 interface AssistantMessageProps extends MessageProps<AssistantMessage> {
   ask: (message: string) => unknown;
@@ -17,7 +18,11 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
             <RedHatIcon />
           </Icon>
         </SplitItem>
-        <SplitItem className="bubble pf-u-background-color-200 pf-u-font-size-sm">{message.content}</SplitItem>
+        <SplitItem className="bubble pf-u-background-color-200 pf-u-font-size-sm">
+          <TextContent>
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </TextContent>
+        </SplitItem>
       </Split>
 
       {message.options && (

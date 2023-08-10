@@ -28,7 +28,8 @@
   .bubble {
     border-radius: 14px;
     padding: 10px 16px 10px 16px;
-    white-space: pre-wrap;
+    max-width: 100%;
+    word-wrap: break-word;
   }
 
   .typing {
@@ -59,7 +60,7 @@
   @keyframes mercuryTypingAnimation {
     0% {
       transform: translateY(0px);
-      background-color: var(--pf-global--palette--black-600); 
+      background-color: var(--pf-global--palette--black-600);
     }
     28% {
       transform: translateY(-7px);
