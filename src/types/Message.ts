@@ -10,10 +10,15 @@ interface BaseMessage {
   content: string;
 }
 
+export interface MessageOption {
+  title: string;
+  payload: string;
+}
+
 // Brand Assistant
 export interface AssistantMessage extends BaseMessage {
   from: From.ASSISTANT;
-  options?: Array<string>;
+  options?: Array<MessageOption>;
   isLoading: boolean;
 }
 

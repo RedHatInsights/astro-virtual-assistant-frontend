@@ -41,7 +41,10 @@ const loadMessage = async (
     };
 
     if (typeof resolvedContent !== 'string' && from === From.ASSISTANT && resolvedContent.buttons) {
-      (message as AssistantMessage).options = resolvedContent.buttons.map((b) => b.payload);
+      (message as AssistantMessage).options = resolvedContent.buttons.map((b) => ({
+        title: b.title,
+        payload: b.payload,
+      }));
     }
 
     setMessages(
@@ -59,29 +62,37 @@ const loadMessage = async (
   }
 };
 
+export interface AskOptions {
+  hideMessage: boolean;
+  label: string;
+}
+
 export const useAstro = () => {
   const [input, setInput] = useState<string>('');
-  const [messages, setMessages] = useState<Array<Message>>([
-    {
-      from: From.ASSISTANT,
-      content: 'Which set of Hybrid Cloud Console services can I help you with?',
-      options: ['OpenShift', 'Ansible', 'RHEL', 'Cloud Native Development', 'Console Services'],
-      isLoading: false,
-    },
-  ]);
+  const [messages, setMessages] = useState<Array<Message>>([]);
 
   const ask = useCallback(
-    async (optionalMessage?: string) => {
+    async (optionalMessage?: string, options?: Partial<AskOptions>) => {
       const message = optionalMessage ?? input;
+      const validOptions: AskOptions = {
+        ...{
+          hideMessage: false,
+          label: message,
+        },
+        ...options,
+      };
+
       if (message) {
-        setMessages(
-          produce((draft) => {
-            draft.push({
-              from: From.USER,
-              content: message,
-            });
-          })
-        );
+        if (!options?.hideMessage) {
+          setMessages(
+            produce((draft) => {
+              draft.push({
+                from: From.USER,
+                content: validOptions.label,
+              });
+            })
+          );
+        }
 
         setInput('');
 
@@ -99,8 +110,6 @@ export const useAstro = () => {
         for (let i = 1; i < responses.length; i++) {
           await loadMessage(From.ASSISTANT, responses[i], setMessages, Config.messages.delays.minAssistantResponse);
         }
-
-        await loadMessage(From.FEEDBACK, '', setMessages, Config.messages.delays.feedback);
       }
     },
     [input]

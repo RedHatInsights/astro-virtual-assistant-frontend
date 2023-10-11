@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler, useEffect, useLayoutEffect } from 'react';
+import React, { KeyboardEventHandler, useCallback, useEffect, useLayoutEffect } from 'react';
 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
@@ -10,7 +10,7 @@ import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 import MinimizeIcon from '@patternfly/react-icons/dist/esm/icons/window-minimize-icon';
 
 import './landing-page.scss';
-import { From } from '../../types/Message';
+import { From, MessageOption } from '../../types/Message';
 import { AssistantMessageEntry } from '../../Components/Message/AssistantMessageEntry';
 import { UserMessageEntry } from '../../Components/Message/UserMessageEntry';
 import { LoadingMessageEntry } from '../../Components/Message/LoadingMessageEntry';
@@ -51,6 +51,12 @@ const LandingPage = () => {
     }
   };
 
+  const askFromOption = useCallback((option: MessageOption) => {
+      return ask(option.payload, {
+        label: option.title,
+      });
+  }, [ask]);
+
   return (
     <React.Fragment>
       <PageHeader>
@@ -83,7 +89,7 @@ const LandingPage = () => {
 
               switch (message.from) {
                 case From.ASSISTANT:
-                  return <AssistantMessageEntry message={message} ask={ask} key={index} />;
+                  return <AssistantMessageEntry message={message} ask={askFromOption} key={index} />;
                 case From.USER:
                   return <UserMessageEntry message={message} key={index} />;
                 case From.FEEDBACK:

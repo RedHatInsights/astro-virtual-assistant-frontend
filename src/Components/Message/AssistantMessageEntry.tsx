@@ -2,11 +2,11 @@ import { MessageProps } from './MessageProps';
 import React, { FunctionComponent } from 'react';
 import { Icon, Label, Split, SplitItem, TextContent } from '@patternfly/react-core';
 import RedHatIcon from '@patternfly/react-icons/dist/js/icons/redhat-icon';
-import { AssistantMessage } from '../../types/Message';
+import { AssistantMessage, MessageOption } from '../../types/Message';
 import ReactMarkdown from 'react-markdown';
 
 interface AssistantMessageProps extends MessageProps<AssistantMessage> {
-  ask: (message: string) => unknown;
+  ask: (option: MessageOption) => unknown;
 }
 
 export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask }) => {
@@ -30,14 +30,14 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
           {message.options.map((option) => (
             <Label
               className="pf-u-m-xs"
-              key={option}
+              key={option.title}
               render={({ className, content, componentRef }) => (
                 <a className={className} ref={componentRef} onClick={() => ask(option)}>
                   {content}
                 </a>
               )}
             >
-              {option}
+              {option.title}
             </Label>
           ))}
         </div>
