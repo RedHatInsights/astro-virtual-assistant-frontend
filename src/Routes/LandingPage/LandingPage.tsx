@@ -45,6 +45,12 @@ const LandingPage = () => {
     scrollMessageContainer();
   }, [messages]);
 
+  useEffect(() => {
+    ask('/intent_core_session_start', {
+      hideMessage: true,
+    });
+  }, []);
+
   const handleKeyPress: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' || event.keyCode === 13) {
       ask();
