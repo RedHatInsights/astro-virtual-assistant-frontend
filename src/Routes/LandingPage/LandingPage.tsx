@@ -51,11 +51,14 @@ const LandingPage = () => {
     }
   };
 
-  const askFromOption = useCallback((option: MessageOption) => {
+  const askFromOption = useCallback(
+    (option: MessageOption) => {
       return ask(option.payload, {
         label: option.title,
       });
-  }, [ask]);
+    },
+    [ask]
+  );
 
   return (
     <React.Fragment>
