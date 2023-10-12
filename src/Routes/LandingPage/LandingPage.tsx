@@ -62,7 +62,7 @@ const LandingPage = () => {
             <Split hasGutter>
               <SplitItem isFilled>
                 <TextContent className="pf-u-p-md pf-u-color-light-100">
-                  <Text>Answer Blaster 3000</Text>
+                  <Text>Virtual Assistant</Text>
                 </TextContent>
               </SplitItem>
               <SplitItem>
