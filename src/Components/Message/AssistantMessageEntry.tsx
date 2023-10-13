@@ -9,6 +9,8 @@ interface AssistantMessageProps extends MessageProps<AssistantMessage> {
   ask: (option: MessageOption) => unknown;
 }
 
+const OPTION_COLORS = ['blue', 'cyan', 'green', 'orange', 'purple', 'grey', 'gold'] as const;
+
 export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask }) => {
   return (
     <>
@@ -27,10 +29,11 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
 
       {message.options && (
         <div className="astro-chatbot pf-u-pl-xl">
-          {message.options.map((option) => (
+          {message.options.map((option, index) => (
             <Label
               className="pf-u-m-xs"
               key={option.title}
+              color={OPTION_COLORS[index % OPTION_COLORS.length]}
               render={({ className, content, componentRef }) => (
                 <a className={className} ref={componentRef} onClick={() => ask(option)}>
                   {content}
