@@ -67,7 +67,7 @@ export interface AskOptions {
   label: string;
 }
 
-export const useAstro = () => {
+export const useAstro = (location: string) => {
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<Array<Message>>([]);
 
@@ -96,7 +96,7 @@ export const useAstro = () => {
 
         setInput('');
 
-        const postTalkResponse = postTalk(message);
+        const postTalkResponse = postTalk(message, location);
 
         await loadMessage(
           From.ASSISTANT,

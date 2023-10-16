@@ -9,8 +9,11 @@ export interface PostTalkResponse {
   }>;
 }
 
-export const postTalk = async (message: string) => {
+export const postTalk = async (message: string, location: string) => {
   return axiosInstance.post<unknown, Array<PostTalkResponse>>('/api/virtual-assistant/talk', {
     message,
+    metadata: {
+      current_url: location,
+    },
   });
 };

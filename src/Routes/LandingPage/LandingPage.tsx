@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler, useCallback, useEffect, useLayoutEffect } from 'react';
+import React, { KeyboardEventHandler, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
@@ -16,6 +16,7 @@ import { UserMessageEntry } from '../../Components/Message/UserMessageEntry';
 import { LoadingMessageEntry } from '../../Components/Message/LoadingMessageEntry';
 import { FeedbackAssistantEntry } from '../../Components/Message/FeedbackMessageEntry';
 import { useAstro } from './useAstro';
+import { useChrome } from '@redhat-cloud-services/frontend-components/useChrome';
 
 const MESSAGE_CONTAINER = 'virtual-assistant-message-container';
 
@@ -35,11 +36,15 @@ const scrollMessageContainer = () => {
  * https://medium.com/@thejasonfile/dumb-components-and-smart-components-e7b33a698d43
  */
 const LandingPage = () => {
+  const chrome = useChrome();
+
   useEffect(() => {
-    insights?.chrome?.appAction?.('sample-page');
+    chrome.appAction('sample-page');
   }, []);
 
-  const { messages, input, setInput, ask } = useAstro();
+  const currentLocation = chrome.chromeHistory.location.pathname;
+
+  const { messages, input, setInput, ask } = useAstro(currentLocation);
 
   useLayoutEffect(() => {
     scrollMessageContainer();
