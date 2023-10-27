@@ -10,7 +10,10 @@ objects:
     spec:
       envName: ${ENV_NAME}
       title: Virtual assistant
-      deploymentRepo: TBD
+      deploymentRepo: https://github.com/RedHatInsights/astro-virtual-assistant-frontend
+      API:
+        versions:
+          - v1
       frontend:
         paths:
           - /apps/virtual-assistant
@@ -33,4 +36,4 @@ parameters:
   - name: IMAGE_TAG
     required: true
   - name: IMAGE
-    value: TBD
+    value: quay.io/cloudservices/astro-virtual-assistant-frontend
