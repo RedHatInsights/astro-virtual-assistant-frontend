@@ -1,37 +1,57 @@
 .astro-l-stack {
   width: 400px;
-  height: 500px;
+  height: 600px;
   overflow: hidden;
+  &__header {
+    background-color: var(--pf-v5-global--palette--red-300);
+  }
   &__body {
     overflow-y: scroll;
     &::-webkit-scrollbar{
       display: none;
     }
     .astro-chatbot {
-      align-items: flex-end;
-      margin: 0 40px 12px 0;
+      margin-right: 40px;
     }
     .astro-user {
       margin: 0 0 12px 40px;
     }
+    .bubble {
+      border-radius: 14px;
+      padding: var(--pf-global--spacer--md);
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+    .bubble-user {
+      border: 1px solid var(--pf-v5-global--BackgroundColor--dark-400);
+    }
+    .pf-c-label {
+      --pf-c-label__content--before--BorderColor: var(--pf-v5-c-label--m-red__icon--Color);
+    }
   }
-
   &__footer {
     .pf-c-input-group {
-      height: 50px;
+      height: 80px;
     }
     .pf-c-form-control:not(textarea) {
       height: 100%;
     }
+    .pf-c-form-control {
+      --pf-c-form-control--focus--BorderBottomColor: var(--pf-v5-global--BackgroundColor--dark-400);
+      --pf-c-form-control--hover--BorderBottomColor: var(--pf-v5-global--BackgroundColor--dark-400);
+      border-bottom-width: 1px;
+     }
+    :focus-visible {
+      outline: none;
+      box-shadow: 0 -3px 0 var(--pf-v5-global--palette--red-300);
+    }
+    .pf-c-button {
+      border-bottom: 2px solid var(--pf-v5-global--BackgroundColor--100);
+      &:hover {
+        border-bottom: 3px solid var(--pf-v5-global--palette--red-300);
+      }
+    }
   }
-
-  .bubble {
-    border-radius: 14px;
-    padding: 10px 16px 10px 16px;
-    max-width: 100%;
-    word-wrap: break-word;
-  }
-
   .typing {
     height: 17px;
   }
@@ -60,19 +80,19 @@
   @keyframes mercuryTypingAnimation {
     0% {
       transform: translateY(0px);
-      background-color: var(--pf-global--palette--black-600);
+      background-color: var(--pf-v5-global--palette--black-600);
     }
     28% {
       transform: translateY(-7px);
-      background-color: var(--pf-global--palette--black-400);
+      background-color: var(--pf-v5-global--palette--black-400);
     }
     44% {
       transform: translateY(0px);
-      background-color: var(--pf-global--palette--black-200);
+      background-color: var(--pf-v5-global--palette--black-200);
     }
   }
   .pf-c-divider {
-    --pf-c-divider--BackgroundColor: var(--pf-global--BackgroundColor--100);
+    --pf-c-divider--BackgroundColor: var(--pf-v5-global--BackgroundColor--100);
     margin: 4px 0 4px 0;
   }
 }

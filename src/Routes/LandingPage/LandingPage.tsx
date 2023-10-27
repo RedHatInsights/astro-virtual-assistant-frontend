@@ -68,29 +68,30 @@ const LandingPage = () => {
 
   return (
     <React.Fragment>
-      <PageHeader>
+      <PageHeader className="">
         <PageHeaderTitle title="Virtual assistant" />
       </PageHeader>
       <Main>
         <Stack className="astro-l-stack">
-          <StackItem className="astro-l-stack__header pf-u-background-color-active-color-100">
+          <StackItem className="astro-l-stack__header pf-v5-pt-md pf-v5-u-pb-md">
             <Split hasGutter>
               <SplitItem isFilled>
-                <TextContent className="pf-u-p-md pf-u-color-light-100">
+                <TextContent className="pf-v5-u-p-md pf-u-color-light-100 pf-v5-u-font-size-3xl">
                   <Text>Virtual Assistant</Text>
                 </TextContent>
               </SplitItem>
               <SplitItem>
-                <Button variant="plain" aria-label="Action" className="pf-u-p-md pf-u-pr-0 pf-u-color-light-100">
-                  <MinimizeIcon />
-                </Button>
-                <Button variant="plain" aria-label="Action" className="pf-u-p-md pf-u-pl-sm pf-u-color-light-100">
+                <Button variant="plain" aria-label="Action" className="pf-v5-u-p-md pf-v5-u-pl-sm pf-v5-u-color-light-100">
                   <TimesIcon />
                 </Button>
               </SplitItem>
             </Split>
           </StackItem>
-          <StackItem id={MESSAGE_CONTAINER} className="astro-l-stack__body pf-u-p-md pf-m-scrollable pf-u-background-color-100" isFilled>
+          <StackItem
+            id={MESSAGE_CONTAINER}
+            className="astro-l-stack__body pf-v5-u-px-md pf-v5-u-pt-2xl pf-v5-m-scrollable pf-v5-u-background-color-100"
+            isFilled
+          >
             {messages.map((message, index) => {
               if ('isLoading' in message && message.isLoading) {
                 return <LoadingMessageEntry key={index} />;
@@ -119,7 +120,7 @@ const LandingPage = () => {
                 aria-label=""
               />
               <InputGroupText id="username">
-                <Button onClick={() => ask()} variant="plain" className="pf-u-px-sm">
+                <Button onClick={() => ask()} variant="plain" className="pf-v5-u-px-sm">
                   <PlaneIcon />
                 </Button>
               </InputGroupText>
