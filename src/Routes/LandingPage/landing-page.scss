@@ -33,14 +33,14 @@
     .pf-c-input-group {
       height: 80px;
     }
-    .pf-c-form-control:not(textarea) {
-      height: 100%;
-    }
     .pf-c-form-control {
       --pf-c-form-control--focus--BorderBottomColor: var(--pf-v5-global--BackgroundColor--dark-400);
       --pf-c-form-control--hover--BorderBottomColor: var(--pf-v5-global--BackgroundColor--dark-400);
       border-bottom-width: 1px;
      }
+    .pf-c-form-control:not(textarea) {
+      height: 100%;
+    }
     :focus-visible {
       outline: none;
       box-shadow: 0 -3px 0 var(--pf-v5-global--palette--red-300);
