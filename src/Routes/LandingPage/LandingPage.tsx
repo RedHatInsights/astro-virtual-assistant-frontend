@@ -3,18 +3,7 @@ import React, { KeyboardEventHandler, useCallback, useEffect, useLayoutEffect } 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
-import {
-  Button,
-  InputGroup,
-  InputGroupText,
-  Split,
-  SplitItem,
-  Stack,
-  StackItem,
-  Text,
-  TextArea,
-  TextContent,
-} from '@patternfly/react-core';
+import { Button, InputGroup, InputGroupText, Split, SplitItem, Stack, StackItem, Text, TextArea, TextContent } from '@patternfly/react-core';
 
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
