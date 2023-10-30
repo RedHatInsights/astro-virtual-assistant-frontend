@@ -36,4 +36,4 @@ parameters:
   - name: IMAGE_TAG
     required: true
   - name: IMAGE
-    value: quay.io/cloudservices/astro-virtual-assistant-frontend
+    value: quay.io/cloudservices/virtual-assistant-frontend
