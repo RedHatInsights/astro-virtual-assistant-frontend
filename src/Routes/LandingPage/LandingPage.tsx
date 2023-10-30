@@ -3,7 +3,18 @@ import React, { KeyboardEventHandler, useCallback, useEffect, useLayoutEffect } 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
-import { Button, InputGroup, InputGroupText, Split, SplitItem, Stack, StackItem, Text, TextContent, TextInput } from '@patternfly/react-core';
+import {
+  Button,
+  InputGroup,
+  InputGroupText,
+  Split,
+  SplitItem,
+  Stack,
+  StackItem,
+  Text,
+  TextArea,
+  TextContent,
+} from '@patternfly/react-core';
 
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
@@ -45,14 +56,16 @@ const LandingPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    ask('/intent_core_session_start', {
+    void ask('/intent_core_session_start', {
       hideMessage: true,
     });
   }, []);
 
-  const handleKeyPress: KeyboardEventHandler<HTMLInputElement> = (event) => {
+  const handleKeyPress: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.key === 'Enter' || event.keyCode === 13) {
-      ask();
+      if (!event.shiftKey) {
+        void ask();
+      }
     }
   };
 
@@ -108,15 +121,14 @@ const LandingPage = () => {
           </StackItem>
           <StackItem className="astro-l-stack__footer">
             <InputGroup>
-              <TextInput
+              <TextArea
                 value={input}
                 onChange={setInput}
-                onKeyPress={handleKeyPress}
+                onKeyPressCapture={handleKeyPress}
                 placeholder="Type a message..."
-                name=""
-                id=""
+                name="user-query"
                 type="text"
-                aria-label=""
+                aria-label="User question"
               />
               <InputGroupText id="username">
                 <Button onClick={() => ask()} variant="plain" className="pf-v5-u-px-sm">

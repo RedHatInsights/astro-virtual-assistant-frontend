@@ -37,6 +37,7 @@
       --pf-c-form-control--focus--BorderBottomColor: var(--pf-v5-global--BackgroundColor--dark-400);
       --pf-c-form-control--hover--BorderBottomColor: var(--pf-v5-global--BackgroundColor--dark-400);
       border-bottom-width: 1px;
+      resize: none;
      }
     .pf-c-form-control:not(textarea) {
       height: 100%;
