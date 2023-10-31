@@ -3,11 +3,10 @@ import React, { KeyboardEventHandler, useCallback, useEffect, useLayoutEffect } 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
-import { Button, InputGroup, InputGroupText, Split, SplitItem, Stack, StackItem, Text, TextContent, TextInput } from '@patternfly/react-core';
+import { Button, InputGroup, InputGroupText, Split, SplitItem, Stack, StackItem, Text, TextArea, TextContent } from '@patternfly/react-core';
 
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
-import MinimizeIcon from '@patternfly/react-icons/dist/esm/icons/window-minimize-icon';
 
 import './landing-page.scss';
 import { From, MessageOption } from '../../types/Message';
@@ -46,14 +45,16 @@ const LandingPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    ask('/intent_core_session_start', {
+    void ask('/intent_core_session_start', {
       hideMessage: true,
     });
   }, []);
 
-  const handleKeyPress: KeyboardEventHandler<HTMLInputElement> = (event) => {
+  const handleKeyPress: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.key === 'Enter' || event.keyCode === 13) {
-      ask();
+      if (!event.shiftKey) {
+        void ask();
+      }
     }
   };
 
@@ -68,29 +69,30 @@ const LandingPage = () => {
 
   return (
     <React.Fragment>
-      <PageHeader>
+      <PageHeader className="">
         <PageHeaderTitle title="Virtual assistant" />
       </PageHeader>
       <Main>
         <Stack className="astro-l-stack">
-          <StackItem className="astro-l-stack__header pf-u-background-color-active-color-100">
+          <StackItem className="astro-l-stack__header pf-v5-pt-md pf-v5-u-pb-md">
             <Split hasGutter>
               <SplitItem isFilled>
-                <TextContent className="pf-u-p-md pf-u-color-light-100">
+                <TextContent className="pf-v5-u-p-md pf-u-color-light-100 pf-v5-u-font-size-3xl">
                   <Text>Virtual Assistant</Text>
                 </TextContent>
               </SplitItem>
               <SplitItem>
-                <Button variant="plain" aria-label="Action" className="pf-u-p-md pf-u-pr-0 pf-u-color-light-100">
-                  <MinimizeIcon />
-                </Button>
-                <Button variant="plain" aria-label="Action" className="pf-u-p-md pf-u-pl-sm pf-u-color-light-100">
+                <Button variant="plain" aria-label="Action" className="pf-v5-u-p-md pf-v5-u-pl-sm pf-v5-u-color-light-100">
                   <TimesIcon />
                 </Button>
               </SplitItem>
             </Split>
           </StackItem>
-          <StackItem id={MESSAGE_CONTAINER} className="astro-l-stack__body pf-u-p-md pf-m-scrollable pf-u-background-color-100" isFilled>
+          <StackItem
+            id={MESSAGE_CONTAINER}
+            className="astro-l-stack__body pf-v5-u-px-md pf-v5-u-pt-2xl pf-v5-m-scrollable pf-v5-u-background-color-100"
+            isFilled
+          >
             {messages.map((message, index) => {
               if ('isLoading' in message && message.isLoading) {
                 return <LoadingMessageEntry key={index} />;
@@ -108,18 +110,18 @@ const LandingPage = () => {
           </StackItem>
           <StackItem className="astro-l-stack__footer">
             <InputGroup>
-              <TextInput
+              <TextArea
                 value={input}
                 onChange={setInput}
-                onKeyPress={handleKeyPress}
+                onKeyPressCapture={handleKeyPress}
                 placeholder="Type a message..."
-                name=""
-                id=""
+                name="user-query"
                 type="text"
-                aria-label=""
+                aria-label="User question"
+                className="pf-v5-u-pt-md pf-v5-u-pl-md"
               />
               <InputGroupText id="username">
-                <Button onClick={() => ask()} variant="plain" className="pf-u-px-sm">
+                <Button onClick={() => ask()} variant="plain" className="pf-v5-u-px-sm">
                   <PlaneIcon />
                 </Button>
               </InputGroupText>

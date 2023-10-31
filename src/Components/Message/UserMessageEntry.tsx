@@ -7,14 +7,14 @@ import { UserMessage } from '../../types/Message';
 export const UserMessageEntry: FunctionComponent<MessageProps<UserMessage>> = ({ message }) => {
   return (
     <>
-      <Split className="astro-user pf-u-align-items-flex-end pf-u-justify-content-flex-end">
-        <SplitItem className="bubble pf-u-background-color-active-color-100">
-          <TextContent className="pf-u-color-light-100 pf-u-font-size-sm">{message.content}</TextContent>
-        </SplitItem>
+      <Split className="astro-user pf-v5-u-mb-lg pf-v5-u-align-items-flex-start pf-v5-u-justify-content-flex-end">
         <SplitItem>
-          <Icon size="lg" className="pf-u-ml-sm">
+          <Icon size="lg" className="pf-v5-u-mr-md">
             <OutlinedUserCircleIcon />
           </Icon>
+        </SplitItem>
+        <SplitItem className="bubble bubble-user">
+          <TextContent className="pf-v5-u-color-300 pf-v5-u-font-size-sm">{message.content}</TextContent>
         </SplitItem>
       </Split>
     </>
