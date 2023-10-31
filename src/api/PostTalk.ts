@@ -10,7 +10,7 @@ export interface PostTalkResponse {
 }
 
 export const postTalk = async (message: string) => {
-  return axiosInstance.post<unknown, Array<PostTalkResponse>>('/api/virtual-assistant/talk', {
+  return axiosInstance.post<unknown, Array<PostTalkResponse>>('/api/virtual-assistant/v1/talk', {
     message,
   });
 };
