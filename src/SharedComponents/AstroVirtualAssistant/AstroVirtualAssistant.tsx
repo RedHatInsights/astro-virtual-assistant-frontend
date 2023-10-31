@@ -8,6 +8,7 @@ import { UserMessageEntry } from '../../Components/Message/UserMessageEntry';
 import { FeedbackAssistantEntry } from '../../Components/Message/FeedbackMessageEntry';
 import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 import { useAstro } from '../../Routes/LandingPage/useAstro';
+import './astro-virtual-assistant.scss';
 
 export const AstroVirtualAssistant: FunctionComponent = () => {
   const { messages, input, setInput, ask } = useAstro();
