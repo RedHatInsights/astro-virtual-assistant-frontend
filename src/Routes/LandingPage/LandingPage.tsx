@@ -118,6 +118,7 @@ const LandingPage = () => {
                 name="user-query"
                 type="text"
                 aria-label="User question"
+                className="pf-v5-u-pt-md pf-v5-u-pl-md"
               />
               <InputGroupText id="username">
                 <Button onClick={() => ask()} variant="plain" className="pf-v5-u-px-sm">
