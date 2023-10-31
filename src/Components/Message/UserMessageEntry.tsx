@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { Icon, Split, SplitItem, TextContent } from '@patternfly/react-core';
-import { OutlinedUserCircleIcon } from '@patternfly/react-icons';
+import OutlinedUserCircleIcon from '@patternfly/react-icons/dist/js/icons/outlined-user-circle-icon';
 import { MessageProps } from './MessageProps';
 import { UserMessage } from '../../types/Message';
 
