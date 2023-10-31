@@ -1,3 +1,5 @@
+const path = require('path');
+
 const getRoutes = () => {
   if (process.env.USE_LOCAL_RASA && process.env.USE_LOCAL_RASA !== '') {
     return {
@@ -21,6 +23,11 @@ module.exports = {
   /**
    * Add additional webpack plugins
    */
+  moduleFederation: {
+    exposes: {
+      './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
+    },
+  },
   plugins: [],
   sassPrefix: '.virtualAssistant',
   _unstableHotReload: process.env.HOT === 'true',
