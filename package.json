@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@patternfly/react-core": "^4.278.0",
-    "@patternfly/react-table": "^4.108.0",
+    "@patternfly/react-table": "^4.113.6",
     "@redhat-cloud-services/frontend-components": "3.11.5",
     "@redhat-cloud-services/frontend-components-notifications": "3.2.16",
     "@redhat-cloud-services/frontend-components-utilities": "3.7.6",
