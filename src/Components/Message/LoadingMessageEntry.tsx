@@ -1,13 +1,13 @@
 import React, { FunctionComponent } from 'react';
 import { Icon, Split, SplitItem } from '@patternfly/react-core';
-import RobotIcon from '@patternfly/react-icons/dist/js/icons/robot-icon';
+import ChatbotIcon from '../icon-chatbot';
 
 export const LoadingMessageEntry: FunctionComponent<unknown> = () => {
   return (
     <Split className="astro-chatbot">
       <SplitItem>
-        <Icon size="lg" className="pf-v5-u-mr-md">
-          <RobotIcon />
+        <Icon size="lg" className="pf-v5-u-mr-sm pf-v5-u-pt-md">
+          <ChatbotIcon />
         </Icon>
       </SplitItem>
       <SplitItem className="bubble pf-v5-u-background-color-200">

@@ -3,7 +3,9 @@
   height: 700px;
   overflow: hidden;
   &__header {
-    background-color: var(--pf-v5-global--palette--red-300);
+    background: url(https://console.redhat.com/apps/frontend-assets/virtual-assistant/header-background-01.svg) var(--pf-v5-global--palette--red-300);
+    background-repeat: no-repeat;
+    background-position: 75% 0%;
   }
   &__body {
     overflow-y: scroll;
@@ -18,7 +20,7 @@
     }
     .bubble {
       border-radius: 14px;
-      padding: var(--pf-global--spacer--md);
+      padding: var(--pf-global--spacer--sm) var(--pf-global--spacer--md) var(--pf-global--spacer--sm) var(--pf-global--spacer--md);
       max-width: 100%;
       word-wrap: break-word;
     }

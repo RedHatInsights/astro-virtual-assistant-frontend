@@ -1,7 +1,7 @@
 import { MessageProps } from './MessageProps';
 import React, { FunctionComponent } from 'react';
 import { Icon, Label, Split, SplitItem, TextContent } from '@patternfly/react-core';
-import RobotIcon from '@patternfly/react-icons/dist/js/icons/robot-icon';
+import ChatbotIcon from '../icon-chatbot';
 
 import { AssistantMessage, MessageOption } from '../../types/Message';
 import ReactMarkdown from 'react-markdown';
@@ -18,8 +18,8 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
       {message.content && (
         <Split className="astro-chatbot">
           <SplitItem>
-            <Icon size="lg" className="pf-v5-u-mr-md">
-              <RobotIcon />
+            <Icon size="lg" className="pf-v5-u-mr-sm pf-v5-u-pt-md">
+              <ChatbotIcon />
             </Icon>
           </SplitItem>
           <SplitItem className="bubble pf-u-background-color-200">
