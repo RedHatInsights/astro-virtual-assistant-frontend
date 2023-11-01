@@ -25,6 +25,7 @@ module.exports = {
    */
   moduleFederation: {
     exposes: {
+      './RootApp': path.resolve(__dirname, './src/AppEntry.tsx'),
       './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
     },
   },
