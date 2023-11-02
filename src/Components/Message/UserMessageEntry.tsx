@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { Icon, Split, SplitItem, TextContent } from '@patternfly/react-core';
-import OutlinedUserCircleIcon from '@patternfly/react-icons/dist/js/icons/outlined-user-circle-icon';
+import OutlinedUserIcon from '@patternfly/react-icons/dist/js/icons/outlined-user-icon';
 import { MessageProps } from './MessageProps';
 import { UserMessage } from '../../types/Message';
 
@@ -13,7 +13,7 @@ export const UserMessageEntry: FunctionComponent<MessageProps<UserMessage>> = ({
         </SplitItem>
         <SplitItem>
           <Icon size="lg" className="pf-v5-u-ml-sm pf-v5-u-pt-xs">
-            <OutlinedUserCircleIcon />
+            <OutlinedUserIcon />
           </Icon>
         </SplitItem>
       </Split>
