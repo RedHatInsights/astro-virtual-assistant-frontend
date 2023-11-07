@@ -20,7 +20,7 @@ const LandingPage = () => {
 
   // This is only used to delete the lightbulb for testing purposes
   useLayoutEffect(() => {
-    const removePendoLightbulb = () => {
+    const observer = new MutationObserver(() => {
       const badges = document.getElementsByClassName('_pendo-badge');
       for (let i = 0; i < badges.length; ++i) {
         const element = badges.item(i);
@@ -28,9 +28,6 @@ const LandingPage = () => {
           element.remove();
         }
       }
-    };
-    const observer = new MutationObserver(() => {
-      removePendoLightbulb();
     });
 
     observer.observe(document.body, {
