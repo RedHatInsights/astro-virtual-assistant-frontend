@@ -2,8 +2,9 @@ import React, { FunctionComponent, useEffect, useState } from 'react';
 import { Status, useAstro } from '../../Components/AstroChat/useAstro';
 import './astro-virtual-assistant.scss';
 import { AstroChat } from '../../Components/AstroChat/AstroChat';
-import { AstroAvatar } from '../../Components/AstroAvatar/AstroAvatar';
+import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { AstroChatSkeleton } from '../../Components/AstroChat/AstroChatSkeleton';
+import { Stack, StackItem } from '@patternfly/react-core';
 
 export const AstroVirtualAssistant: FunctionComponent = () => {
   const { messages, ask, start, stop, status } = useAstro();
@@ -17,12 +18,15 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
     }
   }, [isOpen]);
 
-  switch (status) {
-    case Status.STARTED:
-      return <AstroChat messages={messages} ask={ask} onClose={() => setOpen(false)} />;
-    case Status.NOT_STARTED:
-      return <AstroAvatar onClick={() => setOpen((prev) => !prev)} />;
-    case Status.LOADING:
-      return <AstroChatSkeleton />;
-  }
+  return (
+    <Stack className="astro-wrapper-stack">
+      <StackItem>
+        {status === Status.STARTED && <AstroChat key="astro-chat" messages={messages} ask={ask} onClose={() => setOpen(false)} />}
+        {status === Status.LOADING && <AstroChatSkeleton />}
+      </StackItem>
+      <StackItem className="astro-wrapper-stack__badge">
+        <AstroBadge onClick={() => setOpen((prev) => !prev)} />
+      </StackItem>
+    </Stack>
+  );
 };

@@ -1,5 +1,5 @@
-.astro__avatar {
-  background-color: rgba(1,1,1,0.8)
+.astro__badge {
+  width: 50px;
 }
 
 .astro-l-stack {
@@ -101,5 +101,11 @@
   .pf-c-divider {
     --pf-c-divider--BackgroundColor: var(--pf-v5-global--BackgroundColor--100);
     margin: 4px 0 4px 0;
+  }
+}
+
+.astro-wrapper-stack {
+  .astro-wrapper-stack__badge {
+    align-self: end;
   }
 }

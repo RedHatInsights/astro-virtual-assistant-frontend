@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
 import { AstroVirtualAssistant } from '../../SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant';
+import './landing-page.scss';
 
 /**
  * A smart component that handles all the api calls and data needed by the dumb components.
@@ -17,13 +18,39 @@ const LandingPage = () => {
     insights?.chrome?.appAction?.('sample-page');
   }, []);
 
+  // This is only used to delete the lightbulb for testing purposes
+  useLayoutEffect(() => {
+    const removePendoLightbulb = () => {
+      const badges = document.getElementsByClassName('_pendo-badge');
+      for (let i = 0; i < badges.length; ++i) {
+        const element = badges.item(i);
+        if (element) {
+          element.remove();
+        }
+      }
+    };
+    const observer = new MutationObserver(() => {
+      removePendoLightbulb();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
     <React.Fragment>
       <PageHeader className="">
         <PageHeaderTitle title="Virtual assistant" />
       </PageHeader>
       <Main>
-        <AstroVirtualAssistant />
+        <div className="astro__landing-page">
+          <AstroVirtualAssistant />
+        </div>
       </Main>
     </React.Fragment>
   );
