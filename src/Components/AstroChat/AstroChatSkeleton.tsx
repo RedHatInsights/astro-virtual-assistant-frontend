@@ -9,15 +9,14 @@ import {
   Stack,
   StackItem,
   Text,
-  TextArea, TextAreaReadOnlyVariant,
-  TextContent
+  TextArea,
+  TextAreaReadOnlyVariant,
+  TextContent,
 } from '@patternfly/react-core';
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
-import { SkeletonSize } from '@redhat-cloud-services/frontend-components';
 
 export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
-
   return (
     <div>
       <Stack className="astro-l-stack">
@@ -29,12 +28,7 @@ export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
               </TextContent>
             </SplitItem>
             <SplitItem>
-              <Button
-                variant="plain"
-                aria-label="Close virtual assistant"
-                className="pf-v5-u-p-md pf-v5-u-pl-sm pf-v5-u-color-light-100"
-                isDisabled
-              >
+              <Button variant="plain" aria-label="Close virtual assistant" className="pf-v5-u-p-md pf-v5-u-pl-sm pf-v5-u-color-light-100" isDisabled>
                 <TimesIcon />
               </Button>
             </SplitItem>
