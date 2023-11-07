@@ -65,39 +65,44 @@ const loadMessage = async (
 export interface AskOptions {
   hideMessage: boolean;
   label: string;
+  waitResponses: boolean;
+}
+
+export const enum Status {
+  LOADING = 'LOADING',
+  STARTED = 'STARTED',
+  NOT_STARTED = 'NOT_STARTED',
 }
 
 export const useAstro = () => {
-  const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<Array<Message>>([]);
+  const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
 
-  const ask = useCallback(
-    async (optionalMessage?: string, options?: Partial<AskOptions>) => {
-      const message = optionalMessage ?? input;
-      const validOptions: AskOptions = {
-        ...{
-          hideMessage: false,
-          label: message,
-        },
-        ...options,
-      };
+  const ask = useCallback(async (message: string, options?: Partial<AskOptions>) => {
+    const validOptions: AskOptions = {
+      ...{
+        hideMessage: false,
+        label: message,
+        waitResponses: true,
+      },
+      ...options,
+    };
 
-      if (message) {
-        if (!options?.hideMessage) {
-          setMessages(
-            produce((draft) => {
-              draft.push({
-                from: From.USER,
-                content: validOptions.label,
-              });
-            })
-          );
-        }
+    if (message) {
+      if (!options?.hideMessage) {
+        setMessages(
+          produce((draft) => {
+            draft.push({
+              from: From.USER,
+              content: validOptions.label,
+            });
+          })
+        );
+      }
 
-        setInput('');
+      const postTalkResponse = postTalk(message);
 
-        const postTalkResponse = postTalk(message);
-
+      const waitResponses = async () => {
         await loadMessage(
           From.ASSISTANT,
           postTalkResponse.then((r) => r[0]),
@@ -110,15 +115,42 @@ export const useAstro = () => {
         for (let i = 1; i < responses.length; i++) {
           await loadMessage(From.ASSISTANT, responses[i], setMessages, Config.messages.delays.minAssistantResponse);
         }
+      };
+
+      if (validOptions.waitResponses) {
+        await waitResponses();
+      } else {
+        void waitResponses();
+        await postTalkResponse;
       }
-    },
-    [input]
-  );
+    }
+  }, []);
+
+  const start = useCallback(async () => {
+    if (status === Status.NOT_STARTED) {
+      setStatus(Status.LOADING);
+
+      await ask('/intent_core_session_start', {
+        hideMessage: true,
+        waitResponses: false,
+      });
+
+      setStatus(Status.STARTED);
+    }
+  }, [ask, status]);
+
+  const stop = useCallback(async () => {
+    if (status === Status.STARTED) {
+      setMessages([]);
+      setStatus(Status.NOT_STARTED);
+    }
+  }, [ask, status]);
 
   return {
     ask,
     messages,
-    input,
-    setInput,
+    start,
+    stop,
+    status,
   };
 };
