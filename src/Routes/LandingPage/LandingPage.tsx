@@ -3,7 +3,7 @@ import React, { useEffect, useLayoutEffect } from 'react';
 import { Main } from '@redhat-cloud-services/frontend-components/Main';
 import { PageHeader, PageHeaderTitle } from '@redhat-cloud-services/frontend-components/PageHeader';
 
-import { AstroVirtualAssistant } from '../../SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant';
+import AstroVirtualAssistant from '../../SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant';
 import './landing-page.scss';
 
 /**

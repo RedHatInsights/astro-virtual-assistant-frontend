@@ -30,3 +30,5 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
     </Stack>
   );
 };
+
+export default AstroVirtualAssistant;
