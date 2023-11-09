@@ -20,7 +20,7 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
 
   return (
     <Stack className="astro-wrapper-stack">
-      <StackItem>
+      <StackItem className="pf-v5-u-box-shadow-lg">
         {status === Status.STARTED && <AstroChat key="astro-chat" messages={messages} ask={ask} onClose={() => setOpen(false)} />}
         {status === Status.LOADING && <AstroChatSkeleton />}
       </StackItem>
