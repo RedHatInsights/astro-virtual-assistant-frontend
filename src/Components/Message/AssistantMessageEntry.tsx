@@ -14,7 +14,7 @@ const OPTION_COLORS = ['red'] as const;
 
 export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask }) => {
   return (
-    <div className="pf-v5-u-mb-xl">
+    <div className="pf-v5-u-mb-md">
       {message.content && (
         <Split className="astro-chatbot">
           <SplitItem>

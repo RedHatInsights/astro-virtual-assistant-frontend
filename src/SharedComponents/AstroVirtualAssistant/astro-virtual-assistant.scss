@@ -3,8 +3,8 @@
 }
 
 .astro-l-stack {
-  width: 400px;
-  height: 600px;
+  width: 350px;
+  height: 550px;
   overflow: hidden;
   &__header {
     background: url(../../assets/header-background-01.svg) var(--pf-v5-global--palette--red-300);
@@ -37,7 +37,7 @@
   }
   &__footer {
     .pf-c-input-group {
-      height: 80px;
+      height: 60px;
     }
     .pf-c-form-control {
       --pf-c-form-control--focus--BorderBottomColor: var(--pf-v5-global--BackgroundColor--dark-400);

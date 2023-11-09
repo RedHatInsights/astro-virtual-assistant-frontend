@@ -20,10 +20,10 @@ export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
   return (
     <div>
       <Stack className="astro-l-stack">
-        <StackItem className="astro-l-stack__header pf-v5-pt-md pf-v5-u-pb-md">
+        <StackItem className="astro-l-stack__header pf-v5-pt-xs pf-v5-u-pb-sm">
           <Split hasGutter>
             <SplitItem isFilled>
-              <TextContent className="pf-v5-u-p-md pf-u-color-light-100 pf-v5-u-font-size-3xl">
+              <TextContent className="pf-v5-u-pt-md pf-v5-u-pl-lg pf-u-color-light-100 pf-v5-u-font-size-xl">
                 <Text>Virtual Assistant</Text>
               </TextContent>
             </SplitItem>
@@ -34,7 +34,7 @@ export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
             </SplitItem>
           </Split>
         </StackItem>
-        <StackItem className="astro-l-stack__body pf-v5-u-px-md pf-v5-u-pt-2xl pf-v5-m-scrollable pf-v5-u-background-color-100" isFilled>
+        <StackItem className="astro-l-stack__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100" isFilled>
           <Skeleton width="80%" />
         </StackItem>
         <StackItem className="astro-l-stack__footer">

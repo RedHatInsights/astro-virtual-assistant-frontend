@@ -53,10 +53,10 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
   return (
     <div ref={astroContainer}>
       <Stack className="astro-l-stack">
-        <StackItem className="astro-l-stack__header pf-v5-pt-md pf-v5-u-pb-md">
+        <StackItem className="astro-l-stack__header pf-v5-pt-xs pf-v5-u-pb-sm">
           <Split hasGutter>
             <SplitItem isFilled>
-              <TextContent className="pf-v5-u-p-md pf-u-color-light-100 pf-v5-u-font-size-3xl">
+              <TextContent className="pf-v5-u-pt-md pf-v5-u-pl-lg pf-u-color-light-100 pf-v5-u-font-size-xl">
                 <Text>Virtual Assistant</Text>
               </TextContent>
             </SplitItem>
@@ -72,7 +72,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
             </SplitItem>
           </Split>
         </StackItem>
-        <StackItem className="astro-l-stack__body pf-v5-u-px-md pf-v5-u-pt-2xl pf-v5-m-scrollable pf-v5-u-background-color-100" isFilled>
+        <StackItem className="astro-l-stack__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100" isFilled>
           {messages.map((message, index) => {
             if ('isLoading' in message && message.isLoading) {
               return <LoadingMessageEntry key={index} />;
