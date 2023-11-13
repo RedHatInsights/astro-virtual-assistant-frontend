@@ -11,21 +11,14 @@ const getRoutes = () => {
 };
 
 module.exports = {
-  appUrl: ['/staging/virtual-assistant'],
+  appUrl: [],
   debug: true,
   useProxy: true,
   proxyVerbose: true,
   routes: getRoutes(),
-  /**
-   * Change to false after your app is registered in configuration files
-   */
   interceptChromeConfig: true,
-  /**
-   * Add additional webpack plugins
-   */
   moduleFederation: {
     exposes: {
-      './RootApp': path.resolve(__dirname, './src/AppEntry.tsx'),
       './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
     },
   },
