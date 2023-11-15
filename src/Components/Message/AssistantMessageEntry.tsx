@@ -24,7 +24,19 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
           </SplitItem>
           <SplitItem className="bubble pf-u-background-color-200">
             <TextContent className="pf-v5-u-font-size-sm">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  a(props) {
+                    return (
+                      <a {...props} target="_blank" rel="noopener noreferrer">
+                        {props.children}
+                      </a>
+                    );
+                  },
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
             </TextContent>
           </SplitItem>
         </Split>
