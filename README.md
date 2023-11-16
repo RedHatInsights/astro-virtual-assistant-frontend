@@ -5,23 +5,30 @@ the [landing page frontend](https://github.com/RedHatInsights/landing-page-front
 ## Getting started
 
 1. `npm install`
-
 2. `npm run start` or `BETA=true npm run start` if running on beta/preview.
+3. Download [landing page frontend](https://github.com/RedHatInsights/landing-page-frontend/))
+    1. Update [fec.config.js](https://github.com/RedHatInsights/landing-page-frontend/blob/master/fec.config.js) by adding the required routes as follows:
+
+   ```javascript
    
-3. Run the landing page frontend (instructions on the [project repository](https://github.com/RedHatInsights/landing-page-frontend/))
+   module.exports = {
+     // ...
+
+     routes: {
+       '/apps/virtual-assistant/': { host: 'http://localhost:8003' },
+
+       // Optional. If you want to run a local instance of Rasa add this entry
+       '/api/virtual-assistant/v1': { host: 'http://localhost:5005' },
+     }
+   };
+   ```
+
+    2. Run the landing page frontend by following the instructions on their README.
 
 4. You should be able to see it on the bottom right. To make changes to the position/alignment relative to the landing page, check out the
    [component](https://github.com/RedHatInsights/landing-page-frontend/blob/master/src/components/app-content-renderer/virtual-assistant.tsx)
    or the [scss file](https://github.com/RedHatInsights/landing-page-frontend/blob/master/src/components/app-content-renderer/virtual-assistant.scss)
    In the landing page code.
-
-## Running with local backend
-
-Start the backend locally by running Rasa (`make run`) and Rasa actions (`make run-actions`). After that start the frontend with `USE_LOCAL_RASA` env set to anything other than an empty string:
-
-```bash
-USE_LOCAL_RASA=1 npm run start
-```
 
 ### Testing
 
