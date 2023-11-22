@@ -45,9 +45,6 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
   }, []);
 
   const onAskPressed = useCallback(() => {
-    if (!input || input === '' || input === '\n') {
-      return;
-    }
     void ask(input);
     setInput('');
   }, [ask, input]);
@@ -111,7 +108,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
               className="pf-v5-u-pt-md pf-v5-u-pl-md"
             />
             <InputGroupText id="username">
-              <Button onClick={onAskPressed} variant="plain" className="pf-v5-u-px-sm">
+              <Button onClick={onAskPressed} isDisabled={input.trim() === ''} variant="plain" className="pf-v5-u-px-sm">
                 <PlaneIcon />
               </Button>
             </InputGroupText>
