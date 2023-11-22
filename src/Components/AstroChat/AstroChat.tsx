@@ -38,7 +38,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
   );
 
   const onChange = useCallback((value: string) => {
-    if (value === '' || value === '\n') {
+    if (value === '\n') {
       return;
     }
     setInput(value);
