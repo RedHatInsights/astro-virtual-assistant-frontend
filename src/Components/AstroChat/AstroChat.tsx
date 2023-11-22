@@ -37,7 +37,17 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
     [ask]
   );
 
+  const onChange = useCallback((value: string) => {
+    if (value === '' || value === '\n') {
+      return;
+    }
+    setInput(value);
+  }, []);
+
   const onAskPressed = useCallback(() => {
+    if (!input || input === '' || input === '\n') {
+      return;
+    }
     void ask(input);
     setInput('');
   }, [ask, input]);
@@ -92,7 +102,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
           <InputGroup>
             <TextArea
               value={input}
-              onChange={setInput}
+              onChange={onChange}
               onKeyPressCapture={handleKeyPress}
               placeholder="Type a message..."
               name="user-query"
