@@ -7,6 +7,12 @@ export interface PostTalkResponse {
     title: string;
     payload: string;
   }>;
+  custom?: CustomResponse;
+}
+
+export interface CustomResponse {
+  type: string;
+  command?: string;
 }
 
 export const postTalk = async (message: string) => {

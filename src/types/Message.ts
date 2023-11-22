@@ -19,6 +19,7 @@ export interface MessageOption {
 export interface AssistantMessage extends BaseMessage {
   from: From.ASSISTANT;
   options?: Array<MessageOption>;
+  command?: string;
   isLoading: boolean;
 }
 

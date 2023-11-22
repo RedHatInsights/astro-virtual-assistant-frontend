@@ -47,6 +47,12 @@ const loadMessage = async (
       }));
     }
 
+    if (typeof resolvedContent !== 'string' && from === From.ASSISTANT && resolvedContent.custom) {
+      if (resolvedContent.custom.type === 'command' && resolvedContent.custom.command) {
+        (message as AssistantMessage).command = resolvedContent.custom.command;
+      }
+    }
+
     setMessages(
       produce((draft) => {
         draft.pop();
