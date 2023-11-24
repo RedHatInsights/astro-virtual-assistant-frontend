@@ -1,9 +1,4 @@
-import {
-  FINISH_CONVERSATION,
-  PASSWORD_REDIRECT,
-  PERSONAL_INFORMATION_REDIRECT,
-  TOUR_START
-} from '../../types/Command';
+import { FINISH_CONVERSATION, PASSWORD_REDIRECT, PERSONAL_INFORMATION_REDIRECT, TOUR_START } from '../../types/Command';
 import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
 
@@ -26,7 +21,6 @@ const finishConversation = (): void => {
 };
 
 export const commandMessageProcessor: MessageProcessor = async (message) => {
-
   if (message.from === From.ASSISTANT && message.command) {
     switch (message.command) {
       case FINISH_CONVERSATION:
