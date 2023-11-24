@@ -4,10 +4,7 @@ import { Icon, Label, Split, SplitItem, TextContent } from '@patternfly/react-co
 import ChatbotIcon from '../icon-chatbot';
 
 import { AssistantMessage, MessageOption } from '../../types/Message';
-import { commandMessageProcessor } from '../../SharedComponents/AstroVirtualAssistant/CommandMessageProcessor';
 import ReactMarkdown from 'react-markdown';
-
-import { Command } from '../../types/Command';
 
 interface AssistantMessageProps extends MessageProps<AssistantMessage> {
   ask: (option: MessageOption) => unknown;
@@ -65,8 +62,6 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
           </SplitItem>
         </Split>
       )}
-
-      {message.command && commandMessageProcessor(message.command as Command)}
     </div>
   );
 };
