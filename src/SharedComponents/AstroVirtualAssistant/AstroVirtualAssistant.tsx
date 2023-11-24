@@ -5,9 +5,12 @@ import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { AstroChatSkeleton } from '../../Components/AstroChat/AstroChatSkeleton';
 import { Stack, StackItem } from '@patternfly/react-core';
+import { commandMessageProcessor } from './CommandMessageProcessor';
+
+const messageProcessors = [commandMessageProcessor];
 
 export const AstroVirtualAssistant: FunctionComponent = () => {
-  const { messages, ask, start, stop, status } = useAstro();
+  const { messages, ask, start, stop, status } = useAstro(messageProcessors);
   const [isOpen, setOpen] = useState<boolean>(false);
 
   useEffect(() => {

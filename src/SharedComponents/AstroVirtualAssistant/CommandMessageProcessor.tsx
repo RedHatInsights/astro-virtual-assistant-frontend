@@ -1,5 +1,11 @@
-import { useEffect } from 'react';
-import { Command, FINISH_CONVERSATION, PASSWORD_REDIRECT, PERSONAL_INFORMATION_REDIRECT, TOUR_START } from '../../types/Command';
+import {
+  FINISH_CONVERSATION,
+  PASSWORD_REDIRECT,
+  PERSONAL_INFORMATION_REDIRECT,
+  TOUR_START
+} from '../../types/Command';
+import { MessageProcessor } from '../../Components/Message/MessageProcessor';
+import { From } from '../../types/Message';
 
 const PERSONAL_INFORMATION_URL = 'https://www.redhat.com/wapps/ugc/protected/personalInfo.html';
 const PASSWORD_URL = 'https://www.redhat.com/wapps/ugc/protected/password.html';
@@ -19,13 +25,10 @@ const finishConversation = (): void => {
   // TODO: finish conversation; load banner
 };
 
-export const CommandMessageEntry = (command: Command): void => {
-  useEffect(() => {
-    handleCommand(command);
-  }, []);
+export const commandMessageProcessor: MessageProcessor = async (message) => {
 
-  const handleCommand = (command: Command): void => {
-    switch (command) {
+  if (message.from === From.ASSISTANT && message.command) {
+    switch (message.command) {
       case FINISH_CONVERSATION:
         finishConversation();
         break;
@@ -39,5 +42,5 @@ export const CommandMessageEntry = (command: Command): void => {
         startPendoTour('tourId');
         break;
     }
-  };
+  }
 };

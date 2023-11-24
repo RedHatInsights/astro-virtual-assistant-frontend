@@ -4,7 +4,7 @@ import { Icon, Label, Split, SplitItem, TextContent } from '@patternfly/react-co
 import ChatbotIcon from '../icon-chatbot';
 
 import { AssistantMessage, MessageOption } from '../../types/Message';
-import { CommandMessageEntry } from './CommandMessageEntry';
+import { commandMessageProcessor } from '../../SharedComponents/AstroVirtualAssistant/CommandMessageProcessor';
 import ReactMarkdown from 'react-markdown';
 
 import { Command } from '../../types/Command';
@@ -66,7 +66,7 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
         </Split>
       )}
 
-      {message.command && CommandMessageEntry(message.command as Command)}
+      {message.command && commandMessageProcessor(message.command as Command)}
     </div>
   );
 };
