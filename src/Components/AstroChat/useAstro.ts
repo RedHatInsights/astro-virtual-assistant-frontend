@@ -82,6 +82,7 @@ const messageProcessor = async (message: AssistantMessage | FeedbackMessage, pro
 
 export interface AskOptions {
   hideMessage: boolean;
+  hideResponse: boolean;
   label: string;
   waitResponses: boolean;
 }
@@ -103,6 +104,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
           hideMessage: false,
           label: message,
           waitResponses: true,
+          hideResponse: false,
         },
         ...options,
       };
@@ -122,6 +124,10 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
         const postTalkResponse = postTalk(message);
 
         const waitResponses = async () => {
+          if (options?.hideResponse) {
+            return;
+          }
+
           await loadMessage(
             From.ASSISTANT,
             postTalkResponse.then((r) => r[0]),
@@ -151,6 +157,12 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
   const start = useCallback(async () => {
     if (status === Status.NOT_STARTED) {
       setStatus(Status.LOADING);
+
+      await ask('/session_start', {
+        hideMessage: true,
+        hideResponse: true,
+        waitResponses: false,
+      });
 
       await ask('/intent_core_session_start', {
         hideMessage: true,
