@@ -30,6 +30,16 @@ the [landing page frontend](https://github.com/RedHatInsights/landing-page-front
    or the [scss file](https://github.com/RedHatInsights/landing-page-frontend/blob/master/src/components/app-content-renderer/virtual-assistant.scss)
    In the landing page code.
 
+### Standalone mode
+
+A standalone mode is provided to run virtual assistant frontend without the landing page.
+This mode won't provide the exact position of the elements as in the landing page, but it can be easier to run.
+
+You still need to complete once the `Initial etc/hosts setup` as detailed in the landing page repository.
+After that, you can run `npm run start:standalone`.
+
+If you want to run your backend locally, use `USE_LOCAL_RASA=1 npm run start:standalone`.
+
 ### Testing
 
 `npm run verify` will run `npm run lint` (eslint) and `npm test` (Jest)
