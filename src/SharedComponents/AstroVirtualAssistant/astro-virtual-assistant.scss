@@ -8,10 +8,9 @@
   &:hover {
     background: var(--pf-v5-global--palette--red-300);
   }
-}
-
-.astro__badge {
-  width: 100%;
+  .astro__badge {
+    width: 100%;
+  }
 }
 
 .astro-l-stack {
@@ -67,10 +66,10 @@
       outline: none;
       box-shadow: 0 -3px 0 var(--pf-v5-global--palette--red-200);
     }
-    .pf-c-button {
-      border-bottom: 2px solid var(--pf-v5-global--BackgroundColor--100);
+    .pf-c-input-group__text {
       &:hover {
-        border-bottom: 3px solid var(--pf-v5-global--palette--red-200);
+        box-shadow: 0 -3px 0 var(--pf-v5-global--palette--red-200);
+        border-bottom: 1px solid var(--pf-v5-global--palette--red-200);
       }
     }
   }
