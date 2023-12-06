@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
 import { MessageProcessor } from '../Message/MessageProcessor';
+import { Command } from '../../types/Command';
 
 type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
 
@@ -52,7 +53,10 @@ const loadMessage = async (
 
       if (resolvedContent.custom) {
         if (resolvedContent.custom.type === 'command' && resolvedContent.custom.command) {
-          (message as AssistantMessage).command = resolvedContent.custom.command;
+          (message as AssistantMessage).command = {
+            type: resolvedContent.custom.command,
+            params: resolvedContent.custom.params,
+          } as Command;
         }
       }
     }

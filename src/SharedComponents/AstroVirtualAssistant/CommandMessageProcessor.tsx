@@ -1,6 +1,7 @@
-import { FINISH_CONVERSATION, PASSWORD_REDIRECT, PERSONAL_INFORMATION_REDIRECT, TOUR_START } from '../../types/Command';
+import { CommandType } from '../../types/Command';
 import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
+import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
 
 const PERSONAL_INFORMATION_URL = 'https://www.redhat.com/wapps/ugc/protected/personalInfo.html';
 const PASSWORD_URL = 'https://www.redhat.com/wapps/ugc/protected/password.html';
@@ -22,18 +23,21 @@ const finishConversation = (): void => {
 
 export const commandMessageProcessor: MessageProcessor = async (message) => {
   if (message.from === From.ASSISTANT && message.command) {
-    switch (message.command) {
-      case FINISH_CONVERSATION:
+    switch (message.command.type) {
+      case CommandType.FINISH_CONVERSATION:
         finishConversation();
         break;
-      case PERSONAL_INFORMATION_REDIRECT:
+      case CommandType.PERSONAL_INFORMATION_REDIRECT:
         openInNewTab(PERSONAL_INFORMATION_URL);
         break;
-      case PASSWORD_REDIRECT:
+      case CommandType.PASSWORD_REDIRECT:
         openInNewTab(PASSWORD_URL);
         break;
-      case TOUR_START:
+      case CommandType.TOUR_START:
         startPendoTour('tourId');
+        break;
+      case CommandType.FEEDBACK:
+        await feedbackCommandProcessor(message.command);
         break;
     }
   }

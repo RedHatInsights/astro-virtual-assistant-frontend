@@ -1,3 +1,5 @@
+import { Command } from './Command';
+
 export enum From {
   ASSISTANT = 'assistant',
   USER = 'user',
@@ -19,7 +21,7 @@ export interface MessageOption {
 export interface AssistantMessage extends BaseMessage {
   from: From.ASSISTANT;
   options?: Array<MessageOption>;
-  command?: string;
+  command?: Command;
   isLoading: boolean;
 }
 

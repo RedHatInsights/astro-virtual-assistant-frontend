@@ -13,6 +13,7 @@ export interface PostTalkResponse {
 export interface CustomResponse {
   type: string;
   command?: string;
+  params?: object;
 }
 
 export const postTalk = async (message: string) => {
