@@ -19,6 +19,7 @@ export interface MessageOption {
 
 // Brand Assistant
 export interface AssistantMessage extends BaseMessage {
+  messageId: string;
   from: From.ASSISTANT;
   options?: Array<MessageOption>;
   command?: Command;
@@ -32,6 +33,7 @@ export interface UserMessage extends BaseMessage {
 
 // Brand feedback
 export interface FeedbackMessage extends BaseMessage {
+  messageId: string;
   from: From.FEEDBACK;
   isLoading: boolean;
 }

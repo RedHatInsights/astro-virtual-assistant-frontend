@@ -1,13 +1,17 @@
-import { produce } from 'immer';
+import { original, produce } from 'immer';
 import { AssistantMessage, FeedbackMessage, From, Message } from '../../types/Message';
 import { PostTalkResponse, postTalk } from '../../api/PostTalk';
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
 import { MessageProcessor } from '../Message/MessageProcessor';
+import { v4 as uuidv4 } from 'uuid';
 import { Command } from '../../types/Command';
 
 type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
+
+const findByMessageId = (messageId: string) => (message: { messageId?: string } | object) =>
+  'messageId' in message && message.messageId === messageId;
 
 const loadMessage = async (
   from: From.ASSISTANT | From.FEEDBACK,
@@ -16,9 +20,11 @@ const loadMessage = async (
   minTimeout: number,
   processors: Array<MessageProcessor>
 ) => {
+  const messageId = uuidv4();
   setMessages(
     produce((draft) => {
       draft.push({
+        messageId,
         from,
         isLoading: true,
         content: '',
@@ -38,6 +44,7 @@ const loadMessage = async (
     const contentString = typeof resolvedContent === 'string' ? resolvedContent : resolvedContent.text;
 
     const message: AssistantMessage | FeedbackMessage = {
+      messageId,
       from,
       isLoading: false,
       content: contentString,
@@ -65,14 +72,21 @@ const loadMessage = async (
 
     setMessages(
       produce((draft) => {
-        draft.pop();
-        draft.push(message);
+        const index = original(draft)?.findIndex(findByMessageId(messageId));
+        if (index !== undefined && index !== -1) {
+          draft[index] = message;
+        } else {
+          draft.push(message);
+        }
       })
     );
   } else {
     setMessages(
       produce((draft) => {
-        draft.pop();
+        const index = original(draft)?.findIndex(findByMessageId(messageId));
+        if (index !== undefined && index !== -1) {
+          draft.splice(index, 1);
+        }
       })
     );
   }
