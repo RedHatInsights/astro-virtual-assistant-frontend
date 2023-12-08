@@ -28,14 +28,15 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
               <ReactMarkdown
                 components={{
                   a: ({ ...props }) => {
-                    if (props.href && props.href.startsWith('/')) {
+                    let href = props.href;
+                    if (href && href.startsWith('/')) {
                       if (preview) {
-                        props.href = `/preview${props.href}`;
+                        href = `/preview${href}`;
                       }
-                      props.href = `${window.location.origin}${props.href}`;
+                      href = `${window.location.origin}${href}`;
                     }
                     return (
-                      <a {...props} target="_blank" rel="noopener noreferrer">
+                      <a {...props} href={href} target="_blank" rel="noopener noreferrer">
                         {props.children}
                       </a>
                     );
