@@ -13,25 +13,23 @@ import { commandMessageProcessor } from './CommandMessageProcessor';
 const messageProcessors = [commandMessageProcessor];
 
 export const AstroVirtualAssistant: FunctionComponent = () => {
-  const { messages, ask, start, stop, status } = useAstro(messageProcessors);
+  const { messages, ask, start, status } = useAstro(messageProcessors);
   const [isOpen, setOpen] = useState<boolean>(false);
   const chrome = useChrome();
 
   useEffect(() => {
     if (isOpen) {
       void start();
-    } else {
-      void stop();
     }
   }, [isOpen]);
 
   return (
     <Stack className="astro-wrapper-stack">
       <StackItem className="pf-v5-u-box-shadow-lg">
-        {status === Status.STARTED && (
+        {status === Status.STARTED && isOpen && (
           <AstroChat key="astro-chat" messages={messages} ask={ask} preview={chrome.isBeta()} onClose={() => setOpen(false)} />
         )}
-        {status === Status.LOADING && <AstroChatSkeleton />}
+        {status === Status.LOADING && isOpen && <AstroChatSkeleton />}
       </StackItem>
       <StackItem className="astro-wrapper-stack__badge">
         <AstroBadge onClick={() => setOpen((prev) => !prev)} />
