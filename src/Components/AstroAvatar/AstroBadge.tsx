@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, ButtonVariant, Tooltip } from '@patternfly/react-core';
+import { Button, Tooltip } from '@patternfly/react-core';
 import BubbleIcon from '../../assets/badge-icon.svg';
 
 interface AstroAvatarProps {
