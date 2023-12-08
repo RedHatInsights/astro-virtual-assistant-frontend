@@ -2,7 +2,7 @@ const config = {
   messages: {
     delays: {
       // Artificial delays (ms) to avoid overwhelming the user
-      minAssistantResponse: 2000,
+      minAssistantResponse: 800,
       feedback: 1000,
     },
   },
