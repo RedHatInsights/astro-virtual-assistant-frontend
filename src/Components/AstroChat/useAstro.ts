@@ -1,7 +1,7 @@
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { produce } from 'immer';
 import { AssistantMessage, FeedbackMessage, From, Message } from '../../types/Message';
 import { PostTalkResponse, postTalk } from '../../api/PostTalk';
-import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
 import { MessageProcessor } from '../Message/MessageProcessor';

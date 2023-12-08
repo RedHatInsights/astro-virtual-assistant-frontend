@@ -8,11 +8,12 @@ import ReactMarkdown from 'react-markdown';
 
 interface AssistantMessageProps extends MessageProps<AssistantMessage> {
   ask: (option: MessageOption) => unknown;
+  preview: boolean;
 }
 
 const OPTION_COLORS = ['red'] as const;
 
-export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask }) => {
+export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask, preview }) => {
   return (
     <div className="pf-v5-u-mb-md">
       {message.content && (
@@ -26,7 +27,13 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
             <TextContent className="pf-v5-u-font-size-sm">
               <ReactMarkdown
                 components={{
-                  a(props) {
+                  a: ({ ...props }) => {
+                    if (props.href && props.href.startsWith('/')) {
+                      if (preview) {
+                        props.href = `/preview${props.href}`;
+                      }
+                      props.href = `${window.location.origin}${props.href}`;
+                    }
                     return (
                       <a {...props} target="_blank" rel="noopener noreferrer">
                         {props.children}

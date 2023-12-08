@@ -12,10 +12,11 @@ import { AskOptions } from './useAstro';
 interface AstroChatProps {
   messages: Array<Message>;
   ask: (what: string, options?: Partial<AskOptions>) => Promise<void>;
+  preview: boolean;
   onClose: () => void;
 }
 
-export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, ask, onClose }) => {
+export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, ask, preview, onClose }) => {
   const astroContainer = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState<string>('');
 
@@ -87,7 +88,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
 
             switch (message.from) {
               case From.ASSISTANT:
-                return <AssistantMessageEntry message={message} ask={askFromOption} key={index} />;
+                return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} key={index} />;
               case From.USER:
                 return <UserMessageEntry message={message} key={index} />;
               case From.FEEDBACK:
