@@ -13,7 +13,7 @@ import { commandMessageProcessor } from './CommandMessageProcessor';
 const messageProcessors = [commandMessageProcessor];
 
 export const AstroVirtualAssistant: FunctionComponent = () => {
-  const { messages, ask, start, status } = useAstro(messageProcessors);
+  const { messages, ask, start, status, loadingResponse } = useAstro(messageProcessors);
   const [isOpen, setOpen] = useState<boolean>(false);
   const chrome = useChrome();
 
@@ -27,7 +27,14 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
     <Stack className="astro-wrapper-stack">
       <StackItem className="pf-v5-u-box-shadow-lg">
         {status === Status.STARTED && isOpen && (
-          <AstroChat key="astro-chat" messages={messages} ask={ask} preview={chrome.isBeta()} onClose={() => setOpen(false)} />
+          <AstroChat
+            key="astro-chat"
+            messages={messages}
+            ask={ask}
+            blockInput={loadingResponse}
+            preview={chrome.isBeta()}
+            onClose={() => setOpen(false)}
+          />
         )}
         {status === Status.LOADING && isOpen && <AstroChatSkeleton />}
       </StackItem>

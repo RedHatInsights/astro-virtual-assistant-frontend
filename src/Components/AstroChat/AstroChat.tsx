@@ -14,9 +14,10 @@ interface AstroChatProps {
   ask: (what: string, options?: Partial<AskOptions>) => Promise<void>;
   preview: boolean;
   onClose: () => void;
+  blockInput: boolean;
 }
 
-export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, ask, preview, onClose }) => {
+export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, ask, preview, onClose, blockInput }) => {
   const astroContainer = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState<string>('');
 
@@ -88,7 +89,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
 
             switch (message.from) {
               case From.ASSISTANT:
-                return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} key={index} />;
+                return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} blockInput={blockInput} key={index} />;
               case From.USER:
                 return <UserMessageEntry message={message} key={index} />;
               case From.FEEDBACK:
@@ -109,7 +110,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
               className="pf-v5-u-pt-md pf-v5-u-pl-md"
             />
             <InputGroupText id="username">
-              <Button onClick={onAskPressed} isDisabled={input.trim() === ''} variant="plain" className="pf-v5-u-px-sm">
+              <Button onClick={onAskPressed} isDisabled={input.trim() === '' || blockInput} variant="plain" className="pf-v5-u-px-sm">
                 <PlaneIcon />
               </Button>
             </InputGroupText>

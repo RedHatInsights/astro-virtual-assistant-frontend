@@ -9,11 +9,12 @@ import ReactMarkdown from 'react-markdown';
 interface AssistantMessageProps extends MessageProps<AssistantMessage> {
   ask: (option: MessageOption) => unknown;
   preview: boolean;
+  blockInput: boolean;
 }
 
 const OPTION_COLORS = ['red'] as const;
 
-export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask, preview }) => {
+export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask, preview, blockInput }) => {
   return (
     <div className="pf-v5-u-mb-md">
       {message.content && (
@@ -59,7 +60,11 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
                 key={option.title}
                 color={OPTION_COLORS[index % OPTION_COLORS.length]}
                 render={({ className, content, componentRef }) => (
-                  <a className={className} ref={componentRef} onClick={() => ask(option)}>
+                  <a
+                    className={`${className} ${blockInput ? 'astro-option-disabled' : ''}`}
+                    ref={componentRef}
+                    onClick={() => blockInput || ask(option)}
+                  >
                     {content}
                   </a>
                 )}
