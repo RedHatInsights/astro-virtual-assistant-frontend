@@ -6,6 +6,7 @@ import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
 import { MessageProcessor } from '../Message/MessageProcessor';
 import { Command } from '../../types/Command';
+import { DelayedResponseConfig, getDelayedResponse } from '../../utils/DelayedResponse';
 
 type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
 
@@ -13,7 +14,7 @@ const loadMessage = async (
   from: From.ASSISTANT | From.FEEDBACK,
   content: Promise<PostTalkResponse> | PostTalkResponse | string | undefined,
   setMessages: SetMessages,
-  minTimeout: number,
+  delayedResponseConfig: DelayedResponseConfig,
   processors: Array<MessageProcessor>
 ) => {
   setMessages(
@@ -28,14 +29,15 @@ const loadMessage = async (
 
   const startTime = new Date().getTime();
   const resolvedContent = await content;
-
   const endTime = new Date().getTime();
-  const remainingTime = Math.max(minTimeout - endTime + startTime, 0);
-
-  await asyncSleep(remainingTime);
 
   if (resolvedContent !== undefined) {
     const contentString = typeof resolvedContent === 'string' ? resolvedContent : resolvedContent.text;
+
+    const waitTime = getDelayedResponse(contentString, delayedResponseConfig);
+    const remainingTime = Math.max(waitTime - endTime + startTime, 0);
+
+    await asyncSleep(remainingTime);
 
     const message: AssistantMessage | FeedbackMessage = {
       from,
@@ -70,6 +72,7 @@ const loadMessage = async (
       })
     );
   } else {
+    await asyncSleep(delayedResponseConfig.delay.min);
     setMessages(
       produce((draft) => {
         draft.pop();
@@ -136,14 +139,14 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
             From.ASSISTANT,
             postTalkResponse.then((r) => r[0]),
             setMessages,
-            Config.messages.delays.minAssistantResponse,
+            Config.messages.delays.assistantDelayResponse,
             messageProcessors
           );
 
           // responses has already been resolved
           const responses = await postTalkResponse;
           for (let i = 1; i < responses.length; i++) {
-            await loadMessage(From.ASSISTANT, responses[i], setMessages, Config.messages.delays.minAssistantResponse, messageProcessors);
+            await loadMessage(From.ASSISTANT, responses[i], setMessages, Config.messages.delays.assistantDelayResponse, messageProcessors);
           }
         };
 
