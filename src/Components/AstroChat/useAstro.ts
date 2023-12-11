@@ -119,6 +119,10 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
 
   const ask = useCallback(
     async (message: string, options?: Partial<AskOptions>) => {
+      if (loadingResponse) {
+        return;
+      }
+
       setLoadingResponse(true);
       const validOptions: AskOptions = {
         ...{
@@ -173,7 +177,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
         }
       }
     },
-    [messageProcessors]
+    [messageProcessors, loadingResponse]
   );
 
   const start = useCallback(async () => {

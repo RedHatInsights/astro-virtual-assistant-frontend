@@ -54,7 +54,11 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, a
   const handleKeyPress: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.key === 'Enter' || event.keyCode === 13) {
       if (!event.shiftKey) {
-        onAskPressed();
+        if (blockInput) {
+          event.preventDefault();
+        } else {
+          onAskPressed();
+        }
       }
     }
   };
