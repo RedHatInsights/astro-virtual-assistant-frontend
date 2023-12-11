@@ -1,5 +1,7 @@
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 
+import { Metadata } from '../types/Metadata';
+
 export interface PostTalkResponse {
   recipient_id: number;
   text: string;
@@ -16,8 +18,9 @@ export interface CustomResponse {
   params?: object;
 }
 
-export const postTalk = async (message: string) => {
+export const postTalk = async (message: string, metadata: Metadata) => {
   return axiosInstance.post<unknown, Array<PostTalkResponse>>('/api/virtual-assistant/v1/talk', {
     message,
+    metadata,
   });
 };

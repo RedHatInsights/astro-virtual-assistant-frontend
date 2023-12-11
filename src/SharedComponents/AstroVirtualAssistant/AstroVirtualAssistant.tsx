@@ -1,10 +1,13 @@
 import React, { FunctionComponent, useEffect, useState } from 'react';
+
+import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
+import { Stack, StackItem } from '@patternfly/react-core';
+
 import { Status, useAstro } from '../../Components/AstroChat/useAstro';
 import './astro-virtual-assistant.scss';
 import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { AstroChatSkeleton } from '../../Components/AstroChat/AstroChatSkeleton';
-import { Stack, StackItem } from '@patternfly/react-core';
 import { commandMessageProcessor } from './CommandMessageProcessor';
 
 const messageProcessors = [commandMessageProcessor];
@@ -12,6 +15,7 @@ const messageProcessors = [commandMessageProcessor];
 export const AstroVirtualAssistant: FunctionComponent = () => {
   const { messages, ask, start, stop, status } = useAstro(messageProcessors);
   const [isOpen, setOpen] = useState<boolean>(false);
+  const chrome = useChrome();
 
   useEffect(() => {
     if (isOpen) {
@@ -24,7 +28,9 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
   return (
     <Stack className="astro-wrapper-stack">
       <StackItem className="pf-v5-u-box-shadow-lg">
-        {status === Status.STARTED && <AstroChat key="astro-chat" messages={messages} ask={ask} onClose={() => setOpen(false)} />}
+        {status === Status.STARTED && (
+          <AstroChat key="astro-chat" messages={messages} ask={ask} preview={chrome.isBeta()} onClose={() => setOpen(false)} />
+        )}
         {status === Status.LOADING && <AstroChatSkeleton />}
       </StackItem>
       <StackItem className="astro-wrapper-stack__badge">
