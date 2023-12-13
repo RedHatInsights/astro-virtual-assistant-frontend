@@ -38,7 +38,7 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
         )}
         {status === Status.LOADING && isOpen && <AstroChatSkeleton />}
       </StackItem>
-      <StackItem className="astro-wrapper-stack__badge">
+      <StackItem className="astro-wrapper-stack__badge pf-v5-u-mt-sm pf-v5-u-mt-xl-on-md">
         <AstroBadge onClick={() => setOpen((prev) => !prev)} />
       </StackItem>
     </Stack>
