@@ -24,7 +24,6 @@ const finishConversation = (): void => {
 };
 
 export const commandMessageProcessor: MessageProcessor = async (message, toggleFeedbackModal: (isOpen: boolean) => void) => {
-  console.log('commandMessageProcessor', message);
   if (message.from === From.ASSISTANT && message.command) {
     switch (message.command.type) {
       case CommandType.FINISH_CONVERSATION:
@@ -43,7 +42,6 @@ export const commandMessageProcessor: MessageProcessor = async (message, toggleF
         startPendoTour('tourId');
         break;
       case CommandType.FEEDBACK_MODAL:
-        console.log('feedback modal');
         toggleFeedbackModal(true);
         break;
       case CommandType.FEEDBACK:
