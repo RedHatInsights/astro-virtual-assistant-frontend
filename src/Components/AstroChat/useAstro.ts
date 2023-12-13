@@ -1,5 +1,8 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { original, produce } from 'immer';
+
+import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
+
 import { AssistantMessage, FeedbackMessage, From, Message } from '../../types/Message';
 import { PostTalkResponse, postTalk } from '../../api/PostTalk';
 import { asyncSleep } from '../../utils/Async';
@@ -19,7 +22,8 @@ const loadMessage = async (
   content: Promise<PostTalkResponse> | PostTalkResponse | string | undefined,
   setMessages: SetMessages,
   minTimeout: number,
-  processors: Array<MessageProcessor>
+  processors: Array<MessageProcessor>,
+  toggleFeedbackModal: (isOpen: boolean) => void
 ) => {
   const messageId = uuidv4();
   setMessages(
@@ -69,7 +73,7 @@ const loadMessage = async (
       }
     }
 
-    await messageProcessor(message, processors);
+    await messageProcessor(message, processors, toggleFeedbackModal);
 
     setMessages(
       produce((draft) => {
@@ -93,9 +97,13 @@ const loadMessage = async (
   }
 };
 
-const messageProcessor = async (message: AssistantMessage | FeedbackMessage, processors: Array<MessageProcessor>) => {
+const messageProcessor = async (
+  message: AssistantMessage | FeedbackMessage,
+  processors: Array<MessageProcessor>,
+  toggleFeedbackModal: (isOpen: boolean) => void
+) => {
   for (const processor of processors) {
-    await processor(message);
+    await processor(message, toggleFeedbackModal);
   }
 };
 
@@ -116,6 +124,8 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
   const [messages, setMessages] = useState<Array<Message>>([]);
   const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
   const [loadingResponse, setLoadingResponse] = useState<boolean>(false);
+
+  const { toggleFeedbackModal } = useChrome();
 
   const ask = useCallback(
     async (message: string, options?: Partial<AskOptions>) => {
@@ -158,13 +168,21 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
             postTalkResponse.then((r) => r[0]),
             setMessages,
             Config.messages.delays.minAssistantResponse,
-            messageProcessors
+            messageProcessors,
+            toggleFeedbackModal
           );
 
           // responses has already been resolved
           const responses = await postTalkResponse;
           for (let i = 1; i < responses.length; i++) {
-            await loadMessage(From.ASSISTANT, responses[i], setMessages, Config.messages.delays.minAssistantResponse, messageProcessors);
+            await loadMessage(
+              From.ASSISTANT,
+              responses[i],
+              setMessages,
+              Config.messages.delays.minAssistantResponse,
+              messageProcessors,
+              toggleFeedbackModal
+            );
           }
         };
 
