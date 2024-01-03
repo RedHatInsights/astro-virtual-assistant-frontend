@@ -7,7 +7,7 @@ import { AssistantMessage, FeedbackMessage, From, Message } from '../../types/Me
 import { PostTalkResponse, postTalk } from '../../api/PostTalk';
 import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
-import { MessageProcessor } from '../Message/MessageProcessor';
+import { MessageProcessor, MessageProcessorOptions } from '../Message/MessageProcessor';
 import { v4 as uuidv4 } from 'uuid';
 import { Command } from '../../types/Command';
 import { buildMetadata } from '../../utils/Metadata';
@@ -23,7 +23,7 @@ const loadMessage = async (
   setMessages: SetMessages,
   minTimeout: number,
   processors: Array<MessageProcessor>,
-  toggleFeedbackModal: (isOpen: boolean) => void
+  options: MessageProcessorOptions
 ) => {
   const messageId = uuidv4();
   setMessages(
@@ -73,7 +73,7 @@ const loadMessage = async (
       }
     }
 
-    await messageProcessor(message, processors, toggleFeedbackModal);
+    await messageProcessor(message, processors, options);
 
     setMessages(
       produce((draft) => {
@@ -100,10 +100,10 @@ const loadMessage = async (
 const messageProcessor = async (
   message: AssistantMessage | FeedbackMessage,
   processors: Array<MessageProcessor>,
-  toggleFeedbackModal: (isOpen: boolean) => void
+  options: MessageProcessorOptions
 ) => {
   for (const processor of processors) {
-    await processor(message, toggleFeedbackModal);
+    await processor(message, options);
   }
 };
 
@@ -163,13 +163,17 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
             return;
           }
 
+          const messageProcessorOptions = {
+            toggleFeedbackModal,
+          };
+
           await loadMessage(
             From.ASSISTANT,
             postTalkResponse.then((r) => r[0]),
             setMessages,
             Config.messages.delays.minAssistantResponse,
             messageProcessors,
-            toggleFeedbackModal
+            messageProcessorOptions
           );
 
           // responses has already been resolved
@@ -181,7 +185,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
               setMessages,
               Config.messages.delays.minAssistantResponse,
               messageProcessors,
-              toggleFeedbackModal
+              messageProcessorOptions
             );
           }
         };
