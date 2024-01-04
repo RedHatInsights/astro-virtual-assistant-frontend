@@ -1,7 +1,6 @@
 export enum CommandType {
+  REDIRECT = 'redirect',
   FINISH_CONVERSATION = 'core_finish_conversation',
-  PERSONAL_INFORMATION_REDIRECT = 'personal_information_redirect',
-  PASSWORD_REDIRECT = 'password_redirect',
   TOUR_START = 'tour_start',
   FEEDBACK = 'feedback',
 }
@@ -15,12 +14,11 @@ export interface FinishConversationCommand extends BaseCommand {
   type: CommandType.FINISH_CONVERSATION;
 }
 
-export interface PersonalInformationRedirectCommand extends BaseCommand {
-  type: CommandType.PERSONAL_INFORMATION_REDIRECT;
-}
-
-export interface PasswordRedirectCommand extends BaseCommand {
-  type: CommandType.PASSWORD_REDIRECT;
+export interface RedirectCommand extends BaseCommand {
+  type: CommandType.REDIRECT;
+  params: {
+    url: string;
+  };
 }
 
 export interface TourStartCommand extends BaseCommand {
@@ -36,4 +34,4 @@ export interface FeedbackCommand extends BaseCommand {
   };
 }
 
-export type Command = FinishConversationCommand | PersonalInformationRedirectCommand | PasswordRedirectCommand | TourStartCommand | FeedbackCommand;
+export type Command = FinishConversationCommand | RedirectCommand | TourStartCommand | FeedbackCommand;

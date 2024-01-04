@@ -3,11 +3,7 @@ import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
 
-const PERSONAL_INFORMATION_URL = 'https://www.redhat.com/wapps/ugc/protected/personalInfo.html';
-const PASSWORD_URL = 'https://www.redhat.com/wapps/ugc/protected/password.html';
-type Url = typeof PERSONAL_INFORMATION_URL | typeof PASSWORD_URL;
-
-const openInNewTab = (url: Url) => {
+const openInNewTab = (url: string) => {
   const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
   if (newWindow) newWindow.opener = null;
 };
@@ -27,11 +23,10 @@ export const commandMessageProcessor: MessageProcessor = async (message) => {
       case CommandType.FINISH_CONVERSATION:
         finishConversation();
         break;
-      case CommandType.PERSONAL_INFORMATION_REDIRECT:
-        openInNewTab(PERSONAL_INFORMATION_URL);
-        break;
-      case CommandType.PASSWORD_REDIRECT:
-        openInNewTab(PASSWORD_URL);
+      case CommandType.REDIRECT:
+        if (message.command.params.url) {
+          openInNewTab(message.command.params.url);
+        }
         break;
       case CommandType.TOUR_START:
         startPendoTour('tourId');
