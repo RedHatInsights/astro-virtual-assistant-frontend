@@ -2,8 +2,7 @@ import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { original, produce } from 'immer';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
-
-import { AssistantMessage, FeedbackMessage, From, Message } from '../../types/Message';
+import { AssistantMessage, Banner, FeedbackMessage, From, Message, SystemMessage } from '../../types/Message';
 import { PostTalkResponse, postTalk } from '../../api/PostTalk';
 import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
@@ -127,6 +126,34 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
 
   const { toggleFeedbackModal } = useChrome();
 
+  const addSystemMessage = (systemMessageType: string, additionalContent: Array<string>): void => {
+    const systemMessage: SystemMessage = {
+      from: From.SYSTEM,
+      content: 'system_message',
+      type: systemMessageType,
+      additionalContent: additionalContent,
+    };
+    setMessages(
+      produce((draft) => {
+        draft.push(systemMessage);
+      })
+    );
+  };
+
+  const addBanner = (bannerType: string, additionalContent: Array<string>): void => {
+    const banner: Banner = {
+      from: From.INTERFACE,
+      content: 'banner',
+      type: bannerType,
+      additionalContent: additionalContent,
+    };
+    setMessages(
+      produce((draft) => {
+        draft.push(banner);
+      })
+    );
+  };
+
   const ask = useCallback(
     async (message: string, options?: Partial<AskOptions>) => {
       if (loadingResponse) {
@@ -165,6 +192,8 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
 
           const messageProcessorOptions = {
             toggleFeedbackModal,
+            addSystemMessage,
+            addBanner,
           };
 
           await loadMessage(
@@ -231,6 +260,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
   return {
     ask,
     messages,
+    setMessages,
     start,
     stop,
     status,

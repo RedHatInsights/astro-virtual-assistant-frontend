@@ -13,15 +13,12 @@ const startPendoTour = (tourId: string) => {
   // TODO: Pendo tour
 };
 
-const finishConversation = (): void => {
-  // TODO: finish conversation; load banner
-};
-
 export const commandMessageProcessor: MessageProcessor = async (message, options) => {
   if (message.from === From.ASSISTANT && message.command) {
     switch (message.command.type) {
       case CommandType.FINISH_CONVERSATION:
-        finishConversation();
+        options.addSystemMessage('finish_conversation_message', []);
+        options.addBanner('finish_conversation_banner', []);
         break;
       case CommandType.REDIRECT:
         if (message.command.params.url) {

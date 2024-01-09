@@ -58,6 +58,24 @@
     .pf-c-label {
       --pf-c-label__content--before--BorderColor: var(--pf-v5-c-label--m-red__icon--Color);
     }
+    .system-message {
+      .system-message-text {
+        padding-bottom: var(--pf-global--spacer--md);
+        text-align: center;
+      }
+    }
+    .banner {
+      &__chat-end {
+        padding-top: 0;
+        padding-bottom: var(--pf-global--spacer--md);
+        .banner-alert {
+          .pf-c-alert__title {
+            margin-top: 0;
+            font-size: var(--pf-global--FontSize--sm);
+          }
+        }
+      }
+    }
   }
   &__footer {
     .pf-c-input-group {

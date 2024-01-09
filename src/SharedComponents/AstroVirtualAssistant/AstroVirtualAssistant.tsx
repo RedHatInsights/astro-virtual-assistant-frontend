@@ -13,7 +13,7 @@ import { commandMessageProcessor } from './CommandMessageProcessor';
 const messageProcessors = [commandMessageProcessor];
 
 export const AstroVirtualAssistant: FunctionComponent = () => {
-  const { messages, ask, start, status, loadingResponse } = useAstro(messageProcessors);
+  const { messages, setMessages, ask, start, status, loadingResponse } = useAstro(messageProcessors);
   const [isOpen, setOpen] = useState<boolean>(false);
   const chrome = useChrome();
 
@@ -30,6 +30,7 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
           <AstroChat
             key="astro-chat"
             messages={messages}
+            setMessages={setMessages}
             ask={ask}
             blockInput={loadingResponse}
             preview={chrome.isBeta()}

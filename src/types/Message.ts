@@ -4,6 +4,8 @@ export enum From {
   ASSISTANT = 'assistant',
   USER = 'user',
   FEEDBACK = 'feedback',
+  SYSTEM = 'system',
+  INTERFACE = 'interface',
 }
 
 // Base
@@ -38,4 +40,18 @@ export interface FeedbackMessage extends BaseMessage {
   isLoading: boolean;
 }
 
-export type Message = AssistantMessage | UserMessage | FeedbackMessage;
+// System messages
+export interface SystemMessage extends BaseMessage {
+  from: From.SYSTEM;
+  type: string;
+  additionalContent?: Array<string>;
+}
+
+// Banners
+export interface Banner extends BaseMessage {
+  from: From.INTERFACE;
+  type: string;
+  additionalContent?: Array<string>;
+}
+
+export type Message = AssistantMessage | UserMessage | FeedbackMessage | SystemMessage | Banner;

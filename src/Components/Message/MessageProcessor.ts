@@ -4,4 +4,6 @@ export type MessageProcessor = (message: AssistantMessage | FeedbackMessage, opt
 
 export type MessageProcessorOptions = {
   toggleFeedbackModal: (isOpen: boolean) => void;
+  addSystemMessage: (systemMessageType: string, additionalContent: Array<string>) => void;
+  addBanner: (bannerType: string, additionalContent: Array<string>) => void;
 };
