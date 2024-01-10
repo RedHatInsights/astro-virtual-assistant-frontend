@@ -3,13 +3,7 @@ import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
 
-const PERSONAL_INFORMATION_URL = 'https://www.redhat.com/wapps/ugc/protected/personalInfo.html';
-const PASSWORD_URL = 'https://www.redhat.com/wapps/ugc/protected/password.html';
-const SUPPORT_URL =
-  'https://access.redhat.com/support/cases/#/case/new/get-support?seSessionId=54f5e479-9bcd-4186-be3b-701fe7f900f1&product=Other&version=Unknown&caseCreate=true';
-type Url = typeof PERSONAL_INFORMATION_URL | typeof PASSWORD_URL | typeof SUPPORT_URL;
-
-const openInNewTab = (url: Url) => {
+const openInNewTab = (url: string) => {
   const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
   if (newWindow) newWindow.opener = null;
 };
@@ -29,14 +23,10 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
       case CommandType.FINISH_CONVERSATION:
         finishConversation();
         break;
-      case CommandType.PERSONAL_INFORMATION_REDIRECT:
-        openInNewTab(PERSONAL_INFORMATION_URL);
-        break;
-      case CommandType.PASSWORD_REDIRECT:
-        openInNewTab(PASSWORD_URL);
-        break;
-      case CommandType.SUPPORT_REDIRECT:
-        openInNewTab(SUPPORT_URL);
+      case CommandType.REDIRECT:
+        if (message.command.params.url) {
+          openInNewTab(message.command.params.url);
+        }
         break;
       case CommandType.TOUR_START:
         startPendoTour('tourId');
