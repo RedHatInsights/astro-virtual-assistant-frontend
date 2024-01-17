@@ -23,6 +23,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
       case CommandType.REDIRECT:
         if (message.command.params.url) {
           openInNewTab(message.command.params.url);
+          options.addSystemMessage('redirect_message', [message.command.params.url]);
         }
         break;
       case CommandType.TOUR_START:
