@@ -117,7 +117,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, s
               case From.FEEDBACK:
                 return <FeedbackAssistantEntry key={index} />;
               case From.SYSTEM:
-                return <SystemMessageEntry message={message} key={index} />;
+                return <SystemMessageEntry message={message} preview={preview} key={index} />;
               case From.INTERFACE:
                 return <BannerEntry message={message} key={index} />;
             }

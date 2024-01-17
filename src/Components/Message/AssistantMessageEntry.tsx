@@ -4,7 +4,7 @@ import { Icon, Label, Split, SplitItem, TextContent } from '@patternfly/react-co
 import ChatbotIcon from '../icon-chatbot';
 
 import { AssistantMessage, MessageOption } from '../../types/Message';
-import ReactMarkdown from 'react-markdown';
+import { TextEntry } from './TextEntry';
 
 interface AssistantMessageProps extends MessageProps<AssistantMessage> {
   ask: (option: MessageOption) => unknown;
@@ -26,26 +26,7 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
           </SplitItem>
           <SplitItem className="bubble pf-u-background-color-200">
             <TextContent className="pf-v5-u-font-size-sm">
-              <ReactMarkdown
-                components={{
-                  a: ({ ...props }) => {
-                    let href = props.href;
-                    if (href && href.startsWith('/')) {
-                      if (preview) {
-                        href = `/preview${href}`;
-                      }
-                      href = `${window.location.origin}${href}`;
-                    }
-                    return (
-                      <a {...props} href={href} target="_blank" rel="noopener noreferrer">
-                        {props.children}
-                      </a>
-                    );
-                  },
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
+              <TextEntry content={message.content} preview={preview} />
             </TextContent>
           </SplitItem>
         </Split>
