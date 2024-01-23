@@ -154,6 +154,18 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
     );
   };
 
+  const addThumbMessage = (thumbUpPayload: string, thumbDownPayload: string): void => {
+    setMessages(
+      produce((draft) => {
+        draft.push({
+          from: From.THUMBS,
+          thumbsUp: thumbUpPayload,
+          thumbsDown: thumbDownPayload,
+        });
+      })
+    );
+  };
+
   const ask = useCallback(
     async (message: string, options?: Partial<AskOptions>) => {
       if (loadingResponse) {
@@ -194,6 +206,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
             toggleFeedbackModal,
             addSystemMessage,
             addBanner,
+            addThumbMessage,
           };
 
           await loadMessage(

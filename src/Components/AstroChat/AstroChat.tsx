@@ -11,6 +11,7 @@ import { FeedbackAssistantEntry } from '../Message/FeedbackMessageEntry';
 import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 import { AskOptions } from './useAstro';
 import { BannerEntry } from '../Message/BannerEntry';
+import { ThumbsMessageEntry } from '../Message/ThumbsMessageEntry';
 
 interface AstroChatProps {
   messages: Array<Message>;
@@ -120,6 +121,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, s
                 return <SystemMessageEntry message={message} preview={preview} key={index} />;
               case From.INTERFACE:
                 return <BannerEntry message={message} key={index} />;
+              case From.THUMBS:
+                return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} thumbsUp={message.thumbsUp} thumbsDown={message.thumbsDown} />;
             }
           })}
         </StackItem>

@@ -15,6 +15,10 @@ interface AssistantMessageProps extends MessageProps<AssistantMessage> {
 const OPTION_COLORS = ['red'] as const;
 
 export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask, preview, blockInput }) => {
+  if (!message.content && !message.options) {
+    return null;
+  }
+
   return (
     <div className="pf-v5-u-mb-md">
       {message.content && (

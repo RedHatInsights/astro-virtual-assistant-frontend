@@ -2,6 +2,7 @@ import { CommandType } from '../../types/Command';
 import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
+import { thumbsCommandProcessor } from './CommandProcessor/ThumbsCommandProcessor';
 
 const openInNewTab = (url: string) => {
   const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
@@ -35,6 +36,8 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
       case CommandType.FEEDBACK:
         await feedbackCommandProcessor(message.command);
         break;
+      case CommandType.THUMBS:
+        thumbsCommandProcessor(message.command, options);
     }
   }
 };

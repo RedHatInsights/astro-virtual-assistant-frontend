@@ -4,6 +4,7 @@ export enum CommandType {
   TOUR_START = 'tour_start',
   FEEDBACK_MODAL = 'feedback_modal',
   FEEDBACK = 'feedback',
+  THUMBS = 'thumbs',
 }
 
 interface BaseCommand {
@@ -39,4 +40,12 @@ export interface FeedbackCommand extends BaseCommand {
   };
 }
 
-export type Command = FinishConversationCommand | RedirectCommand | TourStartCommand | FeedbackCommand | FeedbackModalCommand;
+export interface ThumbsCommand extends BaseCommand {
+  type: CommandType.THUMBS;
+  params: {
+    thumbsUp: string;
+    thumbsDown: string;
+  };
+}
+
+export type Command = FinishConversationCommand | RedirectCommand | TourStartCommand | FeedbackCommand | FeedbackModalCommand | ThumbsCommand;
