@@ -16,7 +16,7 @@ interface BaseMessage {
 }
 
 export interface MessageOption {
-  title: string;
+  title?: string;
   payload: string;
 }
 

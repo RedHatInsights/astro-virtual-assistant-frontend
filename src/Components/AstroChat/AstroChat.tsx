@@ -52,6 +52,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({ messages, s
     (option: MessageOption) => {
       return ask(option.payload, {
         label: option.title,
+        hideMessage: !option.title,
       });
     },
     [ask]

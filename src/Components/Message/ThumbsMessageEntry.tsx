@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useState } from 'react';
 import { Button, Split, SplitItem, TextContent } from '@patternfly/react-core';
 import ThumbsUpIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-up-icon';
 import ThumbsDownIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-down-icon';
@@ -11,7 +11,28 @@ interface AssistantMessageProps {
   thumbsDown: string;
 }
 
+const THUMBS_UP_SELECTED_COLOR = 'green';
+const THUMBS_DOWN_SELECTED_COLOR = 'red';
+
 export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ ask, blockInput, thumbsUp, thumbsDown }) => {
+  const [optionSelected, setOptionSelected] = useState<'up' | 'down'>();
+
+  const actionSelected = (selected: 'up' | 'down') => {
+    if (!blockInput) {
+      if (selected === 'up') {
+        ask({
+          payload: thumbsUp,
+        });
+      } else {
+        ask({
+          payload: thumbsDown,
+        });
+      }
+
+      setOptionSelected(selected);
+    }
+  };
+
   return (
     <div className="pf-v5-u-mb-md">
       <Split>
@@ -20,30 +41,18 @@ export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ a
             <Button
               variant="plain"
               className="pf-v5-u-pr-xs pf-u-py-0"
-              isDisabled={blockInput}
-              onClick={() =>
-                blockInput ||
-                ask({
-                  payload: thumbsUp,
-                  title: ':thumbsup:',
-                })
-              }
+              isDisabled={blockInput || !!optionSelected}
+              onClick={() => actionSelected('up')}
             >
-              <ThumbsUpIcon />
+              <ThumbsUpIcon color={optionSelected === 'up' ? THUMBS_UP_SELECTED_COLOR : undefined} />
             </Button>
             <Button
               variant="plain"
               className="pf-v5-u-pr-xs pf-u-py-0"
-              isDisabled={blockInput}
-              onClick={() =>
-                blockInput ||
-                ask({
-                  payload: thumbsDown,
-                  title: ':thumbsdown:',
-                })
-              }
+              isDisabled={blockInput || !!optionSelected}
+              onClick={() => actionSelected('down')}
             >
-              <ThumbsDownIcon />
+              <ThumbsDownIcon color={optionSelected === 'down' ? THUMBS_DOWN_SELECTED_COLOR : undefined} />
             </Button>
           </TextContent>
         </SplitItem>
