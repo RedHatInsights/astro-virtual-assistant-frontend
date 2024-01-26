@@ -3,7 +3,7 @@ import { Alert, TextContent } from '@patternfly/react-core';
 import { MessageProps } from '../Message/MessageProps';
 import { Banner } from '../../types/Message';
 
-export const ConversationEndBanner: FunctionComponent<MessageProps<Banner>> = ({ message }) => {
+export const ConversationEndBanner: FunctionComponent<MessageProps<Banner>> = () => {
   return (
     <>
       <TextContent className="banner__chat-end">
