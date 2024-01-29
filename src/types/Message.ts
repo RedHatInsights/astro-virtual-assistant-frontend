@@ -6,7 +6,7 @@ export enum From {
   FEEDBACK = 'feedback',
   SYSTEM = 'system',
   INTERFACE = 'interface',
-  THUMBS = 'thunbs',
+  THUMBS = 'thumbs',
 }
 
 // Base
@@ -57,8 +57,6 @@ export interface Banner extends BaseMessage {
 
 export interface Thumbs {
   from: From.THUMBS;
-  thumbsUp: string;
-  thumbsDown: string;
 }
 
 export type Message = AssistantMessage | UserMessage | FeedbackMessage | SystemMessage | Banner | Thumbs;

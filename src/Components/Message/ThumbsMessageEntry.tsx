@@ -3,29 +3,28 @@ import { Button, Split, SplitItem, TextContent } from '@patternfly/react-core';
 import ThumbsUpIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-up-icon';
 import ThumbsDownIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-down-icon';
 import { MessageOption } from '../../types/Message';
+import Config from '../../Config';
 
 interface AssistantMessageProps {
   ask: (option: MessageOption) => unknown;
   blockInput: boolean;
-  thumbsUp: string;
-  thumbsDown: string;
 }
 
 const THUMBS_UP_SELECTED_COLOR = 'green';
 const THUMBS_DOWN_SELECTED_COLOR = 'red';
 
-export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ ask, blockInput, thumbsUp, thumbsDown }) => {
+export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ ask, blockInput }) => {
   const [optionSelected, setOptionSelected] = useState<'up' | 'down'>();
 
   const actionSelected = (selected: 'up' | 'down') => {
     if (!blockInput) {
       if (selected === 'up') {
         ask({
-          payload: thumbsUp,
+          payload: Config.messages.thumbs.payloads.up,
         });
       } else {
         ask({
-          payload: thumbsDown,
+          payload: Config.messages.thumbs.payloads.down,
         });
       }
 

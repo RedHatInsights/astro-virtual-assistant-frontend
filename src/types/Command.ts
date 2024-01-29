@@ -42,10 +42,6 @@ export interface FeedbackCommand extends BaseCommand {
 
 export interface ThumbsCommand extends BaseCommand {
   type: CommandType.THUMBS;
-  params: {
-    thumbsUp: string;
-    thumbsDown: string;
-  };
 }
 
 export type Command = FinishConversationCommand | RedirectCommand | TourStartCommand | FeedbackCommand | FeedbackModalCommand | ThumbsCommand;

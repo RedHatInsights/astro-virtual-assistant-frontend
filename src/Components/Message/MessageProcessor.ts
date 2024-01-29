@@ -6,5 +6,5 @@ export type MessageProcessorOptions = {
   toggleFeedbackModal: (isOpen: boolean) => void;
   addSystemMessage: (systemMessageType: string, additionalContent: Array<string>) => void;
   addBanner: (bannerType: string, additionalContent: Array<string>) => void;
-  addThumbMessage: (thumbsUpPayload: string, thumbsDownPayload: string) => void;
+  addThumbMessage: () => void;
 };

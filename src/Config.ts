@@ -5,6 +5,12 @@ const config = {
       minAssistantResponse: 1200,
       feedback: 1000,
     },
+    thumbs: {
+      payloads: {
+        up: '/intent_core_yes',
+        down: '/intent_core_no',
+      },
+    },
   },
 };
 

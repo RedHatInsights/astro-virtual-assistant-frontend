@@ -154,13 +154,11 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
     );
   };
 
-  const addThumbMessage = (thumbUpPayload: string, thumbDownPayload: string): void => {
+  const addThumbMessage = (): void => {
     setMessages(
       produce((draft) => {
         draft.push({
           from: From.THUMBS,
-          thumbsUp: thumbUpPayload,
-          thumbsDown: thumbDownPayload,
         });
       })
     );
