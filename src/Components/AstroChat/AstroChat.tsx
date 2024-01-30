@@ -154,7 +154,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
               case From.INTERFACE:
                 return <BannerEntry message={message} key={index} />;
               case From.THUMBS:
-                return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} thumbsUp={message.thumbsUp} thumbsDown={message.thumbsDown} />;
+                return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} />;
             }
           })}
         </StackItem>
