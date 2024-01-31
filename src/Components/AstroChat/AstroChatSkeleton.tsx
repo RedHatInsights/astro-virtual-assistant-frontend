@@ -1,19 +1,18 @@
 import React from 'react';
 import {
   Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  CardTitle,
   InputGroup,
   InputGroupText,
   Skeleton,
-  Split,
-  SplitItem,
-  Stack,
-  StackItem,
   Text,
   TextArea,
   TextAreaReadOnlyVariant,
-  TextContent,
-  ToolbarGroup,
-  ToolbarItem,
+  Title,
 } from '@patternfly/react-core';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import ExpandAltIcon from '@patternfly/react-icons/dist/esm/icons/expand-alt-icon';
@@ -22,34 +21,24 @@ import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
   return (
     <div>
-      <Stack className="astro-l-stack">
-        <StackItem className="astro-l-stack__header pf-v5-u-py-md">
-          <Split hasGutter>
-            <SplitItem isFilled>
-              <TextContent className="pf-v5-u-pl-lg pf-u-color-light-100 pf-v5-u-font-size-xl">
-                <Text>Virtual Assistant</Text>
-              </TextContent>
-            </SplitItem>
-            <SplitItem>
-              <ToolbarGroup variant="icon-button-group">
-                <ToolbarItem>
-                  <Button variant="plain" aria-label="Full screen" className="pf-v5-u-color-light-100">
-                    <ExpandAltIcon />
-                  </Button>
-                </ToolbarItem>
-                <ToolbarItem>
-                  <Button variant="plain" aria-label="Close virtual assistant" className="pf-v5-u-color-light-100">
-                    <AngleDownIcon />
-                  </Button>
-                </ToolbarItem>
-              </ToolbarGroup>
-            </SplitItem>
-          </Split>
-        </StackItem>
-        <StackItem className="astro-l-stack__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100" isFilled>
+      <Card className="astro-c-card">
+        <CardHeader className="astro-c-card__header">
+          <CardTitle>
+            <Title headingLevel="h4" size="lg" className="pf-u-color-light-100">
+              Virtual Assistant
+            </Title>
+          </CardTitle>
+          <Button variant="plain" aria-label="Full screen" className="pf-v5-u-color-light-100">
+            <ExpandAltIcon />
+          </Button>
+          <Button variant="plain" aria-label="Close virtual assistant" className="pf-v5-u-color-light-100">
+            <AngleDownIcon />
+          </Button>
+        </CardHeader>
+        <CardBody className="astro-c-card__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100">
           <Skeleton width="80%" />
-        </StackItem>
-        <StackItem className="astro-l-stack__footer">
+        </CardBody>
+        <CardFooter className="astro-c-card__footer pf-v5-u-p-0">
           <InputGroup>
             <TextArea
               placeholder="Type a message..."
@@ -65,8 +54,8 @@ export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
               </Button>
             </InputGroupText>
           </InputGroup>
-        </StackItem>
-      </Stack>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

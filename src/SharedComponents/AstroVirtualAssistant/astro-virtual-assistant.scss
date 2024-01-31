@@ -12,7 +12,7 @@
   }
 }
 
-.astro-l-stack {
+.astro-c-card {
   width: 350px;
   height: 550px;
   @media screen and (max-width: 768px) {
@@ -36,13 +36,11 @@
     }
     .astro-chatbot {
       margin-right: 40px;
-
       .astro-option-disabled {
         cursor: not-allowed;
         opacity: 0.5;
         text-decoration: none;
       }
-
     }
     .astro-user {
       margin: 0 0 12px 40px;
@@ -102,13 +100,9 @@
       }
     }
   }
-  .pf-c-divider {
-    --pf-c-divider--BackgroundColor: var(--pf-v5-global--BackgroundColor--100);
-    margin: 4px 0 4px 0;
-  }
 }
 
-.astro-l-stack-full-screen {
+.astro-c-card-full-screen {
   height: calc(100vh - 220px);
   @media screen and (max-width: 768px) {
     width: 100vw;
