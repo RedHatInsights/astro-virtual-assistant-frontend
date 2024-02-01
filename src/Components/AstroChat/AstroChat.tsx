@@ -2,6 +2,7 @@ import React, { Dispatch, KeyboardEventHandler, SetStateAction, useCallback, use
 import {
   Button,
   Card,
+  CardActions,
   CardBody,
   CardFooter,
   CardHeader,
@@ -112,18 +113,20 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   return (
     <div ref={astroContainer}>
       <Card className={`astro-c-card ${fullscreen ? 'astro-c-card-full-screen' : ''}`}>
-        <CardHeader className="astro-c-card__header" /*actions={{ actions: headerActions, hasNoOffset }}*/>
+        <CardHeader className="astro-c-card__header">
+          <CardActions hasNoOffset>
+            <Button variant="plain" aria-label="Full screen" onClick={() => setFullScreen(!fullscreen)} className="pf-v5-u-color-light-100">
+              {fullscreen ? <CompressAltIcon /> : <ExpandAltIcon />}
+            </Button>
+            <Button variant="plain" aria-label="Close virtual assistant" onClick={onClose} className="pf-v5-u-color-light-100">
+              <AngleDownIcon />
+            </Button>
+          </CardActions>
           <CardTitle>
             <Title headingLevel="h4" size="lg" className="pf-u-color-light-100">
               Virtual Assistant
             </Title>
           </CardTitle>
-          <Button variant="plain" aria-label="Full screen" onClick={() => setFullScreen(!fullscreen)} className="pf-v5-u-color-light-100">
-            {fullscreen ? <CompressAltIcon /> : <ExpandAltIcon />}
-          </Button>
-          <Button variant="plain" aria-label="Close virtual assistant" onClick={onClose} className="pf-v5-u-color-light-100">
-            <AngleDownIcon />
-          </Button>
         </CardHeader>
         <CardBody className="astro-c-card__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100">
           {messages.map((message, index) => {
