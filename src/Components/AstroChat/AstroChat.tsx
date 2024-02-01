@@ -9,10 +9,7 @@ import {
   CardTitle,
   InputGroup,
   InputGroupText,
-  Split,
-  SplitItem,
   TextArea,
-  TextContent,
   Title,
 } from '@patternfly/react-core';
 import { original, produce } from 'immer';
@@ -114,7 +111,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     <div ref={astroContainer}>
       <Card className={`astro-c-card ${fullscreen ? 'astro-c-card-full-screen' : ''}`}>
         <CardHeader className="astro-c-card__header">
-          <CardActions hasNoOffset>
+          <CardActions>
             <Button variant="plain" aria-label="Full screen" onClick={() => setFullScreen(!fullscreen)} className="pf-v5-u-color-light-100">
               {fullscreen ? <CompressAltIcon /> : <ExpandAltIcon />}
             </Button>

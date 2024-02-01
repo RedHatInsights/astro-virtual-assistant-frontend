@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Button,
   Card,
+  CardActions,
   CardBody,
   CardFooter,
   CardHeader,
@@ -28,12 +29,14 @@ export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
               Virtual Assistant
             </Title>
           </CardTitle>
-          <Button variant="plain" aria-label="Full screen" className="pf-v5-u-color-light-100">
-            <ExpandAltIcon />
-          </Button>
-          <Button variant="plain" aria-label="Close virtual assistant" className="pf-v5-u-color-light-100">
-            <AngleDownIcon />
-          </Button>
+          <CardActions>
+            <Button variant="plain" aria-label="Full screen" className="pf-v5-u-color-light-100">
+              <ExpandAltIcon />
+            </Button>
+            <Button variant="plain" aria-label="Close virtual assistant" className="pf-v5-u-color-light-100">
+              <AngleDownIcon />
+            </Button>
+          </CardActions>
         </CardHeader>
         <CardBody className="astro-c-card__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100">
           <Skeleton width="80%" />
