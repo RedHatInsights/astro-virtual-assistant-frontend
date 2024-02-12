@@ -54,7 +54,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
 
   useLayoutEffect(() => {
     if (astroContainer.current) {
-      const messageContainer = astroContainer.current.querySelector('.astro-c-card__body');
+      const messageContainer = astroContainer.current.querySelector('.pf-v5-c-card__body');
       if (messageContainer) {
         messageContainer.scrollTo(0, messageContainer.scrollHeight);
       }
@@ -97,9 +97,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   };
   return (
     <div ref={astroContainer}>
-      <Card className={`astro-c-card ${fullscreen ? 'astro-c-card-full-screen' : ''}`}>
+      <Card className={`${fullscreen ? 'pf-v5-c-card-full-screen' : ''}`}>
         <CardHeader
-          className="astro-c-card__header"
           actions={{
             actions: (
               <>
@@ -114,12 +113,12 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           }}
         >
           <CardTitle>
-            <Title headingLevel="h4" size="lg" className="pf-u-color-light-100">
+            <Title headingLevel="h4" size="lg">
               Virtual Assistant
             </Title>
           </CardTitle>
         </CardHeader>
-        <CardBody className="astro-c-card__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100">
+        <CardBody>
           {messages.map((message, index) => {
             if ('isLoading' in message && message.isLoading) {
               return <LoadingMessageEntry key={index} />;
@@ -141,8 +140,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
             }
           })}
         </CardBody>
-
-        <CardFooter className="astro-c-card__footer pf-v5-u-p-0">
+        <CardFooter>
           <InputGroup>
             <TextArea
               value={input}

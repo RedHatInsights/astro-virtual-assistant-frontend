@@ -1,4 +1,4 @@
-.astro-c-card {
+.pf-v5-c-card {
   width: 350px;
   height: 550px;
   @media screen and (max-width: 768px) {
@@ -6,6 +6,9 @@
     width: 100%;
   }
   overflow: hidden;
+  &__title {
+    color: var(--pf-v5-global--Color--light-100);
+  }
   &__header {
     background: url(../../assets/header-background-01.svg) var(--pf-v5-global--palette--red-200);
     background-repeat: no-repeat;
@@ -16,6 +19,10 @@
     }
   }
   &__body {
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+    padding-left: var(--pf-v5-global--spacer--md);
+    padding-right: var(--pf-v5-global--spacer--md) ;
+    padding-top: var(--pf-v5-global--spacer--xl);
     overflow-y: scroll;
     &::-webkit-scrollbar{
       display: none;
@@ -63,6 +70,7 @@
     }
   }
   &__footer {
+    padding: 0;
     .pf-v5-c-input-group {
       height: 60px;
     }
@@ -76,7 +84,7 @@
   }
 }
 
-.astro-c-card-full-screen {
+.pf-v5-c-card-full-screen {
   height: calc(100vh - 220px);
   @media screen and (max-width: 768px) {
     width: 100vw;

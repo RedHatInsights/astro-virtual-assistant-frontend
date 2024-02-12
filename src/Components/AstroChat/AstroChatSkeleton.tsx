@@ -19,9 +19,8 @@ import PlaneIcon from '@patternfly/react-icons/dist/esm/icons/paper-plane-icon';
 export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
   return (
     <div>
-      <Card className="astro-c-card">
+      <Card>
         <CardHeader
-          className="astro-c-card__header"
           actions={{
             actions: (
               <>
@@ -36,17 +35,24 @@ export const AstroChatSkeleton: React.FunctionComponent<unknown> = () => {
           }}
         >
           <CardTitle>
-            <Title headingLevel="h4" size="lg" className="pf-u-color-light-100">
+            <Title headingLevel="h4" size="lg">
               Virtual Assistant
             </Title>
           </CardTitle>
         </CardHeader>
-        <CardBody className="astro-c-card__body pf-v5-u-px-md pf-v5-u-pt-xl pf-v5-m-scrollable pf-v5-u-background-color-100">
+        <CardBody>
           <Skeleton width="80%" />
         </CardBody>
-        <CardFooter className="astro-c-card__footer pf-v5-u-p-0">
+        <CardFooter>
           <InputGroup>
-            <TextArea placeholder="Type a message..." name="user-query" type="text" aria-label="User question" readOnlyVariant="plain" />
+            <TextArea
+              className="pf-v5-u-pl-md"
+              placeholder="Type a message..."
+              name="user-query"
+              type="text"
+              aria-label="User question"
+              readOnlyVariant="plain"
+            />
             <InputGroupText id="username">
               <Button isDisabled variant="plain" className="pf-v5-u-px-sm">
                 <PlaneIcon />
