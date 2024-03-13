@@ -7,7 +7,13 @@ export const ConversationEndBanner: FunctionComponent<MessageProps<Banner>> = ()
   return (
     <>
       <TextContent className="banner__chat-end">
-        <Alert variant="info" isInline title="You can start a new conversation at any time by typing below." component="h6" className="banner-alert" />
+        <Alert
+          variant="info"
+          isInline
+          title="You can start a new conversation at any time by typing below."
+          component="h6"
+          className="banner-alert"
+        />
       </TextContent>
     </>
   );
