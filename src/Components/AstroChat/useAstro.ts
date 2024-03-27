@@ -164,18 +164,18 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
         return;
       }
 
-      setLoadingResponse(true);
-      const validOptions: AskOptions = {
-        ...{
-          hideMessage: false,
-          label: message,
-          waitResponses: true,
-          hideResponse: false,
-        },
-        ...options,
-      };
-
       if (message) {
+        setLoadingResponse(true);
+        const validOptions: AskOptions = {
+          ...{
+            hideMessage: false,
+            label: message,
+            waitResponses: true,
+            hideResponse: false,
+          },
+          ...options,
+        };
+
         if (!options?.hideMessage) {
           setMessages(
             produce((draft) => {

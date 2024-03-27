@@ -87,7 +87,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   const handleKeyPress: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.key === 'Enter' || event.keyCode === 13) {
       if (!event.shiftKey) {
-        if (blockInput) {
+        if (input.trim() === '' || blockInput) {
           event.preventDefault();
         } else {
           onAskPressed();
