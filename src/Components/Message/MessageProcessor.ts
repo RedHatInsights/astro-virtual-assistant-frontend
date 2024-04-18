@@ -7,4 +7,5 @@ export type MessageProcessorOptions = {
   addSystemMessage: (systemMessageType: string, additionalContent: Array<string>) => void;
   addBanner: (bannerType: string, additionalContent: Array<string>) => void;
   addThumbMessage: () => void;
+  isPreview: boolean;
 };

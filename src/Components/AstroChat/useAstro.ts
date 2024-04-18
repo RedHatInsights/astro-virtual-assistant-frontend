@@ -113,7 +113,11 @@ export const enum Status {
   NOT_STARTED = 'NOT_STARTED',
 }
 
-export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
+export interface AstroOptions {
+  isPreview: boolean;
+}
+
+export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOptions: AstroOptions) => {
   const [messages, setMessages] = useState<Array<Message>>([]);
   const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
   const [loadingResponse, setLoadingResponse] = useState<boolean>(false);
@@ -199,6 +203,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>) => {
             addSystemMessage,
             addBanner,
             addThumbMessage,
+            isPreview: astroOptions.isPreview,
           };
 
           await loadMessage(

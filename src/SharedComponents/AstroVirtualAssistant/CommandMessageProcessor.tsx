@@ -4,8 +4,15 @@ import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
 import { thumbsCommandProcessor } from './CommandProcessor/ThumbsCommandProcessor';
 
-const openInNewTab = (url: string) => {
+const openInNewTab = (url: string, isPreview: boolean) => {
   setTimeout(() => {
+    if (url && url.startsWith('/')) {
+      if (isPreview) {
+        url = `/preview${url}`;
+      }
+      url = `${window.location.origin}${url}`;
+    }
+
     const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
     if (newWindow) newWindow.opener = null;
   }, 3000);
@@ -25,7 +32,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         break;
       case CommandType.REDIRECT:
         if (message.command.params.url) {
-          openInNewTab(message.command.params.url);
+          openInNewTab(message.command.params.url, options.isPreview);
           options.addSystemMessage('redirect_message', [message.command.params.url]);
         }
         break;
