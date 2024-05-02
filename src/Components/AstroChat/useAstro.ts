@@ -116,7 +116,7 @@ export const enum Status {
 
 export interface AstroOptions {
   isPreview: boolean;
-  auth: ChromeAPI["auth"];
+  auth: ChromeAPI['auth'];
 }
 
 export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOptions: AstroOptions) => {

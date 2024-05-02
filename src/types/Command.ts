@@ -48,11 +48,18 @@ export interface ManageOrg2Fa extends BaseCommand {
   params: {
     enable_org_2fa: boolean;
     environment: EnvType;
-  }
+  };
 }
 
 export interface ThumbsCommand extends BaseCommand {
   type: CommandType.THUMBS;
 }
 
-export type Command = FinishConversationCommand | RedirectCommand | TourStartCommand | FeedbackCommand | FeedbackModalCommand | ThumbsCommand | ManageOrg2Fa;
+export type Command =
+  | FinishConversationCommand
+  | RedirectCommand
+  | TourStartCommand
+  | FeedbackCommand
+  | FeedbackModalCommand
+  | ThumbsCommand
+  | ManageOrg2Fa;

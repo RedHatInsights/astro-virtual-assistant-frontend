@@ -4,31 +4,31 @@ import { ChromeAPI } from '@redhat-cloud-services/types';
 
 export enum EnvType {
   STAGE = 'stage',
-  PROD = 'prod'
+  PROD = 'prod',
 }
 
 export interface PostManageOrg2faRequest {
   enable_org_2fa: boolean;
-  environment: EnvType
+  environment: EnvType;
 }
 
-export const postManageOrg2fa = async (request: PostManageOrg2faRequest, auth: ChromeAPI["auth"]) => {
-  const token = await auth.getToken()
+export const postManageOrg2fa = async (request: PostManageOrg2faRequest, auth: ChromeAPI['auth']) => {
+  const token = await auth.getToken();
 
   const headers = {
-    'Content-Type':'application/json',
-    'Authorization': `Bearer ${token}`
-  }
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
 
   const config: AxiosRequestConfig = {
-    headers: headers
-  }
+    headers: headers,
+  };
 
-  const reqBody = {"authenticationFactors":{"otp":{"required": request.enable_org_2fa}}}
+  const reqBody = { authenticationFactors: { otp: { required: request.enable_org_2fa } } };
 
-  let url = 'https://sso.stage.redhat.com/auth/realms/redhat-external/apis/organizations/v1/my/authentication-policy'
+  let url = 'https://sso.stage.redhat.com/auth/realms/redhat-external/apis/organizations/v1/my/authentication-policy';
   if (request.environment === EnvType.PROD) {
-    url = 'https://sso.redhat.com/auth/realms/redhat-external/apis/organizations/v1/my/authentication-policy'
+    url = 'https://sso.redhat.com/auth/realms/redhat-external/apis/organizations/v1/my/authentication-policy';
   }
 
   return axiosInstance.post(url, reqBody, config);
