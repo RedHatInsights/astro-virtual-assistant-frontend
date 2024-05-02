@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { original, produce } from 'immer';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
+import { ChromeAPI } from '@redhat-cloud-services/types';
 import { AssistantMessage, Banner, FeedbackMessage, From, Message, SystemMessage } from '../../types/Message';
 import { PostTalkResponse, postTalk } from '../../api/PostTalk';
 import { asyncSleep } from '../../utils/Async';
@@ -115,6 +116,7 @@ export const enum Status {
 
 export interface AstroOptions {
   isPreview: boolean;
+  auth: ChromeAPI["auth"];
 }
 
 export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOptions: AstroOptions) => {
@@ -204,6 +206,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
             addBanner,
             addThumbMessage,
             isPreview: astroOptions.isPreview,
+            auth: astroOptions.auth,
           };
 
           await loadMessage(

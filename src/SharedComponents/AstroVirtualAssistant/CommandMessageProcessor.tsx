@@ -47,7 +47,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         await feedbackCommandProcessor(message.command);
         break;
       case CommandType.MANAGE_ORG_2FA:
-        await manageOrg2FaCommandProcessor(message.command);
+        await manageOrg2FaCommandProcessor(message.command, options);
         break
       case CommandType.THUMBS:
         thumbsCommandProcessor(message.command, options);

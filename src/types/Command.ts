@@ -1,3 +1,5 @@
+import { EnvType } from '../api/PostManage2fa';
+
 export enum CommandType {
   REDIRECT = 'redirect',
   FINISH_CONVERSATION = 'core_finish_conversation',
@@ -45,6 +47,7 @@ export interface ManageOrg2Fa extends BaseCommand {
   type: CommandType.MANAGE_ORG_2FA;
   params: {
     enable_org_2fa: boolean;
+    environment: EnvType;
   }
 }
 

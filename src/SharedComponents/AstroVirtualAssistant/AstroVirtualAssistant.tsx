@@ -21,6 +21,7 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, loadingResponse } = useAstro(messageProcessors, {
     isPreview: chrome.isBeta(),
+    auth: chrome.auth,
   });
   const [isOpen, setOpen] = useState<boolean>(false);
   const [isFullScreen, setFullScreen] = useState<boolean>(false);
