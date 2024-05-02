@@ -8,7 +8,7 @@ export enum EnvType {
 }
 
 export interface PostManageOrg2faRequest {
-  enable_org_2fa: boolean;
+  enable_org_2fa: string;
   environment: EnvType;
 }
 
@@ -24,7 +24,12 @@ export const postManageOrg2fa = async (request: PostManageOrg2faRequest, auth: C
     headers: headers,
   };
 
-  const reqBody = { authenticationFactors: { otp: { required: request.enable_org_2fa } } };
+  let enable_org_2fa_bool = true
+  if (request.enable_org_2fa === "false") {
+    enable_org_2fa_bool = false
+  }
+
+  const reqBody = { authenticationFactors: { otp: { required: enable_org_2fa_bool } } };
 
   let url = 'https://sso.stage.redhat.com/auth/realms/redhat-external/apis/organizations/v1/my/authentication-policy';
   if (request.environment === EnvType.PROD) {

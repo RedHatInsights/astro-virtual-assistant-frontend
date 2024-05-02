@@ -46,7 +46,7 @@ export interface FeedbackCommand extends BaseCommand {
 export interface ManageOrg2Fa extends BaseCommand {
   type: CommandType.MANAGE_ORG_2FA;
   params: {
-    enable_org_2fa: boolean;
+    enable_org_2fa: string;
     environment: EnvType;
   };
 }
