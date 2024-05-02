@@ -3,6 +3,7 @@ import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
 import { thumbsCommandProcessor } from './CommandProcessor/ThumbsCommandProcessor';
+import { manageOrg2FaCommandProcessor } from './CommandProcessor/ManageOrg2FaProcessor';
 
 const openInNewTab = (url: string, isPreview: boolean) => {
   setTimeout(() => {
@@ -45,6 +46,9 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
       case CommandType.FEEDBACK:
         await feedbackCommandProcessor(message.command);
         break;
+      case CommandType.MANAGE_ORG_2FA:
+        await manageOrg2FaCommandProcessor(message.command);
+        break
       case CommandType.THUMBS:
         thumbsCommandProcessor(message.command, options);
     }

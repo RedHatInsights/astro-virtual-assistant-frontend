@@ -5,6 +5,7 @@ export enum CommandType {
   FEEDBACK_MODAL = 'feedback_modal',
   FEEDBACK = 'feedback',
   THUMBS = 'thumbs',
+  MANAGE_ORG_2FA = 'manage_org_2fa',
 }
 
 interface BaseCommand {
@@ -40,8 +41,15 @@ export interface FeedbackCommand extends BaseCommand {
   };
 }
 
+export interface ManageOrg2Fa extends BaseCommand {
+  type: CommandType.MANAGE_ORG_2FA;
+  params: {
+    enable_org_2fa: boolean;
+  }
+}
+
 export interface ThumbsCommand extends BaseCommand {
   type: CommandType.THUMBS;
 }
 
-export type Command = FinishConversationCommand | RedirectCommand | TourStartCommand | FeedbackCommand | FeedbackModalCommand | ThumbsCommand;
+export type Command = FinishConversationCommand | RedirectCommand | TourStartCommand | FeedbackCommand | FeedbackModalCommand | ThumbsCommand | ManageOrg2Fa;
