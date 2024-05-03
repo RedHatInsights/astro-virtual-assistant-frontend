@@ -24,9 +24,9 @@ export const postManageOrg2fa = async (request: PostManageOrg2faRequest, auth: C
     headers: headers,
   };
 
-  let enable_org_2fa_bool = true
-  if (request.enable_org_2fa === "false") {
-    enable_org_2fa_bool = false
+  let enable_org_2fa_bool = true;
+  if (request.enable_org_2fa === 'false') {
+    enable_org_2fa_bool = false;
   }
 
   const reqBody = { authenticationFactors: { otp: { required: enable_org_2fa_bool } } };
