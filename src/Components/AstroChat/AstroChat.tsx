@@ -1,5 +1,17 @@
 import React, { Dispatch, KeyboardEventHandler, SetStateAction, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, InputGroup, InputGroupText, TextArea, Title } from '@patternfly/react-core';
+import {
+  Alert,
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  InputGroup,
+  InputGroupText,
+  TextArea,
+  Title,
+} from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import { LoadingMessageEntry } from '../Message/LoadingMessageEntry';
@@ -119,6 +131,15 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           </CardTitle>
         </CardHeader>
         <CardBody>
+          <Alert
+            className="pf-v5-u-mb-md"
+            variant="info"
+            isInline
+            title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
+          >
+            Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
+            intended to assist with general queries. Please see Red Hat Terms of use and Privacy Statement.
+          </Alert>
           {messages.map((message, index) => {
             if ('isLoading' in message && message.isLoading) {
               return <LoadingMessageEntry key={index} />;
