@@ -10,10 +10,6 @@ import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { AstroChatSkeleton } from '../../Components/AstroChat/AstroChatSkeleton';
 import { commandMessageProcessor } from './CommandMessageProcessor';
-import { getSessionStatus } from '../../api/GetSessionStatus';
-import { SessionStatus } from '../../types/Session';
-import { asyncSleep } from '../../utils/Async';
-import config from '../../Config';
 
 const messageProcessors = [commandMessageProcessor];
 
@@ -25,26 +21,12 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
   });
   const [isOpen, setOpen] = useState<boolean>(false);
   const [isFullScreen, setFullScreen] = useState<boolean>(false);
-  const [sessionStatus, setSessionStatus] = useState<SessionStatus>();
 
   useEffect(() => {
     if (isOpen) {
       void start();
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    (async () => {
-      const [status] = await Promise.all([getSessionStatus(), asyncSleep(config.waitBeforeFirstVisitDisplay)]);
-      setSessionStatus(status);
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (isOpen === undefined && sessionStatus?.firstVisit) {
-      setOpen(true);
-    }
-  }, [sessionStatus, isOpen]);
 
   return (
     <Stack className="astro-wrapper-stack">
