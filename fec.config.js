@@ -1,12 +1,6 @@
 const path = require('path');
 
 const extraExposes = {};
-const appUrl = [];
-
-if (process.env.STANDALONE === 'true') {
-  extraExposes['./RootApp'] = path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx');
-  appUrl.push('/staging/virtual-assistant');
-}
 
 const getRoutes = () => {
   if (process.env.USE_LOCAL_RASA && process.env.USE_LOCAL_RASA !== '') {
@@ -19,12 +13,12 @@ const getRoutes = () => {
 };
 
 module.exports = {
-  appUrl: appUrl,
+  appUrl: ['/go-to-landing-page'],
   debug: true,
   useProxy: true,
   proxyVerbose: true,
   routes: getRoutes(),
-  interceptChromeConfig: true,
+  interceptChromeConfig: false,
   moduleFederation: {
     exposes: {
       './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
