@@ -101,6 +101,12 @@
 }
 
 .astro-wrapper-stack {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20000;
+  height: unset;
+
   .astro-wrapper-stack__badge {
     align-self: end;
   }
