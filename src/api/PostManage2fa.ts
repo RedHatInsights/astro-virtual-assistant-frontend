@@ -2,7 +2,7 @@ import { AxiosRequestConfig } from 'axios';
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 import { ChromeAPI } from '@redhat-cloud-services/types';
 
-import { EnvType } from '../types/Misc';
+import { EnvType } from '../types/Common';
 
 export interface PostManageOrg2faRequest {
   enable_org_2fa: string;

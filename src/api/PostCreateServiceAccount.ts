@@ -1,7 +1,7 @@
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 import { ChromeAPI } from '@redhat-cloud-services/types';
 
-import { EnvType } from '../types/Misc';
+import { EnvType } from '../types/Common';
 
 export interface PostCeateServiceAccRequest {
   name: string;

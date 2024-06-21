@@ -1,4 +1,4 @@
-import { EnvType } from './Misc';
+import { EnvType } from './Common';
 
 export enum CommandType {
   REDIRECT = 'redirect',
