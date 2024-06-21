@@ -1,5 +1,4 @@
-
 export enum EnvType {
-    STAGE = 'stage',
-    PROD = 'prod',
+  STAGE = 'stage',
+  PROD = 'prod',
 }

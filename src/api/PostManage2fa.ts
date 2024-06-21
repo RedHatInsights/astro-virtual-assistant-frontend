@@ -4,7 +4,6 @@ import { ChromeAPI } from '@redhat-cloud-services/types';
 
 import { EnvType } from '../types/Misc';
 
-
 export interface PostManageOrg2faRequest {
   enable_org_2fa: string;
   environment: EnvType;

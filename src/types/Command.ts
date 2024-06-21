@@ -1,4 +1,4 @@
-import { EnvType } from "./Misc";
+import { EnvType } from './Misc';
 
 export enum CommandType {
   REDIRECT = 'redirect',
@@ -58,7 +58,7 @@ export interface CreateServiceAcc extends BaseCommand {
     name: string;
     description: string;
     environment: EnvType;
-  }
+  };
 }
 
 export interface ThumbsCommand extends BaseCommand {

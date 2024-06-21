@@ -7,9 +7,9 @@ import { CreateServiceAccBanner, CreateServiceAccFailedBanner } from '../Banners
 export const BannerEntry: FunctionComponent<MessageProps<Banner>> = ({ message }) => {
   return (
     <>
-      { message.type === 'finish_conversation_banner' && <ConversationEndBanner message={message}/>}
-      { message.type == 'create_service_account' && <CreateServiceAccBanner message={message}/>}
-      { message.type == 'create_service_account_failed' && <CreateServiceAccFailedBanner message={message}/>}
+      {message.type === 'finish_conversation_banner' && <ConversationEndBanner message={message} />}
+      {message.type == 'create_service_account' && <CreateServiceAccBanner message={message} />}
+      {message.type == 'create_service_account_failed' && <CreateServiceAccFailedBanner message={message} />}
     </>
-  )
+  );
 };
