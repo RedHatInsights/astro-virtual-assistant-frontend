@@ -67,6 +67,16 @@
           }
         }
       }
+      &__create-service-account {
+        padding-top: 0;
+        padding-bottom: var(--pf-v5-global--spacer--md);
+        .banner-alert {
+          .pf-c-alert__title {
+            margin-top: 0;
+            font-size: var(--pf-v5-global--FontSize--sm);
+          }
+        }
+      }
     }
   }
   &__footer {

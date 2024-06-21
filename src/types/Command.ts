@@ -1,4 +1,4 @@
-import { EnvType } from '../api/PostManage2fa';
+import { EnvType } from "./Misc";
 
 export enum CommandType {
   REDIRECT = 'redirect',
@@ -8,6 +8,7 @@ export enum CommandType {
   FEEDBACK = 'feedback',
   THUMBS = 'thumbs',
   MANAGE_ORG_2FA = 'manage_org_2fa',
+  CREATE_SERVICE_ACCOUNT = 'create_service_account',
 }
 
 interface BaseCommand {
@@ -51,6 +52,15 @@ export interface ManageOrg2Fa extends BaseCommand {
   };
 }
 
+export interface CreateServiceAcc extends BaseCommand {
+  type: CommandType.CREATE_SERVICE_ACCOUNT;
+  params: {
+    name: string;
+    description: string;
+    environment: EnvType;
+  }
+}
+
 export interface ThumbsCommand extends BaseCommand {
   type: CommandType.THUMBS;
 }
@@ -62,4 +72,5 @@ export type Command =
   | FeedbackCommand
   | FeedbackModalCommand
   | ThumbsCommand
-  | ManageOrg2Fa;
+  | ManageOrg2Fa
+  | CreateServiceAcc;

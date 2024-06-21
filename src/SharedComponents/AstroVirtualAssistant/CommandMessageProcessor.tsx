@@ -4,6 +4,7 @@ import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
 import { thumbsCommandProcessor } from './CommandProcessor/ThumbsCommandProcessor';
 import { manageOrg2FaCommandProcessor } from './CommandProcessor/ManageOrg2FaProcessor';
+import { createServiceAccProcessor } from './CommandProcessor/CreateServiceAccProcessor';
 
 const openInNewTab = (url: string, isPreview: boolean) => {
   setTimeout(() => {
@@ -48,6 +49,14 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         break;
       case CommandType.MANAGE_ORG_2FA:
         await manageOrg2FaCommandProcessor(message.command, options);
+        break;
+      case CommandType.CREATE_SERVICE_ACCOUNT:
+        const serviceAccInfo = await createServiceAccProcessor(message.command, options);
+        if (serviceAccInfo.status < 300) {
+          options.addBanner('create_service_account', [serviceAccInfo.data.name, serviceAccInfo.data.description, serviceAccInfo.data.clientId, serviceAccInfo.data.secret])
+        } else {
+          options.addBanner('create_service_account_failed', []);
+        }
         break;
       case CommandType.THUMBS:
         thumbsCommandProcessor(message.command, options);

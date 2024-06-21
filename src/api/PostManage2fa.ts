@@ -2,10 +2,8 @@ import { AxiosRequestConfig } from 'axios';
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 import { ChromeAPI } from '@redhat-cloud-services/types';
 
-export enum EnvType {
-  STAGE = 'stage',
-  PROD = 'prod',
-}
+import { EnvType } from '../types/Misc';
+
 
 export interface PostManageOrg2faRequest {
   enable_org_2fa: string;
