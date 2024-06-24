@@ -5,6 +5,8 @@ import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProc
 import { thumbsCommandProcessor } from './CommandProcessor/ThumbsCommandProcessor';
 import { manageOrg2FaCommandProcessor } from './CommandProcessor/ManageOrg2FaProcessor';
 
+const CONSOLE_TOUR_ID = '60TJ9PZKMXQ9tDS-WC6bMr46C-U';
+
 const openInNewTab = (url: string, isPreview: boolean) => {
   setTimeout(() => {
     if (url && url.startsWith('/')) {
@@ -19,9 +21,10 @@ const openInNewTab = (url: string, isPreview: boolean) => {
   }, 3000);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const startPendoTour = (tourId: string) => {
-  // TODO: Pendo tour
+const startPendoGuide = (tourId: string) => {
+  if (window.pendo) {
+    window?.pendo?.showGuideById(tourId);
+  }
 };
 
 export const commandMessageProcessor: MessageProcessor = async (message, options) => {
@@ -38,7 +41,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         }
         break;
       case CommandType.TOUR_START:
-        startPendoTour('tourId');
+        startPendoGuide(CONSOLE_TOUR_ID);
         break;
       case CommandType.FEEDBACK_MODAL:
         options.toggleFeedbackModal(true);
