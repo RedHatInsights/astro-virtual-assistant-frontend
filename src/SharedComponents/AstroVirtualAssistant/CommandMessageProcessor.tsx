@@ -54,15 +54,19 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         await manageOrg2FaCommandProcessor(message.command, options);
         break;
       case CommandType.CREATE_SERVICE_ACCOUNT: {
-        const serviceAccInfo = await createServiceAccProcessor(message.command, options);
-        if (serviceAccInfo.status < 300) {
-          options.addBanner('create_service_account', [
-            serviceAccInfo.data.name,
-            serviceAccInfo.data.description,
-            serviceAccInfo.data.clientId,
-            serviceAccInfo.data.secret,
-          ]);
-        } else {
+        try {
+          const serviceAccInfo = await createServiceAccProcessor(message.command, options);
+          if (serviceAccInfo.status < 300) {
+            options.addBanner('create_service_account', [
+              serviceAccInfo.data.name,
+              serviceAccInfo.data.description,
+              serviceAccInfo.data.clientId,
+              serviceAccInfo.data.secret,
+            ]);
+          } else {
+            options.addBanner('create_service_account_failed', []);
+          }
+        } catch (error) {
           options.addBanner('create_service_account_failed', []);
         }
         break;
