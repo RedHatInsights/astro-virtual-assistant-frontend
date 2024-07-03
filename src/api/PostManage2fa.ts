@@ -1,4 +1,3 @@
-import { AxiosRequestConfig } from 'axios';
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 import { ChromeAPI } from '@redhat-cloud-services/types';
 

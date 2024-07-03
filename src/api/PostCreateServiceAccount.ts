@@ -9,7 +9,14 @@ export interface PostCeateServiceAccRequest {
   environment: EnvType;
 }
 
-export const postCeateServiceAcc = async (request: PostCeateServiceAccRequest, auth: ChromeAPI['auth']) => {
+export interface PostCreateServiceAccountResponse {
+  name: string;
+  description: string;
+  clientId: string;
+  secret: string;
+}
+
+export const postCreateServiceAcc = async (request: PostCeateServiceAccRequest, auth: ChromeAPI['auth']) => {
   const token = await auth.getToken();
 
   const headers = {
@@ -24,7 +31,7 @@ export const postCeateServiceAcc = async (request: PostCeateServiceAccRequest, a
     url = 'https://sso.redhat.com/auth/realms/redhat-external/apis/service_accounts/v1';
   }
 
-  return axiosInstance.post(url, reqBody, {
+  return axiosInstance.post<unknown, PostCreateServiceAccountResponse>(url, reqBody, {
     headers: headers,
   });
 };

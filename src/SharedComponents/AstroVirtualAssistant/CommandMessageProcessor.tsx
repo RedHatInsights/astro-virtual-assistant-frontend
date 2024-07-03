@@ -57,10 +57,10 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         try {
           const serviceAccInfo = await createServiceAccProcessor(message.command, options);
           options.addBanner('create_service_account', [
-            serviceAccInfo.data.name,
-            serviceAccInfo.data.description,
-            serviceAccInfo.data.clientId,
-            serviceAccInfo.data.secret,
+            serviceAccInfo.name,
+            serviceAccInfo.description,
+            serviceAccInfo.clientId,
+            serviceAccInfo.secret,
           ]);
         } catch (error) {
           options.addBanner('create_service_account_failed', []);
