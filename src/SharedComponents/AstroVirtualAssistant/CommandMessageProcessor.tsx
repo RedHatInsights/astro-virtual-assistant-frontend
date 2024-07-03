@@ -56,16 +56,12 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
       case CommandType.CREATE_SERVICE_ACCOUNT: {
         try {
           const serviceAccInfo = await createServiceAccProcessor(message.command, options);
-          if (serviceAccInfo.status < 300) {
-            options.addBanner('create_service_account', [
-              serviceAccInfo.data.name,
-              serviceAccInfo.data.description,
-              serviceAccInfo.data.clientId,
-              serviceAccInfo.data.secret,
-            ]);
-          } else {
-            options.addBanner('create_service_account_failed', []);
-          }
+          options.addBanner('create_service_account', [
+            serviceAccInfo.data.name,
+            serviceAccInfo.data.description,
+            serviceAccInfo.data.clientId,
+            serviceAccInfo.data.secret,
+          ]);
         } catch (error) {
           options.addBanner('create_service_account_failed', []);
         }
