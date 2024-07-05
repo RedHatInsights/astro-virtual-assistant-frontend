@@ -1,8 +1,8 @@
 import React, { FunctionComponent } from 'react';
-import { Text, TextContent, TextVariants } from '@patternfly/react-core';
 import { MessageProps } from './MessageProps';
 import { SystemMessage } from '../../types/Message';
 import { TextEntry } from './TextEntry';
+import { SystemMessageEntry as PFSystemMessageEntry } from '@patternfly/virtual-assistant';
 
 interface SystemMessageProps extends MessageProps<SystemMessage> {
   preview: boolean;
@@ -19,13 +19,10 @@ export const SystemMessageEntry: FunctionComponent<SystemMessageProps> = ({ mess
       systemMessageText = `Your browser may block pop-ups. Please allow pop-ups or click [here](${message.additionalContent?.[0]}).`;
       break;
   }
+
   return (
-    <>
-      <TextContent className="system-message">
-        <Text component={TextVariants.small} className="system-message-text">
-          <TextEntry content={systemMessageText} preview={preview} />
-        </Text>
-      </TextContent>
-    </>
+    <PFSystemMessageEntry>
+      <TextEntry content={systemMessageText} preview={preview} />
+    </PFSystemMessageEntry>
   );
 };

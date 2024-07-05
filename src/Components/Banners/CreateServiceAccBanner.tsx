@@ -3,6 +3,7 @@ import { Alert, TextContent } from '@patternfly/react-core';
 import { MessageProps } from '../Message/MessageProps';
 import { Banner } from '../../types/Message';
 
+// Todo: ConversationAlert needs to accept a body to migrate this file
 export const CreateServiceAccBanner: FunctionComponent<MessageProps<Banner>> = ({ message }) => {
   return (
     <>
