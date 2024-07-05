@@ -98,6 +98,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   return (
     <div ref={astroContainer}>
       <VirtualAssistant
+        // Todo: Add a way to accept fullscreen - either by a className or a specific parameter
         title="Virtual Assistant" // Todo: Could also accept a ReactNode
         inputPlaceholder="Type a message..."
         message={input}
@@ -144,77 +145,6 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           }
         })}
       </VirtualAssistant>
-      {/*<Card className={`${fullscreen ? 'pf-v5-c-card-full-screen' : ''}`}>*/}
-      {/*  <CardHeader*/}
-      {/*    actions={{*/}
-      {/*      actions: (*/}
-      {/*        <>*/}
-      {/*          <Button variant="plain" aria-label="Full screen" onClick={() => setFullScreen(!fullscreen)} className="pf-v5-u-color-light-100">*/}
-      {/*            {fullscreen ? <CompressAltIcon /> : <ExpandAltIcon />}*/}
-      {/*          </Button>*/}
-      {/*          <Button variant="plain" aria-label="Close virtual assistant" onClick={onClose} className="pf-v5-u-color-light-100">*/}
-      {/*            <AngleDownIcon />*/}
-      {/*          </Button>*/}
-      {/*        </>*/}
-      {/*      ),*/}
-      {/*    }}*/}
-      {/*  >*/}
-      {/*    <CardTitle>*/}
-      {/*      <Title headingLevel="h4" size="lg">*/}
-      {/*        Virtual Assistant*/}
-      {/*      </Title>*/}
-      {/*    </CardTitle>*/}
-      {/*  </CardHeader>*/}
-      {/*  <CardBody>*/}
-      {/*    <Alert*/}
-      {/*      className="pf-v5-u-mb-md"*/}
-      {/*      variant="info"*/}
-      {/*      isInline*/}
-      {/*      title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"*/}
-      {/*    >*/}
-      {/*      Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is*/}
-      {/*      intended to assist with general queries. Please see Red Hat Terms of use and Privacy Statement.*/}
-      {/*    </Alert>*/}
-      {/*    {messages.map((message, index) => {*/}
-      {/*      if ('isLoading' in message && message.isLoading) {*/}
-      {/*        return <LoadingMessageEntry key={index} />;*/}
-      {/*      }*/}
-
-      {/*      switch (message.from) {*/}
-      {/*        case From.ASSISTANT:*/}
-      {/*          return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} blockInput={blockInput} key={index} />;*/}
-      {/*        case From.USER:*/}
-      {/*          return <UserMessageEntry message={message} key={index} />;*/}
-      {/*        case From.FEEDBACK:*/}
-      {/*          return <FeedbackAssistantEntry key={index} />;*/}
-      {/*        case From.SYSTEM:*/}
-      {/*          return <SystemMessageEntry message={message} preview={preview} key={index} />;*/}
-      {/*        case From.INTERFACE:*/}
-      {/*          return <BannerEntry message={message} key={index} />;*/}
-      {/*        case From.THUMBS:*/}
-      {/*          return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} />;*/}
-      {/*      }*/}
-      {/*    })}*/}
-      {/*  </CardBody>*/}
-      {/*  <CardFooter>*/}
-      {/*    <InputGroup>*/}
-      {/*      <TextArea*/}
-      {/*        value={input}*/}
-      {/*        onChange={onChange}*/}
-      {/*        onKeyPressCapture={handleKeyPress}*/}
-      {/*        placeholder="Type a message..."*/}
-      {/*        name="user-query"*/}
-      {/*        type="text"*/}
-      {/*        aria-label="User question"*/}
-      {/*      />*/}
-      {/*      <InputGroupText id="username">*/}
-      {/*        <Button onClick={onAskPressed} isDisabled={input.trim() === '' || blockInput} variant="plain" className="pf-v5-u-px-sm">*/}
-      {/*          <PlaneIcon />*/}
-      {/*        </Button>*/}
-      {/*      </InputGroupText>*/}
-      {/*    </InputGroup>*/}
-      {/*  </CardFooter>*/}
-      {/*</Card>*/}
     </div>
   );
 };
