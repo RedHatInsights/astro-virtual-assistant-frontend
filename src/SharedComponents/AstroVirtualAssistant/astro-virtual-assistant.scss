@@ -95,18 +95,20 @@
 }
 
 .pf-v5-c-card-full-screen {
-  height: calc(100vh - 220px);
-  @media screen and (max-width: 768px) {
-    width: 100vw;
-  }
-  @media screen and (min-width: 769px) {
-    width: 75vw;
-  }
-  @media screen and (min-width: 992px) {
-    width: 50vw;
-  }
-  @media screen and (min-width: 1200px) {
-    width: 40vw;
+  .pf-v5-c-card {
+    height: calc(100vh - 220px);
+    @media screen and (max-width: 768px) {
+      width: 100vw;
+    }
+    @media screen and (min-width: 769px) {
+      width: 75vw;
+    }
+    @media screen and (min-width: 992px) {
+      width: 50vw;
+    }
+    @media screen and (min-width: 1200px) {
+      width: 40vw;
+    }
   }
 }
 

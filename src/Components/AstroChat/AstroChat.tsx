@@ -96,9 +96,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     }
   };
   return (
-    <div ref={astroContainer}>
+    <div ref={astroContainer} className={fullscreen ? 'pf-v5-c-card-full-screen' : ''}>
       <VirtualAssistant
-        // Todo: Add a way to accept fullscreen - either by a className or a specific parameter
         title="Virtual Assistant" // Todo: Could also accept a ReactNode
         inputPlaceholder="Type a message..."
         message={input}
