@@ -1,5 +1,5 @@
 import React, { Dispatch, KeyboardEventHandler, SetStateAction, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { Alert } from '@patternfly/react-core';
+import { Alert, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import { From, Message, MessageOption } from '../../types/Message';
@@ -24,6 +24,7 @@ interface AstroChatProps {
   blockInput: boolean;
   fullscreen: boolean;
   setFullScreen: (isFullScreen: boolean) => void;
+  isLoading: boolean;
 }
 
 const findConversationEndBanner = (message: Message) => message.from === From.INTERFACE && message.type === 'finish_conversation_banner';
@@ -37,6 +38,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   blockInput,
   fullscreen,
   setFullScreen,
+  isLoading,
 }) => {
   const astroContainer = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState<string>('');
@@ -95,6 +97,42 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
       }
     }
   };
+
+  const content = isLoading ? (
+    <Skeleton width="80%" />
+  ) : (
+    <>
+      <Alert
+        className="pf-v5-u-mb-md"
+        variant="info"
+        isInline
+        title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
+      >
+        Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
+        intended to assist with general queries. Please see Red Hat Terms of use and Privacy Statement.
+      </Alert>
+      {messages.map((message, index) => {
+        if ('isLoading' in message && message.isLoading) {
+          return <LoadingMessage icon={ChatbotIcon as any} key={index} />;
+        }
+        switch (message.from) {
+          case From.ASSISTANT:
+            return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} blockInput={blockInput} key={index} />;
+          case From.USER:
+            return <UserMessageEntry message={message} key={index} />;
+          case From.FEEDBACK:
+            return <FeedbackAssistantEntry key={index} />;
+          case From.SYSTEM:
+            return <SystemMessageEntry message={message} preview={preview} key={index} />;
+          case From.INTERFACE:
+            return <BannerEntry message={message} key={index} />;
+          case From.THUMBS:
+            return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} />;
+        }
+      })}
+    </>
+  );
+
   return (
     <div ref={astroContainer} className={fullscreen ? 'pf-v5-c-card-full-screen' : ''}>
       <VirtualAssistant
@@ -103,46 +141,19 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
         message={input}
         onChangeMessage={onChange} // Todo: Needs a way to tap into the keypress or handle the enter / disabled in there
         onSendMessage={onAskPressed}
-        isSendButtonDisabled={input.trim() === '' || blockInput}
+        isSendButtonDisabled={isLoading || input.trim() === '' || blockInput}
         actions={
           <>
-            <VirtualAssistantAction aria-label="Full screen" onClick={() => setFullScreen(!fullscreen)}>
+            <VirtualAssistantAction aria-label="Full screen" onClick={() => setFullScreen(!fullscreen)} isDisabled={isLoading}>
               {fullscreen ? <CompressAltIcon /> : <ExpandAltIcon />}
             </VirtualAssistantAction>
-            <VirtualAssistantAction aria-label="Close virtual assistant" onClick={onClose}>
+            <VirtualAssistantAction aria-label="Close virtual assistant" onClick={onClose} isDisabled={isLoading}>
               <AngleDownIcon />
             </VirtualAssistantAction>
           </>
         }
       >
-        <Alert
-          className="pf-v5-u-mb-md"
-          variant="info"
-          isInline
-          title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
-        >
-          Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
-          intended to assist with general queries. Please see Red Hat Terms of use and Privacy Statement.
-        </Alert>
-        {messages.map((message, index) => {
-          if ('isLoading' in message && message.isLoading) {
-            return <LoadingMessage icon={ChatbotIcon as any} key={index} />;
-          }
-          switch (message.from) {
-            case From.ASSISTANT:
-              return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} blockInput={blockInput} key={index} />;
-            case From.USER:
-              return <UserMessageEntry message={message} key={index} />;
-            case From.FEEDBACK:
-              return <FeedbackAssistantEntry key={index} />;
-            case From.SYSTEM:
-              return <SystemMessageEntry message={message} preview={preview} key={index} />;
-            case From.INTERFACE:
-              return <BannerEntry message={message} key={index} />;
-            case From.THUMBS:
-              return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} />;
-          }
-        })}
+        {content}
       </VirtualAssistant>
     </div>
   );

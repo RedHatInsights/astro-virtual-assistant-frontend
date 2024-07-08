@@ -8,7 +8,6 @@ import './astro-virtual-assistant.scss';
 import './animation.scss';
 import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
-import { AstroChatSkeleton } from '../../Components/AstroChat/AstroChatSkeleton';
 import { commandMessageProcessor } from './CommandMessageProcessor';
 import { createPortal } from 'react-dom';
 
@@ -33,7 +32,7 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
     <div className="virtualAssistant">
       <Stack className="astro-wrapper-stack">
         <StackItem className="pf-v5-u-box-shadow-lg">
-          {status === Status.STARTED && isOpen && (
+          {(status === Status.STARTED || status === Status.LOADING) && isOpen && (
             <AstroChat
               key="astro-chat"
               messages={messages}
@@ -44,9 +43,9 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
               onClose={() => setOpen(false)}
               fullscreen={isFullScreen}
               setFullScreen={setFullScreen}
+              isLoading={status === Status.LOADING}
             />
           )}
-          {status === Status.LOADING && isOpen && <AstroChatSkeleton />}
         </StackItem>
         <StackItem className="astro-wrapper-stack__badge pf-v5-u-mt-sm pf-v5-u-mt-xl-on-md">
           <AstroBadge onClick={() => setOpen((prev) => !prev)} />
