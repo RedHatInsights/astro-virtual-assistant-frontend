@@ -1,93 +1,10 @@
 .pf-v5-c-card {
-  width: 350px;
-  height: 550px;
-  @media screen and (max-width: 768px) {
-    height: 420px;
-    width: 100%;
-  }
-  overflow: hidden;
-  &__title {
-    color: var(--pf-v5-global--Color--light-100);
-  }
   &__header {
     background: url(../../assets/header-background-01.svg) var(--pf-v5-global--palette--red-200);
     background-repeat: no-repeat;
     background-position: 75% 0%;
-    button {
-      padding-left: 0;
-      padding-right: 0;
-    }
-  }
-  &__body {
-    background-color: var(--pf-v5-global--BackgroundColor--100);
-    padding-left: var(--pf-v5-global--spacer--md);
-    padding-right: var(--pf-v5-global--spacer--md) ;
-    padding-top: var(--pf-v5-global--spacer--xl);
-    overflow-y: scroll;
-    &::-webkit-scrollbar{
-      display: none;
-    }
-    .astro-chatbot {
-      margin-right: 40px;
-      .astro-option-disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-        text-decoration: none;
-      }
-    }
-    .astro-user {
-      margin: 0 0 12px 40px;
-    }
-    .bubble {
-      border-radius: 14px;
-      padding: var(--pf-v5-global--spacer--sm) var(--pf-v5-global--spacer--md) var(--pf-v5-global--spacer--sm) var(--pf-v5-global--spacer--md);
-      max-width: 100%;
-      word-wrap: break-word;
-    }
-    .bubble-user {
-      border: 1px solid var(--pf-v5-global--BackgroundColor--dark-400);
-    }
-    .pf-c-label {
-      --pf-c-label__content--before--BorderColor: var(--pf-v5-c-label--m-red__icon--Color);
-    }
-    .system-message {
-      .system-message-text {
-        padding-bottom: var(--pf-v5-global--spacer--md);
-        text-align: center;
-      }
-    }
-    .banner {
-      &__chat-end {
-        padding-top: 0;
-        padding-bottom: var(--pf-v5-global--spacer--md);
-        .banner-alert {
-          .pf-c-alert__title {
-            margin-top: 0;
-            font-size: var(--pf-v5-global--FontSize--sm);
-          }
-        }
-      }
-      &__create-service-account {
-        padding-top: 0;
-        padding-bottom: var(--pf-v5-global--spacer--md);
-        .banner-alert {
-          .pf-c-alert__title {
-            margin-top: 0;
-            font-size: var(--pf-v5-global--FontSize--sm);
-          }
-        }
-      }
-    }
   }
   &__footer {
-    padding: 0;
-    .pf-v5-c-input-group {
-      height: 60px;
-    }
-    .pf-v5-c-form-control {
-      --pf-v5-c-form-control--Resize: none;
-      --pf-v5-c-form-control--after--BorderBottomColor: var(--pf-v5-global--icon--Color--light--dark);
-    }
     :focus-visible {
       outline: none;
     }
