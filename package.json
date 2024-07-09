@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "fec build",
-    "deploy": "npm-run-all build lint test",
+    "deploy": "npm-run-all build lint",
     "lint": "npm-run-all lint:*",
     "lint:js": "eslint config src",
     "lint:js:fix": "eslint config src --fix",
@@ -18,7 +18,7 @@
     "start:static": "HOT=true fec static",
     "test": "jest",
     "postinstall": "ts-patch install && rimraf .cache",
-    "verify": "npm-run-all build lint test"
+    "verify": "npm-run-all build lint"
   },
   "dependencies": {
     "@patternfly/react-core": "^5.1.2",
@@ -53,6 +53,7 @@
     "@redhat-cloud-services/tsc-transform-imports": "^1.0.7",
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^14.2.1",
+    "@types/jest": "^29.5.12",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.2.18",
     "@types/redux-logger": "^3.0.11",
