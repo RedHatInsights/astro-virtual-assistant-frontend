@@ -1,4 +1,4 @@
-import React, { Dispatch, KeyboardEventHandler, SetStateAction, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { Alert, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
@@ -86,18 +86,6 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     setInput('');
   }, [ask, input]);
 
-  const handleKeyPress: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
-    if (event.key === 'Enter' || event.keyCode === 13) {
-      if (!event.shiftKey) {
-        if (input.trim() === '' || blockInput) {
-          event.preventDefault();
-        } else {
-          onAskPressed();
-        }
-      }
-    }
-  };
-
   const content = isLoading ? (
     <Skeleton width="80%" />
   ) : (
@@ -113,7 +101,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
       </Alert>
       {messages.map((message, index) => {
         if ('isLoading' in message && message.isLoading) {
-          return <LoadingMessage icon={ChatbotIcon as any} key={index} />;
+          return <LoadingMessage icon={ChatbotIcon} key={index} />;
         }
         switch (message.from) {
           case From.ASSISTANT:
@@ -136,10 +124,10 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   return (
     <div ref={astroContainer} className={fullscreen ? 'pf-v5-c-card-full-screen' : ''}>
       <VirtualAssistant
-        title="Virtual Assistant" // Todo: Could also accept a ReactNode
+        title="Virtual Assistant"
         inputPlaceholder="Type a message..."
         message={input}
-        onChangeMessage={onChange} // Todo: Needs a way to tap into the keypress or handle the enter / disabled in there
+        onChangeMessage={onChange}
         onSendMessage={onAskPressed}
         isSendButtonDisabled={isLoading || input.trim() === '' || blockInput}
         actions={

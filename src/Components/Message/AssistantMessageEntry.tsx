@@ -21,7 +21,7 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
 
   return (
     <PFAssistantMessageEntry
-      icon={ChatbotIcon as any} // Todo: Maybe this should be a ReactNode ?
+      icon={ChatbotIcon}
       options={message.options?.map((o, index) => ({
         title: o.title ?? '',
         props: {
