@@ -1,9 +1,4 @@
 .pf-v5-c-card {
-  &__header {
-    background: url(../../assets/header-background-01.svg) var(--pf-v5-global--palette--red-200);
-    background-repeat: no-repeat;
-    background-position: 75% 0%;
-  }
   &__footer {
     :focus-visible {
       outline: none;
