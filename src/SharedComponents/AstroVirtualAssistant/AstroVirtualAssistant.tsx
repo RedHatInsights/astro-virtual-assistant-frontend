@@ -30,7 +30,7 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
   return createPortal(
     <div className="virtualAssistant">
       <Stack className="astro-wrapper-stack">
-        <StackItem className="pf-v5-u-box-shadow-lg">
+        <StackItem>
           {(status === Status.STARTED || status === Status.LOADING) && isOpen && (
             <AstroChat
               key="astro-chat"
