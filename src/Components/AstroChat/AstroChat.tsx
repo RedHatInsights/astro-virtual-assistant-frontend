@@ -14,6 +14,7 @@ import { BannerEntry } from '../Message/BannerEntry';
 import { ThumbsMessageEntry } from '../Message/ThumbsMessageEntry';
 import { LoadingMessage, VirtualAssistant, VirtualAssistantAction } from '@patternfly/virtual-assistant';
 import ChatbotIcon from '../icon-chatbot';
+import ChatBotIcon from '../icon-chatbot';
 
 interface AstroChatProps {
   messages: Array<Message>;
@@ -130,6 +131,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
         onChangeMessage={onChange}
         onSendMessage={onAskPressed}
         isSendButtonDisabled={isLoading || input.trim() === '' || blockInput}
+        icon={ChatBotIcon}
         actions={
           <>
             <VirtualAssistantAction aria-label="Full screen" onClick={() => setFullScreen(!fullscreen)} isDisabled={isLoading}>
