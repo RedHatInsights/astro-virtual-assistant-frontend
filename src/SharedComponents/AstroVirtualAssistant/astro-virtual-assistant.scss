@@ -1,4 +1,10 @@
 .pf-v5-c-card {
+  &__header {
+    .pf-v5-c-icon {
+      margin-left: 8.5px;
+      margin-top: 11px;
+    }
+  }
   &__footer {
     :focus-visible {
       outline: none;
