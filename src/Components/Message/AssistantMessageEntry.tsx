@@ -15,9 +15,18 @@ interface AssistantMessageProps extends MessageProps<AssistantMessage> {
 const OPTION_COLORS = ['red'] as const;
 
 export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask, preview, blockInput }) => {
+  const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  
   if (!message.content && !message.options) {
     return null;
   }
+
+  const optionSelectedClass = (index: number) => {
+    if (selectedIndex === null || blockInput) {
+      return '';
+    }
+    return selectedIndex === index ? 'astro-option-active' : 'astro-option-disabled';
+  };
 
   return (
     <PFAssistantMessageEntry
@@ -26,8 +35,15 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
         title: o.title ?? '',
         props: {
           color: OPTION_COLORS[index % OPTION_COLORS.length],
+          className: optionSelectedClass(index),
           render: ({ className, content, componentRef }) => (
-            <a className={`${className} ${blockInput ? 'astro-option-disabled' : ''}`} ref={componentRef} onClick={() => blockInput || ask(o)}>
+            <a className={`${className} ${blockInput ? 'astro-option-disabled' : ''}`} ref={componentRef} onClick={() => {
+              if (blockInput) {
+                return;
+              }
+              setSelectedIndex(index);
+              ask(o);
+            }}>
               {content}
             </a>
           ),

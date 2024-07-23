@@ -41,3 +41,18 @@
     align-self: end;
   }
 }
+
+.astro-option-active {
+  background-color: #C9190B;
+  .pf-v5-c-label__text {
+    color: white;
+  }
+}
+
+.astro-option-disabled {
+  background-color: #FAEAE8;
+  border-color: none;
+  .pf-v5-c-label__text {
+    color: #CB9893;
+  }
+}
