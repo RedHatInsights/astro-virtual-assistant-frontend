@@ -26,11 +26,8 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
         title: o.title ?? '',
         props: {
           color: OPTION_COLORS[index % OPTION_COLORS.length],
-          render: ({ className, content, componentRef }) => (
-            <a className={`${className} ${blockInput ? 'astro-option-disabled' : ''}`} ref={componentRef} onClick={() => blockInput || ask(o)}>
-              {content}
-            </a>
-          ),
+          className: blockInput ? 'astro-option-disabled' : '',
+          onClick: () => blockInput || ask(o),
         },
       }))}
     >

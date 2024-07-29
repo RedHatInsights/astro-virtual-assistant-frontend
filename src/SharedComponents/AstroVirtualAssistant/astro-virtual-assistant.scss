@@ -35,4 +35,8 @@
   .astro-wrapper-stack__badge {
     align-self: end;
   }
+
+  .astro-option-disabled {
+    pointer-events: none;
+  }
 }
