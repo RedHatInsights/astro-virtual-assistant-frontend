@@ -45,13 +45,8 @@ const ChatBotIcon = () => {
       <path className="st0" d="M27.8,14.4c1.2,0,2.3,1,2.3,2.3v4.5c0,1.2-1,2.3-2.3,2.3H27v-9L27.8,14.4L27.8,14.4z" />
       <circle className="st0" cx="7.6" cy="4.5" r="1.6" />
       <circle className="st0" cx="22.4" cy="4.5" r="1.6" />
-      <circle className="st0"  cx="14" cy="4" r="1.6">
-        <animate
-          attributeName="cx"
-          begin="0s"
-          dur="2s"
-          values="9;20;9"
-          repeatCount="indefinite" />
+      <circle className="st0" cx="14" cy="4" r="1.6">
+        <animate attributeName="cx" begin="0s" dur="2s" values="9;20;9" repeatCount="indefinite" />
       </circle>
     </svg>
   );
