@@ -98,7 +98,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
         title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
       >
         Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
-        intended to assist with general queries. Please see Red Hat Terms of use and Privacy Statement.
+        intended to assist with general queries. Please see <a href="https://www.redhat.com/en/about/terms-use">Red Hat Terms of use</a> and{' '}
+        <a href="https://www.redhat.com/en/about/privacy-policy">Privacy Statement</a>.
       </Alert>
       {messages.map((message, index) => {
         if ('isLoading' in message && message.isLoading) {
