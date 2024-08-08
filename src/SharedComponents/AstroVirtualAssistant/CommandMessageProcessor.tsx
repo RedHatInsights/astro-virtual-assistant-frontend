@@ -51,7 +51,16 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         await feedbackCommandProcessor(message.command);
         break;
       case CommandType.MANAGE_ORG_2FA:
-        await manageOrg2FaCommandProcessor(message.command, options);
+        try {
+          const response = await manageOrg2FaCommandProcessor(message.command, options);
+          if (response.status > 299) {
+            options.addBanner('toggle_org_2fa_failed', [message.command.params.enable_org_2fa])
+          } else {
+            options.addBanner('toggle_org_2fa', [message.command.params.enable_org_2fa])
+          }
+        } catch (error) {
+          options.addBanner('toggle_org_2fa_failed', [message.command.params.enable_org_2fa])
+        }
         break;
       case CommandType.CREATE_SERVICE_ACCOUNT: {
         try {
