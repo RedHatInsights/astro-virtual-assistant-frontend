@@ -10,8 +10,7 @@ interface AssistantMessageProps {
   blockInput: boolean;
 }
 
-const THUMBS_UP_SELECTED_COLOR = 'green';
-const THUMBS_DOWN_SELECTED_COLOR = 'red';
+const SELECTED_CLASS = 'selected';
 
 export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ ask, blockInput }) => {
   const [optionSelected, setOptionSelected] = useState<'up' | 'down'>();
@@ -35,23 +34,23 @@ export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ a
   return (
     <div className="pf-v5-u-mb-md">
       <Split>
-        <SplitItem className="astro-chatbot pf-v5-u-ml-xl">
-          <TextContent className="pf-v5-u-font-size-sm">
+        <SplitItem className="pf-v5-u-ml-xl">
+          <TextContent className="astro-thumbs pf-v5-u-font-size-sm">
             <Button
               variant="plain"
-              className="pf-v5-u-pr-xs pf-u-py-0"
+              className={optionSelected === 'up' ? SELECTED_CLASS : 'pf-v5-u-pr-sm pf-u-py-0'}
               isDisabled={blockInput || !!optionSelected}
               onClick={() => actionSelected('up')}
             >
-              <ThumbsUpIcon color={optionSelected === 'up' ? THUMBS_UP_SELECTED_COLOR : undefined} />
+              <ThumbsUpIcon className={optionSelected === 'up' ? SELECTED_CLASS : undefined} />
             </Button>
             <Button
               variant="plain"
-              className="pf-v5-u-pr-xs pf-u-py-0"
+              className={optionSelected === 'down' ? SELECTED_CLASS : 'pf-u-py-0'}
               isDisabled={blockInput || !!optionSelected}
               onClick={() => actionSelected('down')}
             >
-              <ThumbsDownIcon color={optionSelected === 'down' ? THUMBS_DOWN_SELECTED_COLOR : undefined} />
+              <ThumbsDownIcon />
             </Button>
           </TextContent>
         </SplitItem>

@@ -7,6 +7,34 @@
   }
 }
 
+.astro-thumbs {
+  button {
+    --pf-v5-c-button--PaddingLeft: 0;
+    --pf-v5-c-button--PaddingRight: 0;
+    svg {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 28px;
+      vertical-align: middle;
+      padding: 6px;
+    }
+    &.selected  {
+      svg {
+        background: rgba(red, .1) !important; 
+        color: var(--pf-v5-global--danger-color--200) !important;
+      }
+    }
+    &:disabled {
+      svg {
+        background: var(--pf-v5-global--BackgroundColor--100); 
+        color: var(--pf-v5-global--icon--Color--light);
+      }
+    }
+  }
+}
+
 .pf-v5-c-card-full-screen {
   .pf-v5-c-card {
     height: calc(100vh - 220px);
