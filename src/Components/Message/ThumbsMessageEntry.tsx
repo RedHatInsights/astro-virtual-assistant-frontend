@@ -42,7 +42,7 @@ export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ a
               isDisabled={blockInput || !!optionSelected}
               onClick={() => actionSelected('up')}
             >
-              <ThumbsUpIcon className={optionSelected === 'up' ? SELECTED_CLASS : undefined} />
+              <ThumbsUpIcon />
             </Button>
             <Button
               variant="plain"
