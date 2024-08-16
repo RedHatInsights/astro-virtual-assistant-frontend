@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { Icon, Split, SplitItem } from '@patternfly/react-core';
-import ChatbotIcon from '../icon-chatbot';
+import ChatbotIcon from '../icon-chatbot-animated';
 
 export const LoadingMessageEntry: FunctionComponent<unknown> = () => {
   return (

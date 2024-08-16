@@ -1,6 +1,6 @@
 import { MessageProps } from './MessageProps';
 import React, { FunctionComponent } from 'react';
-import ChatbotIcon from '../icon-chatbot';
+import ChatbotIcon from '../icon-chatbot-static';
 import { AssistantMessageEntry as PFAssistantMessageEntry } from '@patternfly/virtual-assistant';
 
 import { AssistantMessage, MessageOption } from '../../types/Message';

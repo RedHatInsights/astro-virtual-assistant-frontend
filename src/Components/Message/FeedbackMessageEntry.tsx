@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Button, Icon, Split, SplitItem, TextContent } from '@patternfly/react-core';
 import ThumbsUpIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-down-icon';
 import ThumbsDownIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-up-icon';
-import ChatbotIcon from '../icon-chatbot';
+import ChatbotIcon from '../icon-chatbot-animated';
 
 export const FeedbackAssistantEntry: FunctionComponent<unknown> = () => {
   return (

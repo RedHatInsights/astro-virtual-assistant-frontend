@@ -1,27 +1,10 @@
 import React from 'react';
 
-const ChatBotIcon = () => {
+const ChatbotIcon = () => {
   return (
     <svg width="34" height="34" viewBox="0 0 38 38">
       <defs>
-        <style>
-          {`
-            .st0{fill:#A30000;}
-            .eye {
-              -webkit-transform-origin: 50%;
-              -webkit-animation: blink 5s infinite;
-            }
-            @-webkit-keyframes blink {
-              0%, 100% {
-                  transform: scale(1, .05);
-              }
-              5%,
-              95% {
-                  transform: scale(1, 1);
-              }
-            }
-          `}
-        </style>
+        <style>{`.st0{fill:#A30000;}`}</style>
       </defs>
       <path
         className="st0"
@@ -29,8 +12,8 @@ const ChatBotIcon = () => {
     c0,1.9,1.5,3.4,3.4,3.4h14.3c1.9,0,3.4-1.5,3.4-3.4V11.8C25.5,9.9,24,8.4,22.2,8.4z M24,23.6L24,23.6c0,1.6-1.3,2.9-2.9,2.9H8.9
     c-1.6,0-2.9-1.3-2.9-2.9V12.7c0-1.6,1.3-2.9,2.9-2.9h12.2c1.6,0,2.9,1.3,2.9,2.9V23.6z"
       />
-      <circle className="st0 eye" cx="10.5" cy="15.9" r="1.9" />
-      <circle className="st0 eye" cx="19.5" cy="15.9" r="1.9" />
+      <circle className="st0" cx="10.5" cy="15.9" r="1.9" />
+      <circle className="st0" cx="19.5" cy="15.9" r="1.9" />
       <g>
         <g>
           <path
@@ -45,10 +28,10 @@ const ChatBotIcon = () => {
       <path className="st0" d="M27.8,14.4c1.2,0,2.3,1,2.3,2.3v4.5c0,1.2-1,2.3-2.3,2.3H27v-9L27.8,14.4L27.8,14.4z" />
       <circle className="st0" cx="7.6" cy="4.5" r="1.6" />
       <circle className="st0" cx="22.4" cy="4.5" r="1.6" />
-      <circle className="st0" cx="14" cy="4" r="1.6">
-        <animate attributeName="cx" begin="0s" dur="2s" values="9;20;9" repeatCount="indefinite" />
-      </circle>
+      <g>
+        <polygon className="st0" points="18.7,5 16.1,5 14.2,2.8 13,5 11,5 11,4 12.4,4 14,1.1 16.5,4 18.7,4  " />
+      </g>
     </svg>
   );
 };
-export default ChatBotIcon;
+export default ChatbotIcon;
