@@ -7,6 +7,14 @@
   }
 }
 
+.astro-v5-c-alert-welcome {
+  border: 0;
+  border-radius: 14px;
+  .pf-v5-c-alert__icon {
+    display: none;
+  }
+}
+
 .astro-thumbs {
   button {
     --pf-v5-c-button--PaddingLeft: 0;

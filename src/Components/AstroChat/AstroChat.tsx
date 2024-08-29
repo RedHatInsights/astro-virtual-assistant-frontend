@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { Alert, Skeleton } from '@patternfly/react-core';
+import { Alert, AlertActionCloseButton, Button, Icon, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import { From, Message, MessageOption } from '../../types/Message';
@@ -13,6 +13,8 @@ import { AskOptions } from './useAstro';
 import { BannerEntry } from '../Message/BannerEntry';
 import { ThumbsMessageEntry } from '../Message/ThumbsMessageEntry';
 import { LoadingMessage, VirtualAssistant, VirtualAssistantAction } from '@patternfly/virtual-assistant';
+import ExternalLinkAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
+
 import ChatbotIcon from '../icon-chatbot-animated';
 
 interface AstroChatProps {
@@ -91,14 +93,28 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   ) : (
     <>
       <Alert
-        className="pf-v5-u-mb-md"
+        className="astro-v5-c-alert-welcome pf-v5-u-background-color-200 pf-v5-u-mb-md"
         variant="info"
         isInline
         title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
+        actionClose={<AlertActionCloseButton onClose={() => console.log('Clicked the close button')} />}
       >
         Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
-        intended to assist with general queries. Please see <a href="https://www.redhat.com/en/about/terms-use">Red Hat Terms of use</a> and{' '}
-        <a href="https://www.redhat.com/en/about/privacy-policy">Privacy Statement</a>.
+        intended to assist with general queries.
+        <div className="pf-v5-u-mt-md">
+          <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-md">
+            Red Hat Terms of use{' '}
+            <Icon iconSize="sm" isInline>
+              <ExternalLinkAltIcon />
+            </Icon>
+          </a>
+          <a href="https://www.redhat.com/en/about/privacy-policy">
+            Privacy Statement{' '}
+            <Icon iconSize="sm" isInline>
+              <ExternalLinkAltIcon />
+            </Icon>
+          </a>
+        </div>
       </Alert>
       {messages.map((message, index) => {
         if ('isLoading' in message && message.isLoading) {
