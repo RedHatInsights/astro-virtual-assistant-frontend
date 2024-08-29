@@ -104,9 +104,9 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
           intended to assist with general queries.
           <div className="pf-v5-u-mt-md">
-          <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)} >
-            Got it
-          </Label>
+            <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)}>
+              Got it
+            </Label>
             <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-sm">
               Red Hat Terms{' '}
               <Icon iconSize="sm" isInline>
