@@ -44,6 +44,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
 }) => {
   const astroContainer = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState<string>('');
+  const [alertClosed, setAlertClosed] = useState<boolean>(false);
 
   const removeEndConversationBanner = () => {
     setMessages(
@@ -92,30 +93,32 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     <Skeleton width="80%" />
   ) : (
     <>
-      <Alert
-        className="astro-v5-c-alert-welcome pf-v5-u-background-color-200 pf-v5-u-mb-md"
-        variant="info"
-        isInline
-        title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
-        actionClose={<AlertActionCloseButton onClose={() => console.log('Clicked the close button')} />}
-      >
-        Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
-        intended to assist with general queries.
-        <div className="pf-v5-u-mt-md">
-          <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-md">
-            Red Hat Terms of use{' '}
-            <Icon iconSize="sm" isInline>
-              <ExternalLinkAltIcon />
-            </Icon>
-          </a>
-          <a href="https://www.redhat.com/en/about/privacy-policy">
-            Privacy Statement{' '}
-            <Icon iconSize="sm" isInline>
-              <ExternalLinkAltIcon />
-            </Icon>
-          </a>
-        </div>
-      </Alert>
+      {!alertClosed && (
+        <Alert
+          className="astro-v5-c-alert-welcome pf-v5-u-background-color-200 pf-v5-u-mb-md"
+          variant="info"
+          isInline
+          title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
+          actionClose={<AlertActionCloseButton onClose={() => setAlertClosed(true)} />}
+        >
+          Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
+          intended to assist with general queries.
+          <div className="pf-v5-u-mt-md">
+            <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-md">
+              Red Hat Terms{' '}
+              <Icon iconSize="sm" isInline>
+                <ExternalLinkAltIcon />
+              </Icon>
+            </a>
+            <a href="https://www.redhat.com/en/about/privacy-policy">
+              Privacy Statement{' '}
+              <Icon iconSize="sm" isInline>
+                <ExternalLinkAltIcon />
+              </Icon>
+            </a>
+          </div>
+        </Alert>
+      )}
       {messages.map((message, index) => {
         if ('isLoading' in message && message.isLoading) {
           return <LoadingMessage icon={ChatbotIcon} key={index} />;
