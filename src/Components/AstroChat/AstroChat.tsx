@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { Alert, AlertActionCloseButton, Button, Icon, Skeleton } from '@patternfly/react-core';
+import { Alert, AlertActionCloseButton, Icon, Label, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
 import { From, Message, MessageOption } from '../../types/Message';
@@ -104,7 +104,10 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
           intended to assist with general queries.
           <div className="pf-v5-u-mt-md">
-            <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-md">
+          <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)} >
+            Got it
+          </Label>
+            <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-sm">
               Red Hat Terms{' '}
               <Icon iconSize="sm" isInline>
                 <ExternalLinkAltIcon />

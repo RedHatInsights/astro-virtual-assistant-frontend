@@ -13,6 +13,13 @@
   .pf-v5-c-alert__icon {
     display: none;
   }
+  .pf-v5-c-label {
+    background: none;
+    --pf-v5-c-label__content--before--BorderColor: var(--pf-v5-global--danger-color--200);
+    .pf-v5-c-label__content {
+      color: var(--pf-v5-global--danger-color--200);
+    }
+  }
 }
 
 .astro-thumbs {
