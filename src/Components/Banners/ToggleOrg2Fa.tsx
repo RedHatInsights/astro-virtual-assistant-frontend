@@ -6,7 +6,7 @@ import { ConversationAlert } from '@patternfly/virtual-assistant';
 export const ToggleOrg2FaBanner: FunctionComponent<MessageProps<Banner>> = ({ message }) => {
   const enableOrg2fa: boolean = message.additionalContent?.[0] === 'true' ? true : false;
 
-  const twoFaDocsHref = 'https://access.redhat.com/documentation/en-us/red_hat_customer_portal/1/html/using_two-factor_authentication/index';
+  const twoFaDocsHref = 'https://docs.redhat.com/en/documentation/red_hat_customer_portal/1/html/using_two-factor_authentication/index';
   return (
     <>
       {message.additionalContent && (
