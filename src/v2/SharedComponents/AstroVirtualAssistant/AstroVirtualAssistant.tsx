@@ -1,18 +1,18 @@
 import React, { FunctionComponent, useEffect, useState } from 'react';
+
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { Stack, StackItem } from '@patternfly/react-core';
+
 import { Status, useAstro } from '../../Components/AstroChat/useAstro';
 import './astro-virtual-assistant.scss';
 import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { commandMessageProcessor } from './CommandMessageProcessor';
 import { createPortal } from 'react-dom';
-import { useFlag } from '@unleash/proxy-client-react';
-import { AstroVirtualAssistant as AstroVirtualAssistantv2 } from '../../v2/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant';
 
 const messageProcessors = [commandMessageProcessor];
 
-export const AstroVirtualAssistantv1: FunctionComponent = () => {
+export const AstroVirtualAssistant: FunctionComponent = () => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, loadingResponse } = useAstro(messageProcessors, {
     isPreview: chrome.isBeta(),
@@ -20,6 +20,7 @@ export const AstroVirtualAssistantv1: FunctionComponent = () => {
   });
   const [isOpen, setOpen] = useState<boolean>(false);
   const [isFullScreen, setFullScreen] = useState<boolean>(false);
+
   useEffect(() => {
     if (isOpen) {
       void start();
@@ -52,11 +53,6 @@ export const AstroVirtualAssistantv1: FunctionComponent = () => {
     </div>,
     document.body
   );
-};
-
-export const AstroVirtualAssistant: FunctionComponent = () => {
-  const isV2APIEnabled = useFlag('platform.virtual-assistant.use_v2_api');
-  return isV2APIEnabled ? <AstroVirtualAssistantv2 /> : <AstroVirtualAssistantv1 />;
 };
 
 export default AstroVirtualAssistant;

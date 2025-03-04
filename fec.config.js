@@ -5,7 +5,7 @@ const extraExposes = {};
 const getRoutes = () => {
   if (process.env.USE_LOCAL_RASA && process.env.USE_LOCAL_RASA !== '') {
     return {
-      '/api/virtual-assistant/v1': { host: 'http://localhost:5005' },
+      '/api/virtual-assistant/v2': { host: 'http://localhost:5000' },
     };
   }
 
