@@ -32,13 +32,15 @@ export const AssistantButtonEntry: FunctionComponent<AssistantMessageProps> = ({
   return (
     <PFAssistantMessageEntry
       options={message.options?.map((o, index) => ({
-        title: o.value ?? '',
+        title: o.text ?? '',
         props: {
           color: OPTION_COLORS[index % OPTION_COLORS.length],
           className: blockInput ? 'astro-option-disabled' : '',
-          onClick: () => blockInput || ask({ label: o.value }),
+          onClick: () => blockInput || ask({ label: o.value, hideMessage: !!o.optionId, optionId: o.optionId }),
         },
       }))}
-    />
+    >
+      <TextEntry content={message.content} preview={preview} />
+    </PFAssistantMessageEntry>
   );
 };

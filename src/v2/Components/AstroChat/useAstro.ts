@@ -69,6 +69,7 @@ const loadMessage = async (
         message.options = resolvedContent.options?.map((b) => ({
           value: b.value,
           text: b.text,
+          optionId: b.option_id,
         }));
       }
 
@@ -123,6 +124,7 @@ export interface AskOptions {
   hideResponse?: boolean;
   label: string;
   waitResponses?: boolean;
+  optionId?: string;
 }
 
 export const enum Status {
@@ -140,6 +142,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
   const [messages, setMessages] = useState<Array<Message>>([]);
   const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
   const [loadingResponse, setLoadingResponse] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string>();
 
   const { toggleFeedbackModal } = useChrome();
 
@@ -210,7 +213,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
           );
         }
 
-        const postTalkResponse = postTalk(message, buildMetadata());
+        const postTalkResponse = postTalk(message, options?.optionId, sessionId, buildMetadata());
 
         const waitResponses = async () => {
           if (options?.hideResponse) {
@@ -237,6 +240,10 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
 
           // responses has already been resolved
           const resolvedResponse = await postTalkResponse;
+          if (resolvedResponse.session_id) {
+            setSessionId(resolvedResponse.session_id);
+          }
+
           const responses = resolvedResponse.response;
           for (let i = 1; i < responses.length; i++) {
             await loadMessage(

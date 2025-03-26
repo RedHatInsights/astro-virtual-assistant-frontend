@@ -15,18 +15,10 @@ interface BaseMessage {
   content: string | null;
 }
 
-// export interface MessageOption {
-//   label: string;
-//   input: {
-//     intents?: string | null;
-//     suggestion_id?: string | null;
-//     text: string;
-//   };
-// }
-
 export interface AskFromOption {
   value: string;
   text: string;
+  optionId: string | undefined;
 }
 
 // Brand Assistant

@@ -33,6 +33,7 @@ export interface ResponseCommand {
 export interface PostTalkOption {
   text: string;
   value: string;
+  option_id: string | undefined;
 }
 
 export type Response = ResponseText | ResponsePause | ResponseOptions | ResponseCommand;
@@ -42,11 +43,12 @@ export interface PostTalkResponseAPI {
   session_id: string;
 }
 
-export const postTalk = async (message: string, session_id: Metadata) => {
-  return axiosInstance.post<unknown, PostTalkResponseAPI>('/api/virtual-assistant/v2/talk', {
+export const postTalk = async (message: string, optionId: string | undefined, session_id: string | undefined, metadata: Metadata) => {
+  return axiosInstance.post<unknown, PostTalkResponseAPI>('/api/virtual-assistant-v2/v2/talk', {
     input: {
       text: message,
+      option_id: optionId,
     },
-    session_id: null,
+    session_id: session_id,
   });
 };
