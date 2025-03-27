@@ -31,6 +31,7 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
 export const AssistantButtonEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask, preview, blockInput }) => {
   return (
     <PFAssistantMessageEntry
+      icon={ChatbotIcon}
       options={message.options?.map((o, index) => ({
         title: o.text ?? '',
         props: {
