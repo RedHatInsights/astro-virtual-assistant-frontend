@@ -82,4 +82,12 @@
   .astro-option-disabled {
     pointer-events: none;
   }
+
+  code {
+    text-wrap: wrap;
+  }
+
+  pre {
+    text-wrap: wrap;
+  }
 }
