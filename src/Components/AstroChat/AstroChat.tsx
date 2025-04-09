@@ -107,18 +107,6 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
             <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)}>
               Got it
             </Label>
-            <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-sm">
-              Red Hat Terms{' '}
-              <Icon iconSize="sm" isInline>
-                <ExternalLinkAltIcon />
-              </Icon>
-            </a>
-            <a href="https://www.redhat.com/en/about/privacy-policy">
-              Privacy Statement{' '}
-              <Icon iconSize="sm" isInline>
-                <ExternalLinkAltIcon />
-              </Icon>
-            </a>
           </div>
         </Alert>
       )}
