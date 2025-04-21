@@ -106,8 +106,7 @@ const loadMessage = async (
         })
       );
     }
-  }
-  else {
+  } else {
     // The bot received an empty response from watson; append a banner
     setMessages(
       produce((draft) => {
@@ -116,10 +115,10 @@ const loadMessage = async (
           draft[index] = <SystemMessage>{
             from: From.SYSTEM,
             type: 'empty_response',
-          }
+          };
         }
       })
-    )
+    );
   }
 };
 
