@@ -107,6 +107,20 @@ const loadMessage = async (
       );
     }
   }
+  else {
+    // The bot received an empty response from watson; append a banner
+    setMessages(
+      produce((draft) => {
+        const index = original(draft)?.findIndex(findByMessageId(messageId));
+        if (index !== undefined && index !== -1) {
+          draft[index] = <SystemMessage>{
+            from: From.SYSTEM,
+            type: 'empty_response',
+          }
+        }
+      })
+    )
+  }
 };
 
 const messageProcessor = async (
