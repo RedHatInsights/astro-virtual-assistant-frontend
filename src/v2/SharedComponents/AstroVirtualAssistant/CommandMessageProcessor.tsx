@@ -1,4 +1,4 @@
-import { CommandType } from '../../types/Command';
+import { CommandArgsMap, CommandType } from '../../types/Command';
 import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
@@ -6,7 +6,10 @@ import { thumbsCommandProcessor } from './CommandProcessor/ThumbsCommandProcesso
 import { manageOrg2FaCommandProcessor } from './CommandProcessor/ManageOrg2FaProcessor';
 import { createServiceAccProcessor } from './CommandProcessor/CreateServiceAccProcessor';
 
-const CONSOLE_TOUR_ID = '60TJ9PZKMXQ9tDS-WC6bMr46C-U';
+// in case we need more tours
+const TOUR_DICT = {
+  general: '60TJ9PZKMXQ9tDS-WC6bMr46C-U',
+};
 
 const openInNewTab = (url: string, isPreview: boolean) => {
   setTimeout(() => {
@@ -28,43 +31,61 @@ const startPendoGuide = (tourId: string) => {
   }
 };
 
+const commandArgsToDict = (type: CommandType, args: string[]) => {
+  const keys = CommandArgsMap[type];
+  return keys?.reduce((acc, key, index) => {
+    acc[key] = args[index] || ''; // Default to an empty string if the argument is missing
+    return acc;
+  }, {} as Record<string, string>);
+};
+
 export const commandMessageProcessor: MessageProcessor = async (message, options) => {
   if (message.from === From.ASSISTANT && message.command) {
+    const args = commandArgsToDict(message.command.type, message.command.params.args);
+
     switch (message.command.type) {
       case CommandType.FINISH_CONVERSATION:
         options.addSystemMessage('finish_conversation_message', []);
         options.addBanner('finish_conversation_banner', []);
         break;
       case CommandType.REDIRECT:
-        if (message.command.params.url) {
-          openInNewTab(message.command.params.url, options.isPreview);
-          options.addSystemMessage('redirect_message', [message.command.params.url]);
+        if (!args.url) {
+          console.error('URL is required for redirect command');
+          return;
+        }
+        openInNewTab(args.url, options.isPreview);
+        options.addSystemMessage('redirect_message', [args.url]);
+        break;
+      case CommandType.TOUR: {
+        const name = args.name as keyof typeof TOUR_DICT;
+        if (name in TOUR_DICT) {
+          startPendoGuide(TOUR_DICT[name]);
+        } else {
+          console.error(`Unknown tour name: ${name}`);
         }
         break;
-      case CommandType.TOUR_START:
-        startPendoGuide(CONSOLE_TOUR_ID);
-        break;
+      }
       case CommandType.FEEDBACK_MODAL:
         options.toggleFeedbackModal(true);
         break;
       case CommandType.FEEDBACK:
-        await feedbackCommandProcessor(message.command);
+        await feedbackCommandProcessor(args);
         break;
       case CommandType.MANAGE_ORG_2FA:
         try {
-          const response = await manageOrg2FaCommandProcessor(message.command, options);
+          const response = await manageOrg2FaCommandProcessor(args, options);
           if (response.status > 299) {
-            options.addBanner('toggle_org_2fa_failed', [message.command.params.enable_org_2fa]);
+            options.addBanner('toggle_org_2fa_failed', [args.enable_org_2fa]);
           } else {
-            options.addBanner('toggle_org_2fa', [message.command.params.enable_org_2fa]);
+            options.addBanner('toggle_org_2fa', [args.enable_org_2fa]);
           }
         } catch (error) {
-          options.addBanner('toggle_org_2fa_failed', [message.command.params.enable_org_2fa]);
+          options.addBanner('toggle_org_2fa_failed', [args.enable_org_2fa]);
         }
         break;
       case CommandType.CREATE_SERVICE_ACCOUNT: {
         try {
-          const serviceAccInfo = await createServiceAccProcessor(message.command, options);
+          const serviceAccInfo = await createServiceAccProcessor(args, options);
           options.addBanner('create_service_account', [
             serviceAccInfo.name,
             serviceAccInfo.description,
@@ -77,7 +98,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         break;
       }
       case CommandType.THUMBS:
-        thumbsCommandProcessor(message.command, options);
+        thumbsCommandProcessor(args, options);
     }
   }
 };
