@@ -9,7 +9,6 @@ import Config from '../../../Config';
 import { MessageProcessor, MessageProcessorOptions } from '../Message/MessageProcessor';
 import { v4 as uuidv4 } from 'uuid';
 import { buildMetadata } from '../../utils/Metadata';
-import { Command, CommandType } from '../../types/Command';
 
 type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
 
@@ -75,13 +74,11 @@ const loadMessage = async (
 
       if (isCommandType(resolvedContent)) {
         message.command = {
-          type: resolvedContent.command as CommandType,
+          type: resolvedContent.command,
           params: {
             args: resolvedContent.args ?? [],
-            channels: resolvedContent.channels,
-            command: resolvedContent.command,
           },
-        } as Command;
+        };
       }
 
       await messageProcessor(message, processors, options);

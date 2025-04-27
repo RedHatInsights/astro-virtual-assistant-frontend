@@ -7,11 +7,9 @@ export enum CommandType {
   THUMBS = 'thumbs',
   MANAGE_ORG_2FA = 'manage_org_2fa',
   CREATE_SERVICE_ACCOUNT = 'create_service_account',
-  COMMAND = 'command',
 }
 
 export const CommandArgsMap: Record<CommandType, string[]> = {
-  [CommandType.COMMAND]: [],
   [CommandType.FINISH_CONVERSATION]: [],
   [CommandType.REDIRECT]: ['url'],
   [CommandType.TOUR]: ['name'],
@@ -61,15 +59,6 @@ export interface ThumbsCommand extends BaseCommand {
   type: CommandType.THUMBS;
 }
 
-export interface ResponseCommand extends BaseCommand {
-  type: CommandType.COMMAND;
-  params: {
-    args: string[];
-    channels?: string[];
-    command: string;
-  };
-}
-
 export type Command =
   | FinishConversationCommand
   | RedirectCommand
@@ -78,5 +67,4 @@ export type Command =
   | FeedbackModalCommand
   | ThumbsCommand
   | ManageOrg2Fa
-  | CreateServiceAcc
-  | ResponseCommand;
+  | CreateServiceAcc;

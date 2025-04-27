@@ -1,6 +1,7 @@
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 
 import { Metadata } from '../types/Metadata';
+import { CommandType } from '../types/Command';
 
 export interface ResponseText {
   channels?: string[] | null;
@@ -26,7 +27,7 @@ export interface ResponseOptions {
 export interface ResponseCommand {
   args: string[];
   channels?: string[];
-  command: string;
+  command: CommandType;
   type: 'COMMAND';
 }
 
