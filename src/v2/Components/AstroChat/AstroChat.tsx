@@ -98,8 +98,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
         draft.push(messageTooLong);
       })
     );
-  }
-  
+  };
+
   const removeMessageTooLongBanner = () => {
     console.log('removeMessageTooLongBanner');
     setMessages(
@@ -110,7 +110,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
         }
       })
     );
-  }
+  };
 
   useLayoutEffect(() => {
     if (astroContainer.current) {
