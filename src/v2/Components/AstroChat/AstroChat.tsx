@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction, useCallback, useLayoutEffect, useMemo,
 import { Alert, AlertActionCloseButton, Icon, Label, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
-import { From, Message } from '../../types/Message';
+import { Banner, From, Message } from '../../types/Message';
 import { AssistantMessageEntry } from '../Message/AssistantMessageEntry';
 import { SystemMessageEntry } from '../Message/SystemMessageEntry';
 import { UserMessageEntry } from '../Message/UserMessageEntry';
@@ -30,6 +30,7 @@ interface AstroChatProps {
 }
 
 const findConversationEndBanner = (message: Message) => message.from === From.INTERFACE && message.type === 'finish_conversation_banner';
+const findMessageTooLongBanner = (message: Message) => message.from === From.INTERFACE && message.type === 'message_too_long';
 
 export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   messages,
@@ -86,6 +87,31 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     );
   };
 
+  const addMessageTooLongBanner = () => {
+    const messageTooLong: Banner = {
+      from: From.INTERFACE,
+      content: 'banner',
+      type: 'message_too_long',
+    };
+    setMessages(
+      produce((draft) => {
+        draft.push(messageTooLong);
+      })
+    );
+  }
+  
+  const removeMessageTooLongBanner = () => {
+    console.log('removeMessageTooLongBanner');
+    setMessages(
+      produce((draft) => {
+        const index = original(draft)?.findIndex(findMessageTooLongBanner);
+        if (index !== undefined && index !== -1) {
+          draft.splice(index, 1);
+        }
+      })
+    );
+  }
+
   useLayoutEffect(() => {
     if (astroContainer.current) {
       const messageContainer = astroContainer.current.querySelector('.pf-v5-c-card__body');
@@ -97,8 +123,14 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
 
   const onChange = useCallback((_event: unknown, value: string) => {
     removeEndConversationBanner();
+    removeMessageTooLongBanner();
+
     if (value === '\n') {
       return;
+    }
+    if (value.length > 2048) {
+      addMessageTooLongBanner();
+      value = value.slice(0, 2048);
     }
     setInput(value);
   }, []);
