@@ -101,7 +101,6 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   };
 
   const removeMessageTooLongBanner = () => {
-    console.log('removeMessageTooLongBanner');
     setMessages(
       produce((draft) => {
         const index = original(draft)?.findIndex(findMessageTooLongBanner);
