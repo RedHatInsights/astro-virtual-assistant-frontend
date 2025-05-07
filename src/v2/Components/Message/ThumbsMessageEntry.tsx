@@ -20,10 +20,12 @@ export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ a
       if (selected === 'up') {
         ask({
           label: Config.messages.thumbs.payloads.up,
+          hideMessage: true,
         });
       } else {
         ask({
           label: Config.messages.thumbs.payloads.down,
+          hideMessage: true,
         });
       }
 
