@@ -236,48 +236,6 @@ spec:
       workspaces:
       - name: basic-auth
         workspace: git-auth
-    # - name: run-unit-tests
-    #   description: Validates frontend unit tests
-    #   params:
-    #     - name: SOURCE_ARTIFACT
-    #       value: $(tasks.clone-repository-oci-ta.results.SOURCE_ARTIFACT)
-    #   runAfter:
-    #     - clone-repository-oci-ta
-    #   workspaces:
-    #   - name: basic-auth
-    #     workspace: git-auth
-    #   taskSpec:
-    #     params:
-    #       - description: The Trusted Artifact URI pointing to the artifact with the application source code.
-    #         name: SOURCE_ARTIFACT
-    #         type: string
-    #     volumes:
-    #       # New volume to store a copy of the source code accessible only to this Task.
-    #       - name: workdir
-    #         emptyDir: {}
-    #     stepTemplate:
-    #       volumeMounts:
-    #         - mountPath: /var/workdir
-    #           name: workdir
-    #           readOnly: false
-    #     sidecars:
-    #     steps:
-    #       - name: use-trusted-artifact
-    #         image: quay.io/redhat-appstudio/build-trusted-artifacts:latest@sha256:8391272c4e5011120e9e7fee2c1f339e9405366110bf239dadcbc21e953ce099
-    #         args:
-    #           - use
-    #           - $(params.SOURCE_ARTIFACT)=/var/workdir
-    #       - image: registry.access.redhat.com/ubi8/nodejs-20
-    #         workingDir: /var/workdir
-    #         name: unit-tests
-    #         securityContext:
-    #           runAsUser: 0
-    #         script: |
-    #           #!/bin/bash
-    #           set -ex
-    #
-    #           npm install
-    #           npm test
     - name: build-container
       params:
       - name: IMAGE
@@ -398,52 +356,52 @@ spec:
         workspace: workspace
     - name: sast-shell-check
       params:
-        - name: image-digest
-          value: $(tasks.build-image-index.results.IMAGE_DIGEST)
-        - name: image-url
-          value: $(tasks.build-image-index.results.IMAGE_URL)
+      - name: image-digest
+        value: $(tasks.build-image-index.results.IMAGE_DIGEST)
+      - name: image-url
+        value: $(tasks.build-image-index.results.IMAGE_URL)
       runAfter:
-        - build-image-index
+      - build-image-index
       taskRef:
         params:
-          - name: name
-            value: sast-shell-check
-          - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-sast-shell-check:0.1@sha256:188a4f6a582ac43d4de46c3998ded3c2a8ee237fb0604d90559a3b6e0aa62b0f
-          - name: kind
-            value: task
+        - name: name
+          value: sast-shell-check
+        - name: bundle
+          value: quay.io/konflux-ci/tekton-catalog/task-sast-shell-check:0.1@sha256:188a4f6a582ac43d4de46c3998ded3c2a8ee237fb0604d90559a3b6e0aa62b0f
+        - name: kind
+          value: task
         resolver: bundles
       when:
-        - input: $(params.skip-checks)
-          operator: in
-          values:
-            - "false"
+      - input: $(params.skip-checks)
+        operator: in
+        values:
+        - "false"
       workspaces:
-        - name: workspace
-          workspace: workspace
+      - name: workspace
+        workspace: workspace
     - name: sast-unicode-check
       params:
-        - name: image-url
-          value: $(tasks.build-image-index.results.IMAGE_URL)
+      - name: image-url
+        value: $(tasks.build-image-index.results.IMAGE_URL)
       runAfter:
-        - build-image-index
+      - build-image-index
       taskRef:
         params:
-          - name: name
-            value: sast-unicode-check
-          - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-sast-unicode-check:0.2@sha256:e4a5215b45b1886a185a9db8ab392f8440c2b0848f76d719885637cf8d2628ed
-          - name: kind
-            value: task
+        - name: name
+          value: sast-unicode-check
+        - name: bundle
+          value: quay.io/konflux-ci/tekton-catalog/task-sast-unicode-check:0.2@sha256:e4a5215b45b1886a185a9db8ab392f8440c2b0848f76d719885637cf8d2628ed
+        - name: kind
+          value: task
         resolver: bundles
       when:
-        - input: $(params.skip-checks)
-          operator: in
-          values:
-            - "false"
+      - input: $(params.skip-checks)
+        operator: in
+        values:
+        - "false"
       workspaces:
-        - name: workspace
-          workspace: workspace
+      - name: workspace
+        workspace: workspace
     - name: deprecated-base-image-check
       params:
       - name: IMAGE_URL
@@ -600,7 +558,8 @@ spec:
       optional: true
     - name: netrc
       optional: true
-  taskRunTemplate: {}
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-virtual-assistant-frontend
   workspaces:
   - name: workspace
     volumeClaimTemplate:
