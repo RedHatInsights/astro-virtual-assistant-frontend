@@ -30,6 +30,7 @@ export default defineConfig({
       bundler: 'webpack',
       webpackConfig: webpackConfig,
     },
+  watchForFileChanges: true,
   },
   e2e: {
     blockHosts: ['consent.trustarc.com'],

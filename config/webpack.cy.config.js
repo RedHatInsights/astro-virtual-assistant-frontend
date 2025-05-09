@@ -1,10 +1,9 @@
-import path from 'path';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import { container } from 'webpack';
-// const { ModuleFederationPlugin } = require('webpack').container;
-import config from '@redhat-cloud-services/frontend-components-config';
+const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { ModuleFederationPlugin } = require('webpack').container;
+// eslint-disable-next-line rulesdir/disallow-fec-relative-imports
+const config = require('@redhat-cloud-services/frontend-components-config');
 
-const ModuleFederationPlugin = container.ModuleFederationPlugin;
 const JSConfig = {
   module: {
     rules: [

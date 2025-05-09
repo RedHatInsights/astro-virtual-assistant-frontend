@@ -11,6 +11,7 @@
     "cypress": "cypress",
     "cypress:run": "cypress run --browser electron",
     "cypress:run:cp": "cypress run --component",
+    "cypress:run:e2e": "cypress run --browser electron",
     "deploy": "npm-run-all build lint",
     "lint": "npm-run-all lint:*",
     "lint:js": "eslint config src",
@@ -24,6 +25,7 @@
     "verify": "npm-run-all build lint"
   },
   "dependencies": {
+    "@patternfly/patternfly": "^5.1.0",
     "@patternfly/react-core": "^5.1.2",
     "@patternfly/react-icons": "^5.1.2",
     "@patternfly/react-table": "^5.3.3",
@@ -68,6 +70,7 @@
     "@typescript-eslint/parser": "^5.29.0",
     "babel-jest": "29.7.0",
     "babel-plugin-transform-imports": "^2.0.0",
+    "cypress": "^13.9.0",
     "cypress-localstorage-commands": "^2.2.6",
     "eslint": "8.55.0",
     "identity-obj-proxy": "3.0.0",
