@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/RedHatInsights/frontend-components/refs/heads/master/packages/config-utils/src/feo/spec/frontend-crd.schema.json
 apiVersion: v1
 kind: Template
 metadata:
@@ -8,6 +9,7 @@ objects:
     metadata:
       name: virtual-assistant
     spec:
+      feoConfigEnabled: true
       envName: ${ENV_NAME}
       title: Virtual assistant
       deploymentRepo: https://github.com/RedHatInsights/astro-virtual-assistant-frontend
@@ -18,10 +20,6 @@ objects:
         paths:
           - /apps/virtual-assistant
       image: ${IMAGE}:${IMAGE_TAG}
-      navItems: 
-      - appId: virtual-assistant
-        title: Virtual assistant
-        href: "/staging/virtual-assistant"
       module:
         manifestLocation: "/apps/virtual-assistant/fed-mods.json"
         modules:
