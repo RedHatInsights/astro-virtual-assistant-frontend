@@ -18,7 +18,7 @@ const BASIC_MESSAGE : AssistantMessage = {
 
 const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; options: any }> = ({ message, options }) => {
   useEffect(() => {
-    commandMessageProcessor(message, options);
+    commandMessageProcessor(message, options).catch((e) => {console.error(e)});
   }, [message, options]);
 
   return <div>CommandMessageProcessor Test</div>;
@@ -137,9 +137,10 @@ describe('CommandMessageProcessors that call APIs', () => {
       },
       entitlements: {}
     }
-    const options: MessageProcessorOptions = {
+    options = {
       addSystemMessage: cy.stub(),
       addBanner: cy.stub(),
+      addThumbMessage: cy.stub(),
       toggleFeedbackModal: cy.stub(),
       isPreview: false,
       auth: {
