@@ -29,6 +29,7 @@ const startPendoGuide = (tourId: string) => {
 };
 
 export const commandMessageProcessor: MessageProcessor = async (message, options) => {
+  console.log('CommandMessageProcessor', message);
   if (message.from === From.ASSISTANT && message.command) {
     switch (message.command.type) {
       case CommandType.FINISH_CONVERSATION:
@@ -72,6 +73,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
             serviceAccInfo.secret,
           ]);
         } catch (error) {
+          console.error('Error creating service account:', error);
           options.addBanner('create_service_account_failed', []);
         }
         break;
