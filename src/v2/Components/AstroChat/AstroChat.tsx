@@ -151,7 +151,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
           actionClose={<AlertActionCloseButton onClose={() => setAlertClosed(true)} />}
         >
-          This feature uses AI technology. Please do not include personal information or other sensitive information in your input. Interactions may be used to improve Red Hat's products or services. 
+          This feature uses AI technology. Please do not include personal information or other sensitive information in your input. Interactions may
+          be used to improve Red Hat's products or services.
           <div className="pf-v5-u-mt-md">
             <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)}>
               Got it
