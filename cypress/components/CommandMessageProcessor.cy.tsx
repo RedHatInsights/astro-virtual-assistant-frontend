@@ -4,6 +4,8 @@ import { CommandType } from '../../src/v2/types/Command';
 import { AssistantMessage, From } from '../../src/v2/types/Message';
 import React, { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import { ChromeAPI, ChromeUser } from '@redhat-cloud-services/types';
+import { MessageProcessorOptions } from '../../src/Components/Message/MessageProcessor';
 
 
 const BASIC_MESSAGE : AssistantMessage = {
@@ -115,14 +117,51 @@ const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; opti
 // });
 
 describe('CommandMessageProcessors that call APIs', () => {
-  let options: any;
+  let options: MessageProcessorOptions;
   beforeEach(() => {
     // Mock options object
-    options = {
+    const user: ChromeUser = {
+      identity: {
+        user: {
+          username: 'test',
+          email: '<EMAIL>',
+          first_name: 'Test',
+          last_name: 'User',
+          is_internal: false,
+          is_active: true,
+          is_org_admin: true,
+          locale: 'en-US'
+        },
+        org_id: '',
+        type: ''
+      },
+      entitlements: {}
+    }
+    const options: MessageProcessorOptions = {
       addSystemMessage: cy.stub(),
       addBanner: cy.stub(),
       toggleFeedbackModal: cy.stub(),
       isPreview: false,
+      auth: {
+        getUser: async () => Promise.resolve(user),
+        getToken: async () => Promise.resolve('token'),
+        getOfflineToken: function(): Promise<any> {
+          throw new Error('Function not implemented.');
+        },
+        getRefreshToken: function(): Promise<string> {
+          throw new Error('Function not implemented.');
+        },
+        login: function(): Promise<any> {
+          throw new Error('Function not implemented.');
+        },
+        logout: function(): void {
+          throw new Error('Function not implemented.');
+        },
+        qe: undefined,
+        reAuthWithScopes: function(...scopes: string[]): Promise<void> {
+          throw new Error('Function not implemented.');
+        }
+      }
     };
   });
 
@@ -174,10 +213,7 @@ describe('CommandMessageProcessors that call APIs', () => {
         config={{ foo: { name: 'foo' } }}
         api={{
           chrome: {
-            auth: {
-              getUser: () => Promise.resolve({ identity: { user: { is_org_admin: true }} }), 
-              getToken: () => Promise.resolve("token"),
-            },
+            auth: options.auth,
           }
         }}
       >
@@ -188,11 +224,12 @@ describe('CommandMessageProcessors that call APIs', () => {
     );
 
     cy.wait('@serviceAccountAPI');
+    // addBanner isn't part of CommandMessageProcessorOptions, not sure what we're trying to do here
     expect(options.addBanner).to.have.been.calledWith('create_service_account', [
       'test-name',
       'test description please',
       '12345',
-      'secret,'
+      'secret,',
     ]);
   });
 
