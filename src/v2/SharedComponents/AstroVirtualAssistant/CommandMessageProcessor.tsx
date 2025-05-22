@@ -93,6 +93,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
             serviceAccInfo.secret,
           ]);
         } catch (error) {
+          console.error('Error creating service account:', error);
           options.addBanner('create_service_account_failed', []);
         }
         break;

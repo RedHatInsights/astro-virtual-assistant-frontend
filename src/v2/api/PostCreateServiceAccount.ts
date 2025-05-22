@@ -3,7 +3,7 @@ import { ChromeAPI } from '@redhat-cloud-services/types';
 
 import { EnvType } from '../types/Common';
 
-export interface PostCeateServiceAccRequest {
+export interface PostCreateServiceAccRequest {
   name: string;
   description: string;
   environment: EnvType;
@@ -16,7 +16,7 @@ export interface PostCreateServiceAccountResponse {
   secret: string;
 }
 
-export const postCreateServiceAcc = async (request: PostCeateServiceAccRequest, auth: ChromeAPI['auth']) => {
+export const postCreateServiceAcc = async (request: PostCreateServiceAccRequest, auth: ChromeAPI['auth']) => {
   const token = await auth.getToken();
 
   const headers = {

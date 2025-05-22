@@ -3,7 +3,7 @@
     "jsx": "react",
     "sourceMap": true,
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "esnext",
     "allowSyntheticDefaultImports": true,
     "noErrorTruncation": true,
     "strict": true,
