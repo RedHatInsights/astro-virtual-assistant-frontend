@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AstroChat } from '../../src/v2/Components/AstroChat/AstroChat';
 import { From, Message } from '../../src/v2/types/Message';
 
+const MAX_MESSAGE_LENGTH = 2048;
 const basicMessages: Message[] = [
   {
     from: From.USER,
@@ -88,4 +89,36 @@ describe('Basic chat test', () => {
     cy.contains('Option 1').should('exist');
     cy.contains('Option 2').should('exist');
   });
+
+  it('can remove the AI banner', () => {
+    cy.mount(
+      <AstroChatComponent
+        m={[{
+          from: From.ASSISTANT,
+          content: 'Hello, how can I help you?',
+          isLoading: false,
+          messageId: '1',
+        }]} 
+      />
+    );
+    cy.get('.pf-v5-c-label__text').click();
+    cy.get('.astro-v5-c-alert-welcome').should('not.exist');
+  })
+
+  it('shortens messages too long (2048 chars)', () => {
+    cy.mount(
+      <AstroChatComponent m={[{
+          from: From.ASSISTANT,
+          content: 'Hello, how can I help you?',
+          isLoading: false,
+          messageId: '1',
+        }]} 
+      />
+    );
+    const longMessage = 'a'.repeat(MAX_MESSAGE_LENGTH);
+    cy.get('textarea').invoke('val', longMessage).type('type too much');
+    cy.get('textarea').invoke('val').should('have.length', MAX_MESSAGE_LENGTH);
+    // ensure banner is shown
+    cy.get('.banner-0-2-23 > .pf-v5-c-alert > .pf-v5-c-alert__title').contains('2048 characters');
+  })
 });
