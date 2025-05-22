@@ -164,6 +164,7 @@ describe('CommandMessageProcessors that call APIs', () => {
         }
       }
     };
+    window.insights.chrome.auth = options.auth;
   });
 
   // it('should handle MANAGE_ORG_2FA command successfully', async () => {
@@ -196,10 +197,10 @@ describe('CommandMessageProcessors that call APIs', () => {
   //   expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa_failed', ['enable']);
   // });
 
-  it('should handle CREATE_SERVICE_ACCOUNT command successfully', async () => {
+  it('should handle CREATE_SERVICE_ACCOUNT command successfully', () => {
     cy.intercept('POST', 'https://sso.redhat.com/auth/realms/redhat-external/apis/service_accounts/v1', {
       statusCode: 201,
-      body: {id: '12345', name: 'test-name', description: 'test description please', secret: 'secret'},
+      body: {clientId: '12345', name: 'test-name', description: 'test description please', secret: 'secret'},
     }).as('serviceAccountAPI');
   
     const message = {
@@ -224,14 +225,14 @@ describe('CommandMessageProcessors that call APIs', () => {
       </ScalprumProvider>
     );
 
-    cy.wait('@serviceAccountAPI');
-    // addBanner isn't part of CommandMessageProcessorOptions, not sure what we're trying to do here
-    expect(options.addBanner).to.have.been.calledWith('create_service_account', [
-      'test-name',
-      'test description please',
-      '12345',
-      'secret,',
-    ]);
+    cy.wait('@serviceAccountAPI').then(() => {
+      expect(options.addBanner).to.have.been.calledWith('create_service_account', [
+        'test-name',
+        'test description please',
+        '12345',
+        'secret',
+      ]);
+    })
   });
 
   // it('should handle CREATE_SERVICE_ACCOUNT command with failure', async () => {
