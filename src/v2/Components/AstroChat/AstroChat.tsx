@@ -1,8 +1,8 @@
 import React, { Dispatch, SetStateAction, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AlertActionCloseButton, Icon, Label, Skeleton } from '@patternfly/react-core';
+import { Alert, AlertActionCloseButton, Label, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
-import { From, Message } from '../../types/Message';
+import { Banner, From, Message } from '../../types/Message';
 import { AssistantMessageEntry } from '../Message/AssistantMessageEntry';
 import { SystemMessageEntry } from '../Message/SystemMessageEntry';
 import { UserMessageEntry } from '../Message/UserMessageEntry';
@@ -13,7 +13,6 @@ import { AskOptions } from './useAstro';
 import { BannerEntry } from '../Message/BannerEntry';
 import { ThumbsMessageEntry } from '../Message/ThumbsMessageEntry';
 import { LoadingMessage, VirtualAssistant, VirtualAssistantAction } from '@patternfly/virtual-assistant';
-import ExternalLinkAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 
 import ChatbotIcon from '../icon-chatbot-animated';
 
@@ -30,6 +29,7 @@ interface AstroChatProps {
 }
 
 const findConversationEndBanner = (message: Message) => message.from === From.INTERFACE && message.type === 'finish_conversation_banner';
+const findMessageTooLongBanner = (message: Message) => message.from === From.INTERFACE && message.type === 'message_too_long';
 
 export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   messages,
@@ -86,6 +86,30 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     );
   };
 
+  const addMessageTooLongBanner = () => {
+    const messageTooLong: Banner = {
+      from: From.INTERFACE,
+      content: 'banner',
+      type: 'message_too_long',
+    };
+    setMessages(
+      produce((draft) => {
+        draft.push(messageTooLong);
+      })
+    );
+  };
+
+  const removeMessageTooLongBanner = () => {
+    setMessages(
+      produce((draft) => {
+        const index = original(draft)?.findIndex(findMessageTooLongBanner);
+        if (index !== undefined && index !== -1) {
+          draft.splice(index, 1);
+        }
+      })
+    );
+  };
+
   useLayoutEffect(() => {
     if (astroContainer.current) {
       const messageContainer = astroContainer.current.querySelector('.pf-v5-c-card__body');
@@ -97,8 +121,14 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
 
   const onChange = useCallback((_event: unknown, value: string) => {
     removeEndConversationBanner();
+    removeMessageTooLongBanner();
+
     if (value === '\n') {
       return;
+    }
+    if (value.length > 2048) {
+      addMessageTooLongBanner();
+      value = value.slice(0, 2048);
     }
     setInput(value);
   }, []);
@@ -120,24 +150,12 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
           actionClose={<AlertActionCloseButton onClose={() => setAlertClosed(true)} />}
         >
-          Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
-          intended to assist with general queries.
+          This feature uses AI technology. Please do not include personal information or other sensitive information in your input. Interactions may
+          be used to improve Red Hat&apos;s products or services.
           <div className="pf-v5-u-mt-md">
             <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)}>
               Got it
             </Label>
-            <a href="https://www.redhat.com/en/about/terms-use" className="pf-v5-u-pr-sm">
-              Red Hat Terms{' '}
-              <Icon iconSize="sm" isInline>
-                <ExternalLinkAltIcon />
-              </Icon>
-            </a>
-            <a href="https://www.redhat.com/en/about/privacy-policy">
-              Privacy Statement{' '}
-              <Icon iconSize="sm" isInline>
-                <ExternalLinkAltIcon />
-              </Icon>
-            </a>
           </div>
         </Alert>
       )}
