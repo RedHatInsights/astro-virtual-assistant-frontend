@@ -87,7 +87,9 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
       case CommandType.CREATE_SERVICE_ACCOUNT: {
         try {
           console.log('Creating service account with args:', args);
+          console.log('Token before call to createServiceProcessor', options.auth.getToken());
           const serviceAccInfo = await createServiceAccProcessor(args, options);
+          console.log('Service account info:', serviceAccInfo);
           options.addBanner('create_service_account', [
             serviceAccInfo.name,
             serviceAccInfo.description,

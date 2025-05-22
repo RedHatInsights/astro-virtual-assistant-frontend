@@ -65,6 +65,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         break;
       case CommandType.CREATE_SERVICE_ACCOUNT: {
         try {
+          console.log('options', options);
           const serviceAccInfo = await createServiceAccProcessor(message.command, options);
           options.addBanner('create_service_account', [
             serviceAccInfo.name,

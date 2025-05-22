@@ -4,6 +4,8 @@ import { CommandType } from '../../src/v2/types/Command';
 import { AssistantMessage, From } from '../../src/v2/types/Message';
 import React, { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import { ChromeAPI, ChromeUser } from '@redhat-cloud-services/types';
+import { MessageProcessorOptions } from '../../src/Components/Message/MessageProcessor';
 
 
 const BASIC_MESSAGE : AssistantMessage = {
@@ -16,7 +18,7 @@ const BASIC_MESSAGE : AssistantMessage = {
 
 const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; options: any }> = ({ message, options }) => {
   useEffect(() => {
-    commandMessageProcessor(message, options);
+    commandMessageProcessor(message, options).catch((e) => {console.error(e)});
   }, [message, options]);
 
   return <div>CommandMessageProcessor Test</div>;
@@ -115,15 +117,54 @@ const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; opti
 // });
 
 describe('CommandMessageProcessors that call APIs', () => {
-  let options: any;
+  let options: MessageProcessorOptions;
   beforeEach(() => {
     // Mock options object
+    const user: ChromeUser = {
+      identity: {
+        user: {
+          username: 'test',
+          email: '<EMAIL>',
+          first_name: 'Test',
+          last_name: 'User',
+          is_internal: false,
+          is_active: true,
+          is_org_admin: true,
+          locale: 'en-US'
+        },
+        org_id: '',
+        type: ''
+      },
+      entitlements: {}
+    }
     options = {
       addSystemMessage: cy.stub(),
       addBanner: cy.stub(),
+      addThumbMessage: cy.stub(),
       toggleFeedbackModal: cy.stub(),
       isPreview: false,
+      auth: {
+        getUser: async () => Promise.resolve(user),
+        getToken: async () => Promise.resolve('token'),
+        getOfflineToken: function(): Promise<any> {
+          throw new Error('Function not implemented.');
+        },
+        getRefreshToken: function(): Promise<string> {
+          throw new Error('Function not implemented.');
+        },
+        login: function(): Promise<any> {
+          throw new Error('Function not implemented.');
+        },
+        logout: function(): void {
+          throw new Error('Function not implemented.');
+        },
+        qe: undefined,
+        reAuthWithScopes: function(...scopes: string[]): Promise<void> {
+          throw new Error('Function not implemented.');
+        }
+      }
     };
+    window.insights.chrome.auth = options.auth;
   });
 
   // it('should handle MANAGE_ORG_2FA command successfully', async () => {
@@ -156,10 +197,10 @@ describe('CommandMessageProcessors that call APIs', () => {
   //   expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa_failed', ['enable']);
   // });
 
-  it('should handle CREATE_SERVICE_ACCOUNT command successfully', async () => {
+  it('should handle CREATE_SERVICE_ACCOUNT command successfully', () => {
     cy.intercept('POST', 'https://sso.redhat.com/auth/realms/redhat-external/apis/service_accounts/v1', {
       statusCode: 201,
-      body: {id: '12345', name: 'test-name', description: 'test description please', secret: 'secret'},
+      body: {clientId: '12345', name: 'test-name', description: 'test description please', secret: 'secret'},
     }).as('serviceAccountAPI');
   
     const message = {
@@ -174,10 +215,7 @@ describe('CommandMessageProcessors that call APIs', () => {
         config={{ foo: { name: 'foo' } }}
         api={{
           chrome: {
-            auth: {
-              getUser: () => Promise.resolve({ identity: { user: { is_org_admin: true }} }), 
-              getToken: () => Promise.resolve("token"),
-            },
+            auth: options.auth,
           }
         }}
       >
@@ -187,13 +225,14 @@ describe('CommandMessageProcessors that call APIs', () => {
       </ScalprumProvider>
     );
 
-    cy.wait('@serviceAccountAPI');
-    expect(options.addBanner).to.have.been.calledWith('create_service_account', [
-      'test-name',
-      'test description please',
-      '12345',
-      'secret,'
-    ]);
+    cy.wait('@serviceAccountAPI').then(() => {
+      expect(options.addBanner).to.have.been.calledWith('create_service_account', [
+        'test-name',
+        'test description please',
+        '12345',
+        'secret',
+      ]);
+    })
   });
 
   // it('should handle CREATE_SERVICE_ACCOUNT command with failure', async () => {
