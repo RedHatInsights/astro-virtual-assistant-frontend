@@ -16,7 +16,7 @@ const BASIC_MESSAGE : AssistantMessage = {
 };
 
 
-const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; options: any }> = ({ message, options }) => {
+const CommandMessageProcessor: React.FC<{ message: AssistantMessage; options: any }> = ({ message, options }) => {
   useEffect(() => {
     commandMessageProcessor(message, options).catch((e) => {console.error(e)});
   }, [message, options]);
@@ -24,184 +24,205 @@ const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; opti
   return <div>CommandMessageProcessor Test</div>;
 };
 
-// describe('Basic CommandMessageProcessor functions', () => {
-//   let options: any;
+const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; options: MessageProcessorOptions }> = ({ message, options }) => {
+  return (
+    <ScalprumProvider
+      config={{ foo: { name: 'foo' } }}
+      api={{
+        chrome: {
+          auth: options.auth,
+        }
+      }}
+    >
+      <CommandMessageProcessor message={message} options={options} />
+    </ScalprumProvider>
+  );
+}
 
-//   beforeEach(() => {
-//     // Mock options object
-//     options = {
-//       addSystemMessage: cy.stub(),
-//       addBanner: cy.stub(),
-//       toggleFeedbackModal: cy.stub(),
-//       isPreview: false,
-//     };
-//   });
+// Chrome context mock
+const createOptions = () => {
+  const user: ChromeUser = {
+    identity: {
+      user: {
+        username: 'test',
+        email: '<EMAIL>',
+        first_name: 'Test',
+        last_name: 'User',
+        is_internal: false,
+        is_active: true,
+        is_org_admin: true,
+        locale: 'en-US'
+      },
+      org_id: '',
+      type: ''
+    },
+    entitlements: {}
+  }
 
-//   it('should handle FINISH_CONVERSATION command', async () => {
-//     const message : AssistantMessage = {
-//       from: From.ASSISTANT,
-//       content: null,
-//       command: {
-//         type: CommandType.FINISH_CONVERSATION,
-//         params: { args: [] },
-//       },
-//       messageId: '1',
-//       isLoading: false,
-//     };
+  const options: MessageProcessorOptions = {
+    addSystemMessage: cy.stub(),
+    addBanner: cy.stub(),
+    addThumbMessage: cy.stub(),
+    toggleFeedbackModal: cy.stub(),
+    isPreview: false,
+    auth: {
+      getUser: async () => Promise.resolve(user),
+      getToken: async () => Promise.resolve('token'),
+      getOfflineToken: function(): Promise<any> {
+        throw new Error('Function not implemented.');
+      },
+      getRefreshToken: function(): Promise<string> {
+        throw new Error('Function not implemented.');
+      },
+      login: function(): Promise<any> {
+        throw new Error('Function not implemented.');
+      },
+      logout: function(): void {
+        throw new Error('Function not implemented.');
+      },
+      qe: undefined,
+      reAuthWithScopes: function(...scopes: string[]): Promise<void> {
+        throw new Error('Function not implemented.');
+      }
+    }
+  };
+  window.insights.chrome.auth = options.auth;
+  return options;
+};
 
-//     await commandMessageProcessor(message, options);
+describe('Basic CommandMessageProcessor functions', () => {
+  let options: MessageProcessorOptions;
+  beforeEach(() => {
+    options = createOptions();
+  })
+  it('should handle FINISH_CONVERSATION command', async () => {
+    const message : AssistantMessage = {
+      from: From.ASSISTANT,
+      content: null,
+      command: {
+        type: CommandType.FINISH_CONVERSATION,
+        params: { args: [] },
+      },
+      messageId: '1',
+      isLoading: false,
+    };
 
-//     expect(options.addSystemMessage).to.have.been.calledWith('finish_conversation_message', []);
-//     expect(options.addBanner).to.have.been.calledWith('finish_conversation_banner', []);
-//   });
+    await commandMessageProcessor(message, options);
 
-//   it('should handle REDIRECT command with a valid URL', async () => {
-//     const message = {
-//       command: {
-//         type: CommandType.REDIRECT,
-//         params: { args: ['https://example.com'] },
-//       },
-//       ...BASIC_MESSAGE,
-//     };
+    expect(options.addSystemMessage).to.have.been.calledWith('finish_conversation_message', []);
+    expect(options.addBanner).to.have.been.calledWith('finish_conversation_banner', []);
+  });
 
-//     await commandMessageProcessor(message, options);
+  it('should handle REDIRECT command with a valid URL', async () => {
+    const message = {
+      command: {
+        type: CommandType.REDIRECT,
+        params: { args: ['https://example.com'] },
+      },
+      ...BASIC_MESSAGE,
+    };
 
-//     expect(options.addSystemMessage).to.have.been.calledWith('redirect_message', ['https://example.com']);
-//   });
+    await commandMessageProcessor(message, options);
 
-//   it('should log an error for REDIRECT command without a URL', async () => {
-//     cy.spy(console, 'error').as('consoleError');
+    expect(options.addSystemMessage).to.have.been.calledWith('redirect_message', ['https://example.com']);
+  });
 
-//     const message = {
-//       command: {
-//         type: CommandType.REDIRECT,
-//         params: { args: [] },
-//       },
-//       ...BASIC_MESSAGE,
-//     };
+  it('should log an error for REDIRECT command without a URL', async () => {
+    cy.spy(console, 'error').as('consoleError');
 
-//     await commandMessageProcessor(message, options);
+    const message = {
+      command: {
+        type: CommandType.REDIRECT,
+        params: { args: [] },
+      },
+      ...BASIC_MESSAGE,
+    };
 
-//     cy.get('@consoleError').should('be.calledWith', 'URL is required for redirect command');
-//   });
+    await commandMessageProcessor(message, options);
 
-//   it('should log an error for TOUR command with an unknown tour name', async () => {
-//     cy.spy(console, 'error').as('consoleError');
+    cy.get('@consoleError').should('be.calledWith', 'URL is required for redirect command');
+  });
 
-//     const message = {
-//       command: {
-//         type: CommandType.TOUR,
-//         params: { args: ['unknown'] },
-//       },
-//       ...BASIC_MESSAGE,
-//     };
+  it('should log an error for TOUR command with an unknown tour name', async () => {
+    cy.spy(console, 'error').as('consoleError');
 
-//     await commandMessageProcessor(message, options);
+    const message = {
+      command: {
+        type: CommandType.TOUR,
+        params: { args: ['unknown'] },
+      },
+      ...BASIC_MESSAGE,
+    };
 
-//     cy.get('@consoleError').should('be.calledWith', 'Unknown tour name: unknown');
-//   });
+    await commandMessageProcessor(message, options);
 
-//   it('should handle FEEDBACK_MODAL command', async () => {
-//     const message = {
-//       command: {
-//         type: CommandType.FEEDBACK_MODAL,
-//         params: { args: [] },
-//       },
-//       ...BASIC_MESSAGE,
-//     };
+    cy.get('@consoleError').should('be.calledWith', 'Unknown tour name: unknown');
+  });
 
-//     await commandMessageProcessor(message, options);
+  it('should handle FEEDBACK_MODAL command', async () => {
+    const message = {
+      command: {
+        type: CommandType.FEEDBACK_MODAL,
+        params: { args: [] },
+      },
+      ...BASIC_MESSAGE,
+    };
 
-//     expect(options.toggleFeedbackModal).to.have.been.calledWith(true);
-//   });
-// });
+    await commandMessageProcessor(message, options);
+
+    expect(options.toggleFeedbackModal).to.have.been.calledWith(true);
+  });
+});
 
 describe('CommandMessageProcessors that call APIs', () => {
   let options: MessageProcessorOptions;
   beforeEach(() => {
-    // Mock options object
-    const user: ChromeUser = {
-      identity: {
-        user: {
-          username: 'test',
-          email: '<EMAIL>',
-          first_name: 'Test',
-          last_name: 'User',
-          is_internal: false,
-          is_active: true,
-          is_org_admin: true,
-          locale: 'en-US'
-        },
-        org_id: '',
-        type: ''
+    options = createOptions();
+  })
+
+  it('should handle MANAGE_ORG_2FA command successfully', () => {
+    cy.intercept('POST', 'https://sso.redhat.com/auth/realms/redhat-external/apis/organizations/v1/my/authentication-policy', {
+      statusCode: 200,
+      body: {clientId: '12345', name: 'test-name', description: 'test description please', secret: 'secret'},
+    }).as('2FAApiSuccess');
+    const message = {
+      command: {
+        type: CommandType.MANAGE_ORG_2FA,
+        params: { args: ['true', 'prod'] },
       },
-      entitlements: {}
-    }
-    options = {
-      addSystemMessage: cy.stub(),
-      addBanner: cy.stub(),
-      addThumbMessage: cy.stub(),
-      toggleFeedbackModal: cy.stub(),
-      isPreview: false,
-      auth: {
-        getUser: async () => Promise.resolve(user),
-        getToken: async () => Promise.resolve('token'),
-        getOfflineToken: function(): Promise<any> {
-          throw new Error('Function not implemented.');
-        },
-        getRefreshToken: function(): Promise<string> {
-          throw new Error('Function not implemented.');
-        },
-        login: function(): Promise<any> {
-          throw new Error('Function not implemented.');
-        },
-        logout: function(): void {
-          throw new Error('Function not implemented.');
-        },
-        qe: undefined,
-        reAuthWithScopes: function(...scopes: string[]): Promise<void> {
-          throw new Error('Function not implemented.');
-        }
-      }
+      ...BASIC_MESSAGE,
     };
-    window.insights.chrome.auth = options.auth;
+    cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
+
+    cy.wait('@2FAApiSuccess').then(() => {
+      expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa', ['true']);
+    });
   });
 
-  // it('should handle MANAGE_ORG_2FA command successfully', async () => {
-  //   const message = {
-  //     command: {
-  //       type: CommandType.MANAGE_ORG_2FA,
-  //       params: { args: ['enable'] },
-  //     },
-  //     ...BASIC_MESSAGE,
-  //   };
+  it('should handle MANAGE_ORG_2FA command with failure', () => {
+    cy.intercept('POST', 'https://sso.redhat.com/auth/realms/redhat-external/apis/organizations/v1/my/authentication-policy', {
+      statusCode: 404,
+    }).as('2FAApiFailure');
 
-  //   await commandMessageProcessor(message, options);
+    const message = {
+      command: {
+        type: CommandType.MANAGE_ORG_2FA,
+        params: { args: ['false', 'prod'] },
+      },
+      ...BASIC_MESSAGE,
+    };
+    cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
 
-  //   expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa', ['enable']);
-  // });
-
-  // it('should handle MANAGE_ORG_2FA command with failure', async () => {
-  //   cy.stub(window, 'fetch').rejects(new Error('Failed to toggle 2FA'));
-
-  //   const message = {
-  //     command: {
-  //       type: CommandType.MANAGE_ORG_2FA,
-  //       params: { args: ['enable'] },
-  //     },
-  //     ...BASIC_MESSAGE,
-  //   };
-
-  //   await commandMessageProcessor(message, options);
-
-  //   expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa_failed', ['enable']);
-  // });
+    cy.wait('@2FAApiFailure').then(() => {
+      expect(options.addBanner).to.have.been.calledWith('toggle_org_2fa_failed', ['false']);
+    });
+  });
 
   it('should handle CREATE_SERVICE_ACCOUNT command successfully', () => {
     cy.intercept('POST', 'https://sso.redhat.com/auth/realms/redhat-external/apis/service_accounts/v1', {
       statusCode: 201,
       body: {clientId: '12345', name: 'test-name', description: 'test description please', secret: 'secret'},
-    }).as('serviceAccountAPI');
+    }).as('serviceAccountAPISuccess');
   
     const message = {
       command: {
@@ -210,22 +231,9 @@ describe('CommandMessageProcessors that call APIs', () => {
       },
       ...BASIC_MESSAGE,
     };
+    cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
 
-    cy.mount(<ScalprumProvider
-        config={{ foo: { name: 'foo' } }}
-        api={{
-          chrome: {
-            auth: options.auth,
-          }
-        }}
-      >
-        <BrowserRouter>
-          <CommandMessageProcessorWrapper message={message} options={options} />
-        </BrowserRouter>
-      </ScalprumProvider>
-    );
-
-    cy.wait('@serviceAccountAPI').then(() => {
+    cy.wait('@serviceAccountAPISuccess').then(() => {
       expect(options.addBanner).to.have.been.calledWith('create_service_account', [
         'test-name',
         'test description please',
@@ -235,19 +243,23 @@ describe('CommandMessageProcessors that call APIs', () => {
     })
   });
 
-  // it('should handle CREATE_SERVICE_ACCOUNT command with failure', async () => {
-  //   cy.stub(window, 'fetch').rejects(new Error('Failed to create service account'));
+  it('should handle CREATE_SERVICE_ACCOUNT command with failure', () => {
+    // stage URL without params specified
+    cy.intercept('POST', 'https://sso.stage.redhat.com/auth/realms/redhat-external/apis/service_accounts/v1', {
+      statusCode: 404,
+    }).as('serviceAccountAPIFailure');
 
-  //   const message = {
-  //     command: {
-  //       type: CommandType.CREATE_SERVICE_ACCOUNT,
-  //       params: { args: [] },
-  //     },
-  //     ...BASIC_MESSAGE,
-  //   };
+    const message = {
+      command: {
+        type: CommandType.CREATE_SERVICE_ACCOUNT,
+        params: { args: [] },
+      },
+      ...BASIC_MESSAGE,
+    };
+    cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
 
-  //   await commandMessageProcessor(message, options);
-
-  //   expect(options.addBanner).to.have.been.calledWith('create_service_account_failed', []);
-  // });
+    cy.wait('@serviceAccountAPIFailure').then(() => {
+      expect(options.addBanner).to.have.been.calledWith('create_service_account_failed', []);
+    });
+  });
 });
