@@ -91,3 +91,20 @@
     text-wrap: wrap;
   }
 }
+
+.pf-v5-c-card__footer {
+  padding-bottom: 6px;
+  .pf-v5-c-button {
+    bottom: 34px;
+    margin: 0;
+  }
+}
+
+.pf-v5-c-card__footer:after {
+  color: var(--pf-v5-global--danger-color--100);
+  content: "Always review AI generated content prior to use.";
+  display: block;
+  font-size: 12px;
+  padding-top: 4px;
+  text-align: center;
+}
