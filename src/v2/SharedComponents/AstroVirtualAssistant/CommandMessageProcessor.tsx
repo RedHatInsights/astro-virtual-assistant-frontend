@@ -40,7 +40,6 @@ const commandArgsToDict = (type: CommandType, args: string[]) => {
 };
 
 export const commandMessageProcessor: MessageProcessor = async (message, options) => {
-  console.log('CommandMessageProcessor', message);
   if (message.from === From.ASSISTANT && message.command) {
     const args = commandArgsToDict(message.command.type, message.command.params.args);
 
@@ -86,10 +85,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         break;
       case CommandType.CREATE_SERVICE_ACCOUNT: {
         try {
-          console.log('Creating service account with args:', args);
-          console.log('Token before call to createServiceProcessor', options.auth.getToken());
           const serviceAccInfo = await createServiceAccProcessor(args, options);
-          console.log('Service account info:', serviceAccInfo);
           options.addBanner('create_service_account', [
             serviceAccInfo.name,
             serviceAccInfo.description,

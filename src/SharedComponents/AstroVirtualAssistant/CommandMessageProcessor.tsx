@@ -29,7 +29,6 @@ const startPendoGuide = (tourId: string) => {
 };
 
 export const commandMessageProcessor: MessageProcessor = async (message, options) => {
-  console.log('CommandMessageProcessor', message);
   if (message.from === From.ASSISTANT && message.command) {
     switch (message.command.type) {
       case CommandType.FINISH_CONVERSATION:
@@ -65,7 +64,6 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
         break;
       case CommandType.CREATE_SERVICE_ACCOUNT: {
         try {
-          console.log('options', options);
           const serviceAccInfo = await createServiceAccProcessor(message.command, options);
           options.addBanner('create_service_account', [
             serviceAccInfo.name,

@@ -3,7 +3,7 @@ import { ChromeAPI } from '@redhat-cloud-services/types';
 
 import { EnvType } from '../types/Common';
 
-export interface PostCreateServiceAccountRequest {
+export interface PostCreateServiceAccRequest {
   name: string;
   description: string;
   environment: EnvType;
@@ -16,12 +16,7 @@ export interface PostCreateServiceAccountResponse {
   secret: string;
 }
 
-export const postCreateServiceAcc = async (request: PostCreateServiceAccountRequest, auth: ChromeAPI['auth']) => {
-  console.error(auth);
-  if (auth === null || auth === undefined) {
-    console.error('Auth is null');
-    throw new Error('Auth is null or undefined');
-  }
+export const postCreateServiceAcc = async (request: PostCreateServiceAccRequest, auth: ChromeAPI['auth']) => {
   const token = await auth.getToken();
 
   const headers = {

@@ -17,11 +17,7 @@ export interface PostCreateServiceAccountResponse {
 }
 
 export const postCreateServiceAcc = async (request: PostCreateServiceAccRequest, auth: ChromeAPI['auth']) => {
-  console.log('auth is', auth);
   const token = await auth.getToken();
-  console.log('token', token);
-  const user = await auth.getUser();
-  console.log('user', user);
 
   const headers = {
     'Content-Type': 'application/json',
