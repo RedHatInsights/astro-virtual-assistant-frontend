@@ -21,3 +21,8 @@ coverage
 
 # cache folder
 .cache
+
+# cypress output
+.cypress-cache
+cypress/screenshots
+.nyc_output
