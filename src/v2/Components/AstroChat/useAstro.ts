@@ -153,6 +153,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
   const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
   const [loadingResponse, setLoadingResponse] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>();
+  const [error, setError] = useState<Error | null>(null);
 
   const { toggleFeedbackModal } = useChrome();
 
@@ -267,12 +268,22 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
           }
         };
 
-        if (validOptions.waitResponses) {
+        try {
           await waitResponses();
           setLoadingResponse(false);
-        } else {
-          waitResponses().then(() => setLoadingResponse(false));
-          await postTalkResponse;
+          if (!validOptions.waitResponses) {
+            await postTalkResponse;
+          }
+        } catch (error) {
+          console.error('Error in ask function:', error);
+          setLoadingResponse(false);
+          if (error instanceof Error) {
+            setError(error);
+          } else {
+            setError(new Error(String(error)));
+          }
+          addBanner('request_error', []);
+          addSystemMessage('request_error', []);
         }
       }
     },
@@ -307,6 +318,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
     start,
     stop,
     status,
+    error,
     loadingResponse,
   };
 };

@@ -21,6 +21,8 @@ export const SystemMessageEntry: FunctionComponent<SystemMessageProps> = ({ mess
     case 'redirect_message':
       systemMessageText = `Your browser may block pop-ups. Please allow pop-ups or click [here](${message.additionalContent?.[0]}).`;
       break;
+    case 'request_error':
+      systemMessageText = 'Please try again later.';
   }
 
   return (
