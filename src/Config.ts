@@ -11,6 +11,12 @@ const config = {
         down: '/intent_core_no',
       },
     },
+    lingering_thumbs: {
+      payloads: {
+        up: '/intent_core_feedback_up',
+        down: '/intent_core_feedback_down',
+      }
+    }
   },
   waitBeforeFirstVisitDisplay: 3000,
 };
