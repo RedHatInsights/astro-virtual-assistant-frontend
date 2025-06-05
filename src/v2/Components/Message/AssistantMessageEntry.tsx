@@ -1,5 +1,5 @@
 import { MessageProps } from './MessageProps';
-import React, { useState, FunctionComponent } from 'react';
+import React, { FunctionComponent, useState } from 'react';
 import ChatbotIcon from '../icon-chatbot-static';
 import { AssistantMessageEntry as PFAssistantMessageEntry } from '@patternfly/virtual-assistant';
 
@@ -25,12 +25,14 @@ export const AssistantMessageEntry: FunctionComponent<AssistantMessageProps> = (
   if (message.options) {
     return <AssistantButtonEntry message={message} ask={ask} preview={preview} blockInput={blockInput} />;
   }
-  return <>
-    <PFAssistantMessageEntry icon={ChatbotIcon}>
-      <TextEntry content={message.content} preview={preview} />
-    </PFAssistantMessageEntry>
-    {(showThumbs || thumbsSelected) && <LingeringThumbsButtons ask={ask} blockInput={blockInput} setThumbsSelected={setThumbsSelected}/>}
-  </>;
+  return (
+    <>
+      <PFAssistantMessageEntry icon={ChatbotIcon}>
+        <TextEntry content={message.content} preview={preview} />
+      </PFAssistantMessageEntry>
+      {(showThumbs || thumbsSelected) && <LingeringThumbsButtons ask={ask} blockInput={blockInput} setThumbsSelected={setThumbsSelected} />}
+    </>
+  );
 };
 export const AssistantButtonEntry: FunctionComponent<AssistantMessageProps> = ({ message, ask, preview, blockInput }) => {
   return (
