@@ -280,7 +280,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
           if (error instanceof Error) {
             setError(error);
           } else {
-            setError(new Error(String(error)));
+            setError(new Error(JSON.stringify(error)));
           }
           addBanner('request_error', []);
           addSystemMessage('request_error', []);
