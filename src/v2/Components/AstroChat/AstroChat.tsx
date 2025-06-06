@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AlertActionCloseButton, Label, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
@@ -45,6 +45,15 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   const astroContainer = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState<string>('');
   const [alertClosed, setAlertClosed] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (astroContainer.current) {
+      const inputElement = astroContainer.current.querySelector('textarea');
+      if (inputElement instanceof HTMLTextAreaElement) {
+        inputElement.focus();
+      }
+    }
+  }, []);
 
   const askFromOption = useCallback(
     (option: AskOptions) => {
