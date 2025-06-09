@@ -67,9 +67,20 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
       if ('isLoading' in message && message.isLoading) {
         return <LoadingMessage icon={ChatbotIcon} key={index} />;
       }
+      const mostRecentMessage = index === messages.length - 1;
+      const firstMessage = index === 0;
       switch (message.from) {
         case From.ASSISTANT:
-          return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} blockInput={blockInput} key={index} />;
+          return (
+            <AssistantMessageEntry
+              message={message}
+              ask={askFromOption}
+              preview={preview}
+              blockInput={blockInput}
+              showThumbs={mostRecentMessage && !firstMessage}
+              key={index}
+            />
+          );
         case From.USER:
           return <UserMessageEntry message={message} key={index} />;
         case From.FEEDBACK:

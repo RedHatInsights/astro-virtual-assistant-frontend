@@ -121,4 +121,26 @@ describe('Basic chat test', () => {
     // ensure banner is shown
     cy.get('.banner-0-2-23 > .pf-v5-c-alert > .pf-v5-c-alert__title').contains('2048 characters');
   })
+
+  it('selects thumbs up feedback', () => {
+    cy.intercept('POST', '/api/virtual-assistant-v2/v2/talk')
+    cy.mount(
+      <AstroChatComponent
+        m={[{
+          from: From.ASSISTANT,
+          content: 'Hello, how can I help you?',
+          isLoading: false,
+          messageId: '1',
+        },
+        {
+          from: From.ASSISTANT,
+          content: 'Are you there?',
+          isLoading: false,
+          messageId: '2',
+        }]} 
+      />
+    );
+    cy.get('.pf-v5-u-pr-sm > .pf-v5-svg').click();
+    cy.get('.pf-v5-u-pr-sm > .pf-v5-svg').should('not.exist'); // its been selected, class changed.
+  })
 });
