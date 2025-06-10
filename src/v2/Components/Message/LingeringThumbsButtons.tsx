@@ -38,7 +38,7 @@ export const LingeringThumbsButtons: FunctionComponent<AssistantMessageProps> = 
   };
 
   return (
-    <div className="pf-v5-u-mb-md">
+    <div className="astro-thumbs-lingering">
       <Split>
         <SplitItem className="pf-v5-u-ml-xl">
           <TextContent className="astro-thumbs pf-v5-u-font-size-sm">
