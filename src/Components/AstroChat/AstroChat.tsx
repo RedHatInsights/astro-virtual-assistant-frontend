@@ -1,8 +1,8 @@
-import React, { Dispatch, SetStateAction, useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { Alert, AlertActionCloseButton, Icon, Label, Skeleton } from '@patternfly/react-core';
+import React, { Dispatch, SetStateAction, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Alert, AlertActionCloseButton, Label, Skeleton } from '@patternfly/react-core';
 import { original, produce } from 'immer';
 import AngleDownIcon from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
-import { From, Message, MessageOption } from '../../types/Message';
+import { Banner, From, Message } from '../../types/Message';
 import { AssistantMessageEntry } from '../Message/AssistantMessageEntry';
 import { SystemMessageEntry } from '../Message/SystemMessageEntry';
 import { UserMessageEntry } from '../Message/UserMessageEntry';
@@ -13,7 +13,6 @@ import { AskOptions } from './useAstro';
 import { BannerEntry } from '../Message/BannerEntry';
 import { ThumbsMessageEntry } from '../Message/ThumbsMessageEntry';
 import { LoadingMessage, VirtualAssistant, VirtualAssistantAction } from '@patternfly/virtual-assistant';
-import ExternalLinkAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 
 import ChatbotIcon from '../icon-chatbot-animated';
 
@@ -30,6 +29,7 @@ interface AstroChatProps {
 }
 
 const findConversationEndBanner = (message: Message) => message.from === From.INTERFACE && message.type === 'finish_conversation_banner';
+const findMessageTooLongBanner = (message: Message) => message.from === From.INTERFACE && message.type === 'message_too_long';
 
 export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   messages,
@@ -46,10 +46,83 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   const [input, setInput] = useState<string>('');
   const [alertClosed, setAlertClosed] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (astroContainer.current) {
+      const inputElement = astroContainer.current.querySelector('textarea');
+      if (inputElement instanceof HTMLTextAreaElement) {
+        inputElement.focus();
+      }
+    }
+  }, []);
+
+  const askFromOption = useCallback(
+    (option: AskOptions) => {
+      return ask(option.label, option);
+    },
+    [ask]
+  );
+
+  const switchMessages = useMemo(() => {
+    return messages.map((message, index) => {
+      if ('isLoading' in message && message.isLoading) {
+        return <LoadingMessage icon={ChatbotIcon} key={index} />;
+      }
+      const mostRecentMessage = index === messages.length - 1;
+      const firstMessage = index === 0;
+      switch (message.from) {
+        case From.ASSISTANT:
+          return (
+            <AssistantMessageEntry
+              message={message}
+              ask={askFromOption}
+              preview={preview}
+              blockInput={blockInput}
+              showThumbs={mostRecentMessage && !firstMessage}
+              key={index}
+            />
+          );
+        case From.USER:
+          return <UserMessageEntry message={message} key={index} />;
+        case From.FEEDBACK:
+          return <FeedbackAssistantEntry key={index} />;
+        case From.SYSTEM:
+          return <SystemMessageEntry message={message} preview={preview} key={index} />;
+        case From.INTERFACE:
+          return <BannerEntry message={message} key={index} />;
+        case From.THUMBS:
+          return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} />;
+      }
+    });
+  }, [messages]);
+
   const removeEndConversationBanner = () => {
     setMessages(
       produce((draft) => {
         const index = original(draft)?.findIndex(findConversationEndBanner);
+        if (index !== undefined && index !== -1) {
+          draft.splice(index, 1);
+        }
+      })
+    );
+  };
+
+  const addMessageTooLongBanner = () => {
+    const messageTooLong: Banner = {
+      from: From.INTERFACE,
+      content: 'banner',
+      type: 'message_too_long',
+    };
+    setMessages(
+      produce((draft) => {
+        draft.push(messageTooLong);
+      })
+    );
+  };
+
+  const removeMessageTooLongBanner = () => {
+    setMessages(
+      produce((draft) => {
+        const index = original(draft)?.findIndex(findMessageTooLongBanner);
         if (index !== undefined && index !== -1) {
           draft.splice(index, 1);
         }
@@ -66,20 +139,16 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     }
   }, [messages]);
 
-  const askFromOption = useCallback(
-    (option: MessageOption) => {
-      return ask(option.payload, {
-        label: option.title,
-        hideMessage: !option.title,
-      });
-    },
-    [ask]
-  );
-
   const onChange = useCallback((_event: unknown, value: string) => {
     removeEndConversationBanner();
+    removeMessageTooLongBanner();
+
     if (value === '\n') {
       return;
+    }
+    if (value.length > 2048) {
+      addMessageTooLongBanner();
+      value = value.slice(0, 2048);
     }
     setInput(value);
   }, []);
@@ -101,8 +170,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
           actionClose={<AlertActionCloseButton onClose={() => setAlertClosed(true)} />}
         >
-          Please do not include any personal information or confidential information in your interaction with the virtual assistant. The tool is
-          intended to assist with general queries.
+          This feature uses AI technology. Please do not include personal information or other sensitive information in your input. Interactions may
+          be used to improve Red Hat&apos;s products or services.
           <div className="pf-v5-u-mt-md">
             <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)}>
               Got it
@@ -110,25 +179,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
           </div>
         </Alert>
       )}
-      {messages.map((message, index) => {
-        if ('isLoading' in message && message.isLoading) {
-          return <LoadingMessage icon={ChatbotIcon} key={index} />;
-        }
-        switch (message.from) {
-          case From.ASSISTANT:
-            return <AssistantMessageEntry message={message} ask={askFromOption} preview={preview} blockInput={blockInput} key={index} />;
-          case From.USER:
-            return <UserMessageEntry message={message} key={index} />;
-          case From.FEEDBACK:
-            return <FeedbackAssistantEntry key={index} />;
-          case From.SYSTEM:
-            return <SystemMessageEntry message={message} preview={preview} key={index} />;
-          case From.INTERFACE:
-            return <BannerEntry message={message} key={index} />;
-          case From.THUMBS:
-            return <ThumbsMessageEntry ask={askFromOption} blockInput={blockInput} />;
-        }
-      })}
+
+      {switchMessages}
     </>
   );
 

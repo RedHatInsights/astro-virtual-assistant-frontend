@@ -2,11 +2,11 @@ import React, { FunctionComponent, useState } from 'react';
 import { Button, Split, SplitItem, TextContent } from '@patternfly/react-core';
 import ThumbsUpIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-up-icon';
 import ThumbsDownIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-down-icon';
-import { MessageOption } from '../../types/Message';
 import Config from '../../Config';
+import { AskOptions } from '../AstroChat/useAstro';
 
 interface AssistantMessageProps {
-  ask: (option: MessageOption) => unknown;
+  ask: (option: AskOptions) => unknown;
   blockInput: boolean;
 }
 
@@ -19,11 +19,13 @@ export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ a
     if (!blockInput) {
       if (selected === 'up') {
         ask({
-          payload: Config.messages.thumbs.payloads.up,
+          label: Config.messages.thumbs.payloads.up,
+          hideMessage: true,
         });
       } else {
         ask({
-          payload: Config.messages.thumbs.payloads.down,
+          label: Config.messages.thumbs.payloads.down,
+          hideMessage: true,
         });
       }
 

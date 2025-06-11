@@ -12,19 +12,20 @@ export enum From {
 // Base
 interface BaseMessage {
   from: unknown;
-  content: string;
+  content: string | null;
 }
 
-export interface MessageOption {
-  title?: string;
-  payload: string;
+export interface AskFromOption {
+  value: string;
+  text: string;
+  optionId: string | undefined;
 }
 
 // Brand Assistant
 export interface AssistantMessage extends BaseMessage {
   messageId: string;
   from: From.ASSISTANT;
-  options?: Array<MessageOption>;
+  options?: Array<AskFromOption>;
   command?: Command;
   isLoading: boolean;
 }

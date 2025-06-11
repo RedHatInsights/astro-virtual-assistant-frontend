@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { AstroChat } from '../../src/v2/Components/AstroChat/AstroChat';
-import { From, Message } from '../../src/v2/types/Message';
+import { AstroChat } from '../../src/Components/AstroChat/AstroChat';
+import { From, Message } from '../../src/types/Message';
 
 const MAX_MESSAGE_LENGTH = 2048;
 const basicMessages: Message[] = [

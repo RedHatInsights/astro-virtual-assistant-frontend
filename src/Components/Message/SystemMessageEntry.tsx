@@ -12,12 +12,17 @@ export const SystemMessageEntry: FunctionComponent<SystemMessageProps> = ({ mess
   let systemMessageText = '';
 
   switch (message.type) {
+    case 'empty_response':
+      systemMessageText = 'The Virtual Assistant had trouble responding. Please try a different question.';
+      break;
     case 'finish_conversation_message':
       systemMessageText = 'End of conversation';
       break;
     case 'redirect_message':
       systemMessageText = `Your browser may block pop-ups. Please allow pop-ups or click [here](${message.additionalContent?.[0]}).`;
       break;
+    case 'request_error':
+      systemMessageText = 'Please try again later.';
   }
 
   return (

@@ -1,26 +1,55 @@
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 
 import { Metadata } from '../types/Metadata';
+import { CommandType } from '../types/Command';
 
-export interface PostTalkResponse {
-  recipient_id: number;
+export interface ResponseText {
+  channels?: string[] | null;
   text: string;
-  buttons?: Array<{
-    title: string;
-    payload: string;
-  }>;
-  custom?: CustomResponse;
+  type: 'TEXT';
 }
 
-export interface CustomResponse {
-  type: string;
-  command?: string;
-  params?: object;
+export interface ResponsePause {
+  channels?: string[];
+  is_typing: boolean;
+  time: number;
+  type: 'PAUSE';
 }
 
-export const postTalk = async (message: string, metadata: Metadata) => {
-  return axiosInstance.post<unknown, Array<PostTalkResponse>>('/api/virtual-assistant/v1/talk', {
-    message,
-    metadata,
+export interface ResponseOptions {
+  channels?: string[];
+  options: PostTalkOption[];
+  options_type: string | null;
+  text: string | null;
+  type: 'OPTIONS';
+}
+
+export interface ResponseCommand {
+  args: string[];
+  channels?: string[];
+  command: CommandType;
+  type: 'COMMAND';
+}
+
+export interface PostTalkOption {
+  text: string;
+  value: string;
+  option_id: string | undefined;
+}
+
+export type Response = ResponseText | ResponsePause | ResponseOptions | ResponseCommand;
+
+export interface PostTalkResponseAPI {
+  response: Response[];
+  session_id: string;
+}
+
+export const postTalk = async (message: string, optionId: string | undefined, session_id: string | undefined, metadata: Metadata) => {
+  return axiosInstance.post<unknown, PostTalkResponseAPI>('/api/virtual-assistant-v2/v2/talk', {
+    input: {
+      text: message,
+      option_id: optionId,
+    },
+    session_id: session_id,
   });
 };
