@@ -1,7 +1,7 @@
 import ScalprumProvider from '@scalprum/react-core';
-import { commandMessageProcessor } from '../../src/v2/SharedComponents/AstroVirtualAssistant/CommandMessageProcessor';
-import { CommandType } from '../../src/v2/types/Command';
-import { AssistantMessage, From } from '../../src/v2/types/Message';
+import { commandMessageProcessor } from '../../src/SharedComponents/AstroVirtualAssistant/CommandMessageProcessor';
+import { CommandType } from '../../src/types/Command';
+import { AssistantMessage, From } from '../../src/types/Message';
 import React, { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ChromeAPI, ChromeUser } from '@redhat-cloud-services/types';

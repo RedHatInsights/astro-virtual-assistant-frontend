@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useAstro } from '../../src/v2/Components/AstroChat/useAstro';
-import { From, Message } from '../../src/v2/types/Message';
+import { useAstro } from '../../src/Components/AstroChat/useAstro';
+import { From, Message } from '../../src/types/Message';
 
 import { ChromeUser } from '@redhat-cloud-services/types';
 

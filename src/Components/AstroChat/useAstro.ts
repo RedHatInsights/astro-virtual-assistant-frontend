@@ -1,15 +1,13 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { original, produce } from 'immer';
-
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { ChromeAPI } from '@redhat-cloud-services/types';
 import { AssistantMessage, Banner, FeedbackMessage, From, Message, SystemMessage } from '../../types/Message';
-import { PostTalkResponse, postTalk } from '../../api/PostTalk';
+import { Response, ResponseCommand, ResponseOptions, postTalk } from '../../api/PostTalk';
 import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
 import { MessageProcessor, MessageProcessorOptions } from '../Message/MessageProcessor';
 import { v4 as uuidv4 } from 'uuid';
-import { Command } from '../../types/Command';
 import { buildMetadata } from '../../utils/Metadata';
 
 type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
@@ -17,9 +15,27 @@ type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
 const findByMessageId = (messageId: string) => (message: { messageId?: string } | object) =>
   'messageId' in message && message.messageId === messageId;
 
+function isAssistantMessage(message: AssistantMessage | FeedbackMessage | string | Response): message is AssistantMessage {
+  return typeof message !== 'string';
+}
+
+const isResponseOptions = (res: Response): res is ResponseOptions => {
+  return res.type === 'OPTIONS';
+};
+
+const isCommandType = (res: unknown): res is ResponseCommand => {
+  return (
+    typeof res === 'object' &&
+    res !== null &&
+    (res as ResponseCommand).type === 'COMMAND' &&
+    typeof (res as ResponseCommand).command === 'string' &&
+    Array.isArray((res as ResponseCommand).args)
+  );
+};
+
 const loadMessage = async (
   from: From.ASSISTANT | From.FEEDBACK,
-  content: Promise<PostTalkResponse> | PostTalkResponse | string | undefined,
+  content: Promise<Response> | Response | string | undefined,
   setMessages: SetMessages,
   minTimeout: number,
   processors: Array<MessageProcessor>,
@@ -38,10 +54,8 @@ const loadMessage = async (
   );
 
   const [resolvedContent] = await Promise.all([content, asyncSleep(minTimeout)]);
-
   if (resolvedContent !== undefined) {
-    const contentString = typeof resolvedContent === 'string' ? resolvedContent : resolvedContent.text;
-
+    const contentString = typeof resolvedContent === 'string' ? resolvedContent : 'text' in resolvedContent ? resolvedContent.text : '';
     const message: AssistantMessage | FeedbackMessage = {
       messageId,
       from,
@@ -49,42 +63,56 @@ const loadMessage = async (
       content: contentString,
     };
 
-    if (typeof resolvedContent !== 'string' && from === From.ASSISTANT) {
-      if (resolvedContent.buttons) {
-        (message as AssistantMessage).options = resolvedContent.buttons.map((b) => ({
-          title: b.title,
-          payload: b.payload,
+    if (typeof resolvedContent !== 'string' && from === From.ASSISTANT && isAssistantMessage(message)) {
+      if (isResponseOptions(resolvedContent)) {
+        message.options = resolvedContent.options?.map((b) => ({
+          value: b.value,
+          text: b.text,
+          optionId: b.option_id,
         }));
       }
 
-      if (resolvedContent.custom) {
-        if (resolvedContent.custom.type === 'command' && resolvedContent.custom.command) {
-          (message as AssistantMessage).command = {
-            type: resolvedContent.custom.command,
-            params: resolvedContent.custom.params,
-          } as Command;
-        }
+      if (isCommandType(resolvedContent)) {
+        message.command = {
+          type: resolvedContent.command,
+          params: {
+            args: resolvedContent.args ?? [],
+          },
+        };
       }
+
+      await messageProcessor(message, processors, options);
+
+      setMessages(
+        produce((draft) => {
+          const index = original(draft)?.findIndex(findByMessageId(messageId));
+          if (index !== undefined && index !== -1) {
+            draft[index] = message;
+          } else {
+            draft.push(message);
+          }
+        })
+      );
+    } else {
+      setMessages(
+        produce((draft) => {
+          const index = original(draft)?.findIndex(findByMessageId(messageId));
+          if (index !== undefined && index !== -1) {
+            draft.splice(index, 1);
+          }
+        })
+      );
     }
-
-    await messageProcessor(message, processors, options);
-
-    setMessages(
-      produce((draft) => {
-        const index = original(draft)?.findIndex(findByMessageId(messageId));
-        if (index !== undefined && index !== -1) {
-          draft[index] = message;
-        } else {
-          draft.push(message);
-        }
-      })
-    );
   } else {
+    // The bot received an empty response from watson; append a banner
     setMessages(
       produce((draft) => {
         const index = original(draft)?.findIndex(findByMessageId(messageId));
         if (index !== undefined && index !== -1) {
-          draft.splice(index, 1);
+          draft[index] = <SystemMessage>{
+            from: From.SYSTEM,
+            type: 'empty_response',
+          };
         }
       })
     );
@@ -102,10 +130,11 @@ const messageProcessor = async (
 };
 
 export interface AskOptions {
-  hideMessage: boolean;
-  hideResponse: boolean;
+  hideMessage?: boolean;
+  hideResponse?: boolean;
   label: string;
-  waitResponses: boolean;
+  waitResponses?: boolean;
+  optionId?: string;
 }
 
 export const enum Status {
@@ -123,6 +152,8 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
   const [messages, setMessages] = useState<Array<Message>>([]);
   const [status, setStatus] = useState<Status>(Status.NOT_STARTED);
   const [loadingResponse, setLoadingResponse] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string>();
+  const [error, setError] = useState<Error | null>(null);
 
   const { toggleFeedbackModal } = useChrome();
 
@@ -193,7 +224,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
           );
         }
 
-        const postTalkResponse = postTalk(message, buildMetadata());
+        const postTalkResponse = postTalk(message, options?.optionId, sessionId, buildMetadata());
 
         const waitResponses = async () => {
           if (options?.hideResponse) {
@@ -211,7 +242,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
 
           await loadMessage(
             From.ASSISTANT,
-            postTalkResponse.then((r) => r[0]),
+            postTalkResponse.then((r) => r.response[0]),
             setMessages,
             Config.messages.delays.minAssistantResponse,
             messageProcessors,
@@ -219,7 +250,12 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
           );
 
           // responses has already been resolved
-          const responses = await postTalkResponse;
+          const resolvedResponse = await postTalkResponse;
+          if (resolvedResponse.session_id) {
+            setSessionId(resolvedResponse.session_id);
+          }
+
+          const responses = resolvedResponse.response;
           for (let i = 1; i < responses.length; i++) {
             await loadMessage(
               From.ASSISTANT,
@@ -232,12 +268,22 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
           }
         };
 
-        if (validOptions.waitResponses) {
+        try {
           await waitResponses();
           setLoadingResponse(false);
-        } else {
-          waitResponses().then(() => setLoadingResponse(false));
-          await postTalkResponse;
+          if (!validOptions.waitResponses) {
+            await postTalkResponse;
+          }
+        } catch (error) {
+          console.error('Error in ask function:', error);
+          setLoadingResponse(false);
+          if (error instanceof Error) {
+            setError(error);
+          } else {
+            setError(new Error(JSON.stringify(error)));
+          }
+          addBanner('request_error', []);
+          addSystemMessage('request_error', []);
         }
       }
     },
@@ -250,13 +296,8 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
 
       await ask('/session_start', {
         hideMessage: true,
-        hideResponse: true,
         waitResponses: false,
-      });
-
-      await ask('/intent_core_session_start', {
-        hideMessage: true,
-        waitResponses: false,
+        label: 'Session Start',
       });
 
       setStatus(Status.STARTED);
@@ -277,6 +318,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
     start,
     stop,
     status,
+    error,
     loadingResponse,
   };
 };

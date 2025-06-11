@@ -3,7 +3,7 @@ import React, { FunctionComponent } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface TextEntryProps {
-  content: string;
+  content: string | null;
   preview: boolean;
 }
 

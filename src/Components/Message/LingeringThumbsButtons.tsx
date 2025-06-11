@@ -2,39 +2,43 @@ import React, { FunctionComponent, useState } from 'react';
 import { Button, Split, SplitItem, TextContent } from '@patternfly/react-core';
 import ThumbsUpIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-up-icon';
 import ThumbsDownIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-down-icon';
-import Config from '../../../Config';
+import Config from '../../Config';
 import { AskOptions } from '../AstroChat/useAstro';
 
 interface AssistantMessageProps {
   ask: (option: AskOptions) => unknown;
   blockInput: boolean;
+  setThumbsSelected?: (selected: boolean) => void;
 }
 
 const SELECTED_CLASS = 'selected';
 
-export const ThumbsMessageEntry: FunctionComponent<AssistantMessageProps> = ({ ask, blockInput }) => {
+export const LingeringThumbsButtons: FunctionComponent<AssistantMessageProps> = ({ ask, blockInput, setThumbsSelected }) => {
   const [optionSelected, setOptionSelected] = useState<'up' | 'down'>();
 
   const actionSelected = (selected: 'up' | 'down') => {
     if (!blockInput) {
       if (selected === 'up') {
         ask({
-          label: Config.messages.thumbs.payloads.up,
+          label: Config.messages.lingering_thumbs.payloads.up,
           hideMessage: true,
         });
       } else {
         ask({
-          label: Config.messages.thumbs.payloads.down,
+          label: Config.messages.lingering_thumbs.payloads.down,
           hideMessage: true,
         });
       }
 
       setOptionSelected(selected);
+      if (setThumbsSelected) {
+        setThumbsSelected(true);
+      }
     }
   };
 
   return (
-    <div className="pf-v5-u-mb-md">
+    <div className="astro-thumbs-lingering">
       <Split>
         <SplitItem className="pf-v5-u-ml-xl">
           <TextContent className="astro-thumbs pf-v5-u-font-size-sm">
