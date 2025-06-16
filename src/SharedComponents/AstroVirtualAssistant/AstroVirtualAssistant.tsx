@@ -12,20 +12,37 @@ import { createPortal } from 'react-dom';
 
 const messageProcessors = [commandMessageProcessor];
 
-export const AstroVirtualAssistant: FunctionComponent = () => {
+interface AstroVirtualAssistantProps {
+  isOpen: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  startInput?: string;
+}
+
+export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps> = ({
+  isOpen,
+  setOpen,
+  startInput,
+}) => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, error, loadingResponse } = useAstro(messageProcessors, {
     isPreview: chrome.isBeta(),
     auth: chrome.auth,
   });
-  const [isOpen, setOpen] = useState<boolean>(false);
   const [isFullScreen, setFullScreen] = useState<boolean>(false);
+
+  const [input, setInput] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
       void start();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (startInput) {
+      setInput(startInput);
+    }
+  }, [startInput]);
 
   return createPortal(
     <div className="virtualAssistant">
@@ -36,6 +53,8 @@ export const AstroVirtualAssistant: FunctionComponent = () => {
               key="astro-chat"
               messages={messages}
               setMessages={setMessages}
+              input={input}
+              setInput={setInput}
               ask={ask}
               blockInput={loadingResponse || error !== null}
               preview={chrome.isBeta()}
