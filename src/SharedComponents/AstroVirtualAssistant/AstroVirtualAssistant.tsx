@@ -18,11 +18,7 @@ interface AstroVirtualAssistantProps {
   startInput?: string;
 }
 
-export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps> = ({
-  isOpen,
-  setOpen,
-  startInput,
-}) => {
+export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps> = ({ isOpen, setOpen, startInput }) => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, error, loadingResponse } = useAstro(messageProcessors, {
     isPreview: chrome.isBeta(),
