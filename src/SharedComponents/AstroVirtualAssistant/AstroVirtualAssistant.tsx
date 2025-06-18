@@ -1,14 +1,15 @@
 import React, { FunctionComponent, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { Stack, StackItem } from '@patternfly/react-core';
+import { useFlag } from '@unleash/proxy-client-react';
 
 import { Status, useAstro } from '../../Components/AstroChat/useAstro';
 import './astro-virtual-assistant.scss';
 import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { commandMessageProcessor } from './CommandMessageProcessor';
-import { createPortal } from 'react-dom';
 
 const messageProcessors = [commandMessageProcessor];
 
@@ -28,6 +29,15 @@ export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps
   const [isFullScreen, setFullScreen] = useState<boolean>(false);
 
   const [input, setInput] = useState<string>('');
+
+  const isOpenConfig = useFlag('platform.virtual-assistant.is-open-config');
+  // if useOpenConfig is enabled, set showAssistant to true, override parameter isOpen and setOpen
+  const [tempIsOpen, setTempIsOpen] = useState(isOpen);
+  if (isOpenConfig) {
+    showAssistant = true;
+    isOpen = tempIsOpen;
+    setOpen = setTempIsOpen;
+  }
 
   useEffect(() => {
     if (isOpen) {
