@@ -13,12 +13,13 @@ import { createPortal } from 'react-dom';
 const messageProcessors = [commandMessageProcessor];
 
 interface AstroVirtualAssistantProps {
+  showAssistant: boolean;
   isOpen: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   startInput?: string;
 }
 
-export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps> = ({ isOpen, setOpen, startInput }) => {
+export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps> = ({ showAssistant, isOpen, setOpen, startInput }) => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, error, loadingResponse } = useAstro(messageProcessors, {
     isPreview: chrome.isBeta(),
@@ -39,6 +40,10 @@ export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps
       setInput(startInput);
     }
   }, [startInput]);
+
+  if (!showAssistant) {
+    return null;
+  }
 
   return createPortal(
     <div className="virtualAssistant">
