@@ -21,6 +21,7 @@ interface AstroVirtualAssistantProps {
 }
 
 const useAstroConfig = (props: AstroVirtualAssistantProps) => {
+  // if useOpenConfig is enabled, set showAssistant to true, override parameter isOpen and setOpen
   const isOpenConfig = useFlag('platform.virtual-assistant.is-open-config');
   const [tempIsOpen, setTempIsOpen] = useState<boolean>(false);
 
@@ -46,11 +47,7 @@ export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps
     auth: chrome.auth,
   });
   const [isFullScreen, setFullScreen] = useState<boolean>(false);
-
   const [input, setInput] = useState<string>('');
-
-  const isOpenConfig = useFlag('platform.virtual-assistant.is-open-config');
-  // if useOpenConfig is enabled, set showAssistant to true, override parameter isOpen and setOpen
 
   const config = useAstroConfig({ showAssistant, isOpen, setOpen });
 
