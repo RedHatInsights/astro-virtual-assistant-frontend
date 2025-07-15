@@ -19,6 +19,8 @@ import ChatbotIcon from '../icon-chatbot-animated';
 interface AstroChatProps {
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
+  input: string;
+  setInput: Dispatch<SetStateAction<string>>;
   ask: (what: string, options?: Partial<AskOptions>) => Promise<void>;
   preview: boolean;
   onClose: () => void;
@@ -34,6 +36,8 @@ const findMessageTooLongBanner = (message: Message) => message.from === From.INT
 export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   messages,
   setMessages,
+  input,
+  setInput,
   ask,
   preview,
   onClose,
@@ -43,7 +47,6 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   isLoading,
 }) => {
   const astroContainer = useRef<HTMLDivElement>(null);
-  const [input, setInput] = useState<string>('');
   const [alertClosed, setAlertClosed] = useState<boolean>(false);
 
   useEffect(() => {
