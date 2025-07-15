@@ -39,7 +39,6 @@ const useAstroConfig = (props: AstroVirtualAssistantProps) => {
   };
 };
 
-
 export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps> = ({ showAssistant, isOpen, setOpen, startInput }) => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, error, loadingResponse } = useAstro(messageProcessors, {
