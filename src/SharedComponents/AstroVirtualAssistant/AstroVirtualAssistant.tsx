@@ -88,7 +88,7 @@ export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps
             />
           )}
         </StackItem>
-        <StackItem className="astro-wrapper-stack__badge pf-v5-u-mt-sm pf-v5-u-mt-xl-on-md">
+        <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
           <AstroBadge onClick={() => config.setOpen((prev) => !prev)} />
         </StackItem>
       </Stack>

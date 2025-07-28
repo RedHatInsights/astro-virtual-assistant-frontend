@@ -4,8 +4,10 @@
   height: 54px;
   padding: 2px 0 0 0;
   width: 54px;
+  // in pf6 there seem to some default transition
+  transition: none;
   &:hover {
-    background: var(--pf-v5-global--palette--red-300);
+    background: var(--pf-t--color--red-orange--70);
   }
   .astro__badge {
     width: 74%;

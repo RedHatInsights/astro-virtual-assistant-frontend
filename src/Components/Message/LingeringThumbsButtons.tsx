@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react';
-import { Button, Split, SplitItem, TextContent } from '@patternfly/react-core';
+import { Button, Content, Split, SplitItem } from '@patternfly/react-core';
 import ThumbsUpIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-up-icon';
 import ThumbsDownIcon from '@patternfly/react-icons/dist/js/icons/outlined-thumbs-down-icon';
 import Config from '../../Config';
@@ -40,25 +40,25 @@ export const LingeringThumbsButtons: FunctionComponent<AssistantMessageProps> = 
   return (
     <div className="astro-thumbs-lingering">
       <Split>
-        <SplitItem className="pf-v5-u-ml-xl">
-          <TextContent className="astro-thumbs pf-v5-u-font-size-sm">
+        <SplitItem className="pf-v6-u-ml-xl">
+          <Content className="astro-thumbs pf-v6-u-font-size-sm">
             <Button
+              id="thumbs-up"
+              icon={<ThumbsUpIcon />}
               variant="plain"
-              className={optionSelected === 'up' ? SELECTED_CLASS : 'pf-v5-u-pr-sm pf-u-py-0'}
+              className={optionSelected === 'up' ? SELECTED_CLASS : 'pf-v6-u-pr-sm pf-u-py-0'}
               isDisabled={blockInput || !!optionSelected}
               onClick={() => actionSelected('up')}
-            >
-              <ThumbsUpIcon />
-            </Button>
+            />
             <Button
+              id="thumbs-down"
+              icon={<ThumbsDownIcon />}
               variant="plain"
               className={optionSelected === 'down' ? SELECTED_CLASS : 'pf-u-py-0'}
               isDisabled={blockInput || !!optionSelected}
               onClick={() => actionSelected('down')}
-            >
-              <ThumbsDownIcon />
-            </Button>
-          </TextContent>
+            />
+          </Content>
         </SplitItem>
       </Split>
     </div>
