@@ -118,7 +118,6 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
       content: 'banner',
       type: 'message_too_long',
     };
-    console.log('Adding message too long banner');
     setMessages(
       produce((draft) => {
         draft.push(messageTooLong);
