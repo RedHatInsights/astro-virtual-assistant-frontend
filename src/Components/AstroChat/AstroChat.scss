@@ -1,0 +1,12 @@
+// PF6 compatibility changes
+.legacy-astro-chatbot {
+  .pf-v5-c-card__header-main {
+    .pf-v5-c-icon__content {
+      display: flex;
+      svg {
+        margin-left: 8px;
+        margin-top: 6px;
+      }
+    }
+  }
+}

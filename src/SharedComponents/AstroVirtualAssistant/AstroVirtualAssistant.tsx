@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useState } from 'react';
+import React, { FunctionComponent, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
@@ -10,6 +10,10 @@ import './astro-virtual-assistant.scss';
 import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { commandMessageProcessor } from './CommandMessageProcessor';
+
+import ARHChatbot from '../../Components/ARHClient/ARHChatbot';
+import ARHBadge from '../../Components/ARHClient/ARHBadge';
+import type { ChromeUser } from '@redhat-cloud-services/types';
 
 const messageProcessors = [commandMessageProcessor];
 
@@ -40,7 +44,7 @@ const useAstroConfig = (props: AstroVirtualAssistantProps) => {
   };
 };
 
-export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps> = ({ showAssistant, isOpen, setOpen, startInput }) => {
+export const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps> = ({ showAssistant, isOpen, setOpen, startInput }) => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, error, loadingResponse } = useAstro(messageProcessors, {
     isPreview: chrome.isBeta(),
@@ -88,8 +92,67 @@ export const AstroVirtualAssistant: FunctionComponent<AstroVirtualAssistantProps
             />
           )}
         </StackItem>
-        <StackItem className="astro-wrapper-stack__badge pf-v5-u-mt-sm pf-v5-u-mt-xl-on-md">
+        <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
           <AstroBadge onClick={() => config.setOpen((prev) => !prev)} />
+        </StackItem>
+      </Stack>
+    </div>,
+    document.body
+  );
+};
+
+const AstroVirtualAssistant = () => {
+  const useArh = useFlag('platform.arh.enabled');
+  const [isOpen, setOpen] = useState<boolean>(false);
+  const chrome = useChrome();
+  const [showArh, setShowArh] = useState<boolean>(false);
+  const [auth, setAuth] = useState<{ user: ChromeUser | undefined; token: string | undefined }>({ user: undefined, token: undefined });
+  async function handleArhSetup() {
+    if (false || !useArh) {
+      setShowArh(false);
+      setAuth({ user: undefined, token: undefined });
+      return;
+    }
+    const user = await chrome.auth.getUser();
+    if (user) {
+      const { entitlements } = user;
+      // ARH requires at least one entitlement to be considered entitled
+      const isEntitled = Object.values(entitlements).some(({ is_entitled }) => is_entitled);
+      setShowArh(isEntitled);
+      setAuth({ user, token: chrome.auth.token });
+    } else {
+      setShowArh(false);
+      setAuth({ user: undefined, token: undefined });
+    }
+  }
+
+  const ARHBaseUrl = useMemo(() => {
+    // currently we are only allowed to talk to stage
+    // we need KC deployed to accept new scope
+    // FF is disabled for now in production/dev envs
+    if (['prod', 'dev'].includes(chrome.getEnvironment())) {
+      return 'https://access.redhat.com';
+    }
+    return 'https://access.stage.redhat.com';
+  }, []);
+
+  useEffect(() => {
+    handleArhSetup();
+  }, [useArh, chrome.auth.token]);
+  return createPortal(
+    <div className="virtualAssistant">
+      <Stack className="astro-wrapper-stack">
+        {isOpen && (
+          <StackItem>
+            {showArh ? (
+              <ARHChatbot setOpen={setOpen} baseUrl={ARHBaseUrl} user={auth.user!} token={auth.token!} />
+            ) : (
+              <AstroVirtualAssistantLegacy isOpen={isOpen} setOpen={setOpen} showAssistant />
+            )}
+          </StackItem>
+        )}
+        <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
+          {showArh ? <ARHBadge onClick={() => setOpen((prev) => !prev)} /> : <AstroBadge onClick={() => setOpen((prev) => !prev)} />}
         </StackItem>
       </Stack>
     </div>,

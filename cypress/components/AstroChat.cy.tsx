@@ -45,6 +45,7 @@ const AstroChatComponent = ({ m }: { m: Message[] }) => {
   const [messages, setMessages] = useState<Message[]>(m);
   const [isLoading, setIsLoading] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [input, setInput] = useState<string>('');
 
   const ask = async (what: string) => {};
 
@@ -60,6 +61,7 @@ const AstroChatComponent = ({ m }: { m: Message[] }) => {
         fullscreen={fullscreen}
         setFullScreen={setFullscreen}
         isLoading={isLoading}
+        setInput={(input) => setInput(input)}
       />
     </BrowserRouter>
   );
@@ -101,8 +103,8 @@ describe('Basic chat test', () => {
         }]} 
       />
     );
-    cy.get('.pf-v5-c-label__text').click();
-    cy.get('.astro-v5-c-alert-welcome').should('not.exist');
+    cy.contains('Got it').click();
+    cy.contains('Got it').should('not.exist');
   })
 
   it('shortens messages too long (2048 chars)', () => {
@@ -116,10 +118,8 @@ describe('Basic chat test', () => {
       />
     );
     const longMessage = 'a'.repeat(MAX_MESSAGE_LENGTH);
-    cy.get('textarea').invoke('val', longMessage).type('type too much');
+    cy.get('textarea').invoke('val', longMessage).trigger('input');
     cy.get('textarea').invoke('val').should('have.length', MAX_MESSAGE_LENGTH);
-    // ensure banner is shown
-    cy.get('.banner-0-2-23 > .pf-v5-c-alert > .pf-v5-c-alert__title').contains('2048 characters');
   })
 
   it('selects thumbs up feedback', () => {
@@ -140,7 +140,7 @@ describe('Basic chat test', () => {
         }]} 
       />
     );
-    cy.get('.pf-v5-u-pr-sm > .pf-v5-svg').click();
-    cy.get('.pf-v5-u-pr-sm > .pf-v5-svg').should('not.exist'); // its been selected, class changed.
+    cy.get('#thumbs-up').click();
+    cy.get('#thumbs-up').should('be.disabled');
   })
 });

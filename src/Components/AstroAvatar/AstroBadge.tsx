@@ -10,7 +10,7 @@ interface AstroAvatarProps {
 export const AstroBadge: React.FunctionComponent<AstroAvatarProps> = ({ onClick }) => {
   return (
     <Tooltip position="left" content={<div>Virtual assistant</div>}>
-      <Button className="astro-c-button-badge pf-v5-u-box-shadow-lg" onClick={onClick}>
+      <Button className="astro-c-button-badge pf-v6-u-box-shadow-lg pf-v6-u-pt-sm" onClick={onClick}>
         <img className="astro__badge" src={BubbleIcon} alt="Launch virtual assistant" />
       </Button>
     </Tooltip>

@@ -13,8 +13,11 @@ import { AskOptions } from './useAstro';
 import { BannerEntry } from '../Message/BannerEntry';
 import { ThumbsMessageEntry } from '../Message/ThumbsMessageEntry';
 import { LoadingMessage, VirtualAssistant, VirtualAssistantAction } from '@patternfly/virtual-assistant';
+import classnames from 'classnames';
 
 import ChatbotIcon from '../icon-chatbot-animated';
+
+import './AstroChat.scss';
 
 interface AstroChatProps {
   messages: Array<Message>;
@@ -167,7 +170,7 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
     <>
       {!alertClosed && (
         <Alert
-          className="astro-v5-c-alert-welcome pf-v5-u-background-color-200 pf-v5-u-mb-md"
+          className="astro-v5-c-alert-welcome pf-v6-u-background-color-200 pf-v6-u-mb-md"
           variant="info"
           isInline
           title="You are about to utilize Red Hat's Hybrid Cloud Console virtual assistant chat tool"
@@ -175,8 +178,8 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
         >
           This feature uses AI technology. Please do not include personal information or other sensitive information in your input. Interactions may
           be used to improve Red Hat&apos;s products or services.
-          <div className="pf-v5-u-mt-md">
-            <Label className="pf-v5-u-mr-md pf-v5-u-px-md" onClick={() => setAlertClosed(true)}>
+          <div className="pf-v6-u-mt-md">
+            <Label className="pf-v6-u-mr-md pf-v6-u-px-md" onClick={() => setAlertClosed(true)}>
               Got it
             </Label>
           </div>
@@ -188,14 +191,14 @@ export const AstroChat: React.FunctionComponent<AstroChatProps> = ({
   );
 
   return (
-    <div ref={astroContainer} className={fullscreen ? 'pf-v5-c-card-full-screen' : ''}>
+    <div ref={astroContainer} className={classnames({ 'pf-v6-c-card-full-screen': fullscreen }, 'legacy-astro-chatbot')}>
       <VirtualAssistant
         title="Virtual Assistant"
         inputPlaceholder="Send a message..."
         message={input}
         onChangeMessage={onChange}
         onSendMessage={onAskPressed}
-        isSendButtonDisabled={isLoading || input.trim() === '' || blockInput}
+        isSendButtonDisabled={isLoading || input?.trim() === '' || blockInput}
         icon={ChatbotIcon}
         actions={
           <>
