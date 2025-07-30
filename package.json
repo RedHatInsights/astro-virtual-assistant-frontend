@@ -21,6 +21,8 @@
     "start": "HOT=true fec dev",
     "start:static": "HOT=true fec static",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "postinstall": "ts-patch install && rimraf .cache",
     "verify": "npm-run-all build lint"
   },

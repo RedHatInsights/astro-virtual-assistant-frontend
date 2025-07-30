@@ -6,7 +6,7 @@ module.exports = {
     '\\.(css|scss)$': 'identity-obj-proxy',
   },
   roots: ['<rootDir>/src/'],
-  transformIgnorePatterns: ['/node_modules/(?!@redhat-cloud-services)', '/node_modules/(?!@patternfly)'],
+  transformIgnorePatterns: ['/node_modules/(?!(@redhat-cloud-services|@patternfly)/)'],
   testEnvironment: 'jest-environment-jsdom',
   moduleDirectories: [
     'node_modules',

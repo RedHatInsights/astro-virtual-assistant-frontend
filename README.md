@@ -41,3 +41,19 @@ After that, you can run `npm run start:standalone`.
 ### Testing
 
 `npm run verify` will run `npm run lint` (eslint) and `npm test` (Jest)
+
+#### ARH Chatbot Component Testing
+
+For comprehensive testing of ARH chatbot components, see the **[ARH Chatbot Testing Guide](./ARH_CHATBOT_TESTING_GUIDE.md)**.
+
+**Available test commands:**
+- `npm run test` - Run Jest unit tests
+- `npm run test:watch` - Run Jest in watch mode  
+- `npm run test:coverage` - Run Jest with coverage report
+- `npm run cypress:open:cp` - Open Cypress component test runner
+- `npm run cypress:run:cp` - Run Cypress component tests headlessly
+
+**Testing Strategy:**
+- **Cypress Component Tests**: UI components, user interactions, accessibility
+- **Jest Tests**: React hooks, utility functions, business logic
+- **Mocking**: Third-party dependencies (`arh-client`, `ai-client-state`, `ai-react-state`) are mocked to ensure test isolation

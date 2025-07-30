@@ -9,8 +9,8 @@ import {
 } from '@patternfly/chatbot';
 import { Brand, Button, Icon, Title } from '@patternfly/react-core';
 import React from 'react';
-import { ARH_ICON } from './ARHIcon';
 import { CompressAltIcon, ExpandAltIcon } from '@patternfly/react-icons';
+import ARH_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 
 function ARHHeader({
   scrollToBottomRef,

@@ -37,12 +37,12 @@ const ARHProvider = ({ children, baseUrl, token }: PropsWithChildren<{ baseUrl: 
     const stateManager = createClientStateManager(client);
     stateManager.init();
     return stateManager;
-  }, []);
+  }, [token, baseUrl]);
 
   return <AIStateProvider stateManager={stateManager}>{children}</AIStateProvider>;
 };
 
-const ARHChatbot = ({
+export const ARHChatbot = ({
   avatar,
   setOpen,
   isBannerOpen,

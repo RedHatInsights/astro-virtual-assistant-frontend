@@ -27,6 +27,7 @@ import { mount } from 'cypress/react18';
 import '@patternfly/patternfly/patternfly.css';
 // Patternfly utilities
 import '@patternfly/patternfly/patternfly-addons.css';
+import '@patternfly/chatbot/dist/css/main.css';
 
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
@@ -50,5 +51,6 @@ declare global {
 
 Cypress.Commands.add('mount', mount);
 
-// Example use:
-// cy.mount(<MyComponent />)
+// Mock the AI state modules globally for Cypress tests
+// ARH component tests use real AIStateContext with mocked state managers
+// See individual test files for the TestWrapper pattern
