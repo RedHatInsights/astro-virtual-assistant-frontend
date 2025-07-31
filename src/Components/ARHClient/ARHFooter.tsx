@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatbotFooter, MessageBar } from '@patternfly/chatbot';
+import { ChatbotFooter, ChatbotFootnote, MessageBar } from '@patternfly/chatbot';
 import { useActiveConversation, useInProgress, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 
 const ARHFooter = () => {
@@ -22,6 +22,7 @@ const ARHFooter = () => {
         isSendButtonDisabled={inProgress || activeConversation?.locked}
         hasAttachButton={false}
       />
+      <ChatbotFootnote label="Always review AI generated content prior to use." />
     </ChatbotFooter>
   );
 };
