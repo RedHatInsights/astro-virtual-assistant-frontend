@@ -101,7 +101,7 @@ export const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistan
   );
 };
 
-const AstroVirtualAssistant = () => {
+const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
   const useArh = useFlag('platform.arh.enabled');
   const [isOpen, setOpen] = useState<boolean>(false);
   const chrome = useChrome();
@@ -144,10 +144,10 @@ const AstroVirtualAssistant = () => {
       <Stack className="astro-wrapper-stack">
         {isOpen && (
           <StackItem>
-            {showArh ? (
+            {showArh && props.showAssistant ? (
               <ARHChatbot setOpen={setOpen} baseUrl={ARHBaseUrl} user={auth.user!} token={auth.token!} />
             ) : (
-              <AstroVirtualAssistantLegacy isOpen={isOpen} setOpen={setOpen} showAssistant />
+              <AstroVirtualAssistantLegacy {...props} isOpen={isOpen} setOpen={setOpen} />
             )}
           </StackItem>
         )}
