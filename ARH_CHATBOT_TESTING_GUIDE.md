@@ -156,7 +156,7 @@ describe('ARHBadge Component', () => {
     
     // Specific image selector
     cy.get('img[alt="Launch Ask Red Hat assistant"]').should('exist');
-    cy.get('img.astro__badge').should('exist');
+    cy.get('img.arh__badge__image').should('exist');
     
     // PatternFly class validation
     cy.get('button').should('have.class', 'pf-v6-u-pt-sm');

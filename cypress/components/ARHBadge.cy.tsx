@@ -12,7 +12,7 @@ describe('ARHBadge Component', () => {
     
     // Should have the correct image
     cy.get('img[alt="Launch Ask Red Hat assistant"]').should('exist');
-    cy.get('img.astro__badge').should('exist');
+    cy.get('img.arh__badge__image').should('exist');
   });
 
   it('should show tooltip on hover', () => {
@@ -49,17 +49,5 @@ describe('ARHBadge Component', () => {
     
     // Image should have alt text
     cy.get('img').should('have.attr', 'alt', 'Launch Ask Red Hat assistant');
-  });
-
-  it('should have correct CSS classes', () => {
-    const mockOnClick = cy.stub();
-    
-    cy.mount(<ARHBadge onClick={mockOnClick} />);
-    
-    // Button should have PatternFly classes
-    cy.get('button').should('have.class', 'pf-v6-u-pt-sm');
-    
-    // Image should have astro class
-    cy.get('img').should('have.class', 'astro__badge');
   });
 });

@@ -11,6 +11,7 @@ import { Brand, Button, Icon, Title } from '@patternfly/react-core';
 import React from 'react';
 import { CompressAltIcon, ExpandAltIcon } from '@patternfly/react-icons';
 import ARH_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import './ARHHeader.scss';
 
 function ARHHeader({
   scrollToBottomRef,
@@ -28,7 +29,7 @@ function ARHHeader({
   setConversationsDrawerOpened: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
-    <ChatbotHeader>
+    <ChatbotHeader className="arh__header">
       <ChatbotHeaderMain>
         <ChatbotHeaderMenu aria-expanded={conversationsDrawerOpened} onMenuToggle={() => setConversationsDrawerOpened((prev) => !prev)} />
         <ChatbotHeaderTitle>
