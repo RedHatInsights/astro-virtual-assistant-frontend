@@ -139,22 +139,32 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
   useEffect(() => {
     handleArhSetup();
   }, [useArh, chrome.auth.token]);
+  const nodes = useMemo(() => {
+    if (showArh && props.showAssistant) {
+      return (
+        <>
+          <StackItem>{isOpen ? <ARHChatbot setOpen={setOpen} baseUrl={ARHBaseUrl} user={auth.user!} token={auth.token!} /> : null}</StackItem>
+          <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
+            <ARHBadge onClick={() => setOpen((prev) => !prev)} />
+          </StackItem>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <StackItem>
+          <AstroVirtualAssistantLegacy {...props} isOpen={isOpen} setOpen={setOpen} />
+        </StackItem>
+        <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
+          {props.showAssistant ? <AstroBadge onClick={() => setOpen((prev) => !prev)} /> : null}
+        </StackItem>
+      </>
+    );
+  }, [showArh, props.showAssistant, isOpen]);
   return createPortal(
     <div className="virtualAssistant">
-      <Stack className="astro-wrapper-stack">
-        {isOpen && (
-          <StackItem>
-            {showArh && props.showAssistant ? (
-              <ARHChatbot setOpen={setOpen} baseUrl={ARHBaseUrl} user={auth.user!} token={auth.token!} />
-            ) : (
-              <AstroVirtualAssistantLegacy {...props} isOpen={isOpen} setOpen={setOpen} />
-            )}
-          </StackItem>
-        )}
-        <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
-          {showArh ? <ARHBadge onClick={() => setOpen((prev) => !prev)} /> : <AstroBadge onClick={() => setOpen((prev) => !prev)} />}
-        </StackItem>
-      </Stack>
+      <Stack className="astro-wrapper-stack">{nodes}</Stack>
     </div>,
     document.body
   );
