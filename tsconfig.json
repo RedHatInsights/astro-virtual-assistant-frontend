@@ -25,7 +25,9 @@
   "exclude": [
     "./src/entry.ts",
     "./*.js",
-    "./*.d.ts",
-    "./src/**/__tests__/**"
+    "./*.d.ts"
+  ],
+  "types": [
+    "@testing-library/jest-dom"
   ]
 }
