@@ -16,6 +16,9 @@ objects:
       API:
         versions:
           - v1
+        specs:
+          - url: https://console.redhat.com/api/astro-virtual-assistant-v2/v2/openapi.json
+            bundleLabels: ["insights"]
       frontend:
         paths:
           - /apps/virtual-assistant
