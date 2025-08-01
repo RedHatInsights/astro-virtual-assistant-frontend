@@ -107,7 +107,7 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
   const [isOpen, setOpen] = useState<boolean>(false);
   const chrome = useChrome();
   const [showArh, setShowArh] = useState<boolean>(false);
-  const [auth, setAuth] = useState<{ user: ChromeUser | undefined; token: string | undefined }>({ user: undefined, token: undefined });
+  const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
 
   const ARHBaseUrl = useMemo(() => {
     // currently we are only allowed to talk to stage
@@ -122,17 +122,17 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
   async function handleArhSetup() {
     if (!useArh) {
       setShowArh(false);
-      setAuth({ user: undefined, token: undefined });
+      setAuth({ user: undefined });
       return;
     }
     const user = await chrome.auth.getUser();
     if (user) {
       const isEntitled = await checkARHAuth(ARHBaseUrl, user, chrome.auth.token);
       setShowArh(isEntitled);
-      setAuth({ user, token: chrome.auth.token });
+      setAuth({ user });
     } else {
       setShowArh(false);
-      setAuth({ user: undefined, token: undefined });
+      setAuth({ user: undefined });
     }
   }
 
@@ -143,7 +143,7 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
     if (showArh && props.showAssistant) {
       return (
         <>
-          <StackItem>{isOpen ? <ARHChatbot setOpen={setOpen} baseUrl={ARHBaseUrl} user={auth.user!} token={auth.token!} /> : null}</StackItem>
+          <StackItem>{isOpen ? <ARHChatbot setOpen={setOpen} baseUrl={ARHBaseUrl} user={auth.user!} /> : null}</StackItem>
           <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
             <ARHBadge onClick={() => setOpen((prev) => !prev)} />
           </StackItem>
