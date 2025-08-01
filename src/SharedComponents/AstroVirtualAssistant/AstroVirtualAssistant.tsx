@@ -14,6 +14,7 @@ import { commandMessageProcessor } from './CommandMessageProcessor';
 import ARHChatbot from '../../Components/ARHClient/ARHChatbot';
 import ARHBadge from '../../Components/ARHClient/ARHBadge';
 import type { ChromeUser } from '@redhat-cloud-services/types';
+import checkARHAuth from '../../Components/ARHClient/checkARHAuth';
 
 const messageProcessors = [commandMessageProcessor];
 
@@ -106,25 +107,8 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
   const [isOpen, setOpen] = useState<boolean>(false);
   const chrome = useChrome();
   const [showArh, setShowArh] = useState<boolean>(false);
-  const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
-  async function handleArhSetup() {
-    if (false || !useArh) {
-      setShowArh(false);
-      setAuth({ user: undefined });
-      return;
-    }
-    const user = await chrome.auth.getUser();
-    if (user) {
-      const { entitlements } = user;
-      // ARH requires at least one entitlement to be considered entitled
-      const isEntitled = Object.values(entitlements).some(({ is_entitled }) => is_entitled);
-      setShowArh(isEntitled);
-      setAuth({ user });
-    } else {
-      setShowArh(false);
-      setAuth({ user: undefined });
-    }
-  }
+
+  const [auth, setAuth] = useState<{ user: ChromeUser | undefined; token: string | undefined }>({ user: undefined, token: undefined });
 
   const ARHBaseUrl = useMemo(() => {
     // currently we are only allowed to talk to stage
@@ -135,6 +119,23 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
     }
     return 'https://access.stage.redhat.com';
   }, []);
+
+  async function handleArhSetup() {
+    if (!useArh) {
+      setShowArh(false);
+      setAuth({ user: undefined });
+      return;
+    }
+    const user = await chrome.auth.getUser();
+    if (user) {
+      const isEntitled = await checkARHAuth(ARHBaseUrl, user, chrome.auth.token);
+      setShowArh(isEntitled);
+      setAuth({ user });
+    } else {
+      setShowArh(false);
+      setAuth({ user: undefined });
+    }
+  }
 
   useEffect(() => {
     handleArhSetup();
