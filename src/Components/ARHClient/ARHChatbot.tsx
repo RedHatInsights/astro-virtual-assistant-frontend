@@ -10,6 +10,7 @@ import {
 import { IFDClient } from '@redhat-cloud-services/arh-client';
 import { Chatbot, ChatbotConversationHistoryNav, ChatbotDisplayMode } from '@patternfly/chatbot';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
 import useScrollToBottom from './useScrollToBottom';
 import ARHHeader from './ARHHeader';
@@ -20,24 +21,30 @@ import type { ChromeUser } from '@redhat-cloud-services/types';
 
 import '@patternfly/chatbot/dist/css/main.css';
 
-const ARHProvider = ({ children, baseUrl, token }: PropsWithChildren<{ baseUrl: string; token: string }>) => {
+const ARHProvider = ({ children, baseUrl }: PropsWithChildren<{ baseUrl: string }>) => {
+  const chrome = useChrome();
   const stateManager = useMemo(() => {
     const client = new IFDClient({
       // Will change to ARH
       baseUrl,
-      fetchFunction: (input, options) =>
-        fetch(input, {
+      fetchFunction: async (input, options) => {
+        const token = await chrome.auth.getToken();
+        if (!token) {
+          throw new Error('User is not authenticated');
+        }
+        return fetch(input, {
           ...options,
           headers: {
             ...options?.headers,
             Authorization: `Bearer ${token}`,
           },
-        }),
+        });
+      },
     });
     const stateManager = createClientStateManager(client);
     stateManager.init();
     return stateManager;
-  }, [token, baseUrl]);
+  }, [baseUrl]);
 
   return <AIStateProvider stateManager={stateManager}>{children}</AIStateProvider>;
 };
@@ -141,17 +148,7 @@ export const ARHChatbot = ({
   );
 };
 
-const ChromeConnector = ({
-  baseUrl,
-  setOpen,
-  user,
-  token,
-}: {
-  baseUrl: string;
-  setOpen: (isOpen: boolean) => void;
-  user: ChromeUser;
-  token: string;
-}) => {
+const ChromeConnector = ({ baseUrl, setOpen, user }: { baseUrl: string; setOpen: (isOpen: boolean) => void; user: ChromeUser }) => {
   const [isBannerOpen, setIsBannerOpen] = useState<boolean>(true);
   const [username, setUsername] = useState<string>('');
   const [avatar, setAvatar] = useState<string>(emptyAvatar);
@@ -174,7 +171,7 @@ const ChromeConnector = ({
   }, [user]);
 
   return (
-    <ARHProvider baseUrl={baseUrl} token={token}>
+    <ARHProvider baseUrl={baseUrl}>
       <ARHChatbot avatar={avatar} setOpen={setOpen} isBannerOpen={isBannerOpen} setIsBannerOpen={setIsBannerOpen} username={username} />
     </ARHProvider>
   );
