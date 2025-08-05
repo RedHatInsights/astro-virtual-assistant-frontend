@@ -217,7 +217,7 @@ describe('ARHMessages Component', () => {
         .should('have.attr', 'href', 'https://docs.openshift.com/install');
       cy.get('.pf-chatbot__sources-card-body')
         .should('contain.text', 'Complete installation guide for OpenShift Container Platform.');
-      cy.contains('1 of 3').should('be.visible');
+      cy.contains('1/3').should('be.visible');
     });
 
     it('should navigate between multiple sources', () => {
@@ -235,14 +235,14 @@ describe('ARHMessages Component', () => {
         .should('have.attr', 'href', 'https://docs.openshift.com/developer');
       cy.get('.pf-chatbot__sources-card-body')
         .should('contain.text', 'Developer-focused documentation for building applications on OpenShift.');
-      cy.contains('2 of 3').should('be.visible');
+      cy.contains('2/3').should('be.visible');
       
       // Navigate to previous source
       cy.get('button[data-action="previous"]').click();
       
       cy.get('.pf-chatbot__sources-card-title a')
         .should('contain.text', 'OpenShift Installation Guide');
-      cy.contains('1 of 3').should('be.visible');
+      cy.contains('1/3').should('be.visible');
     });
 
     it('should handle navigation boundaries correctly', () => {
@@ -253,16 +253,16 @@ describe('ARHMessages Component', () => {
       );
       
       // Should start at first source, previous button should be disabled
-      cy.contains('1 of 3').should('be.visible');
+      cy.contains('1/3').should('be.visible');
       cy.get('button[data-action="previous"]').should('be.disabled');
       
       // Navigate to last source
-      cy.get('button[data-action="next"]').click(); // Go to 2 of 3
-      cy.get('button[data-action="next"]').click(); // Go to 3 of 3
+      cy.get('button[data-action="next"]').click(); // Go to 2/3
+      cy.get('button[data-action="next"]').click(); // Go to 3/3
       
       cy.get('.pf-chatbot__sources-card-title a')
         .should('contain.text', 'OpenShift Administration');
-      cy.contains('3 of 3').should('be.visible');
+      cy.contains('3/3').should('be.visible');
       
       // Next button should be disabled at last source
       cy.get('button[data-action="next"]').should('be.disabled');
@@ -328,6 +328,103 @@ describe('ARHMessages Component', () => {
       // Should not render PatternFly source components for empty sources array
       cy.get('.pf-chatbot__source').should('not.exist');
       cy.get('.pf-chatbot__sources-card').should('not.exist');
+    });
+  });
+
+  describe('Markdown Rendering', () => {
+    const messagesWithMarkdown = [
+      { 
+        id: '1', 
+        answer: '**This is bold text** and *this is italic text*. Here is a [link](https://example.com).', 
+        role: 'user' 
+      },
+      { 
+        id: '2', 
+        answer: '**This is bold text** and *this is italic text*. Here is a [link](https://example.com).', 
+        role: 'bot'
+      }
+    ];
+
+    it('should disable markdown rendering for user messages', () => {
+      cy.mount(
+        <TestWrapper messages={messagesWithMarkdown}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Find user message - it should render markdown as plain text
+      cy.get('.pf-chatbot__message--user').within(() => {
+        // User message should contain raw markdown syntax (not processed)
+        cy.contains('**This is bold text** and *this is italic text*. Here is a [link](https://example.com).').should('exist');
+        
+        // Should NOT contain processed markdown elements
+        cy.get('strong').should('not.exist');
+        cy.get('em').should('not.exist');
+        cy.get('a[href="https://example.com"]').should('not.exist');
+      });
+    });
+
+    it('should enable markdown rendering for bot messages', () => {
+      cy.mount(
+        <TestWrapper messages={messagesWithMarkdown}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Find bot message - it should render processed markdown
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        // Bot message should contain processed markdown elements
+        cy.get('strong').should('contain.text', 'This is bold text');
+        cy.get('em').should('contain.text', 'this is italic text');
+        cy.get('a[href="https://example.com"]').should('contain.text', 'link');
+        
+        // Should NOT contain raw markdown syntax
+        cy.contains('**This is bold text**').should('not.exist');
+        cy.contains('*this is italic text*').should('not.exist');
+        cy.contains('[link](https://example.com)').should('not.exist');
+      });
+    });
+
+    it('should handle complex markdown differently for user vs bot', () => {
+      const complexMarkdownMessages = [
+        { 
+          id: '1', 
+          answer: '# Heading\n\n- List item 1\n- List item 2\n\n```code block```', 
+          role: 'user' 
+        },
+        { 
+          id: '2', 
+          answer: '# Heading\n\n- List item 1\n- List item 2\n\n```code block```', 
+          role: 'bot'
+        }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={complexMarkdownMessages}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // User message should contain raw markdown
+      cy.get('.pf-chatbot__message--user').within(() => {
+        cy.contains('# Heading').should('exist');
+        cy.contains('- List item 1').should('exist');
+        cy.contains('```code block```').should('exist');
+        
+        // Should NOT contain processed HTML elements
+        cy.get('h1').should('not.exist');
+        cy.get('ul').should('not.exist');
+        cy.get('code').should('not.exist');
+      });
+      
+      // Bot message should contain processed markdown
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('h1').should('contain.text', 'Heading');
+        cy.get('ul').should('exist');
+        cy.get('li').should('contain.text', 'List item 1');
+        cy.get('li').should('contain.text', 'List item 2');
+        cy.get('code').should('contain.text', 'code block');
+      });
     });
   });
 });

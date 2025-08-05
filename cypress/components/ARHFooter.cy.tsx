@@ -53,7 +53,7 @@ describe('ARHFooter Component', () => {
     
     // Should have PatternFly chatbot send button with specific class
     cy.get('button.pf-chatbot__button--send').should('exist');
-    cy.get('button[aria-label="Send button"]').should('exist');
+    cy.get('button[aria-label="Send"]').should('exist');
   });
 
   it('should allow typing messages', () => {
