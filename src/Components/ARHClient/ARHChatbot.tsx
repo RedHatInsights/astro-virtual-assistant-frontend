@@ -37,6 +37,7 @@ const ARHProvider = ({ children, baseUrl }: PropsWithChildren<{ baseUrl: string 
           headers: {
             ...options?.headers,
             Authorization: `Bearer ${token}`,
+            'App-Source-ID': 'CPIN-001',
           },
         });
       },

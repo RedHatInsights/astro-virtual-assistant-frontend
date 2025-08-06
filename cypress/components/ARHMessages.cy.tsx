@@ -1,7 +1,9 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import ARHMessages from '../../src/Components/ARHClient/ARHMessages';
-import { AIStateContext } from '@redhat-cloud-services/ai-react-state';
+import { AIStateContext, AIStateProvider } from '@redhat-cloud-services/ai-react-state';
+import { Conversation, createClientStateManager, StateManager } from '@redhat-cloud-services/ai-client-state';
+import { IFDClient } from '@redhat-cloud-services/arh-client';
 
 // Create mock state manager - ARHMessages needs the double-nested getState interface
 const createMockStateManager = (customMessages?: any[]) => {
@@ -13,31 +15,38 @@ const createMockStateManager = (customMessages?: any[]) => {
   // Use custom messages if provided, otherwise use defaults
   const activeConversationMessages = customMessages || defaultMessages;
   
-  const state = {
-    conversations: [],
-    activeConversation: { id: 'test-conv', locked: false },
-    messages: activeConversationMessages,
+  const state: {
+      conversations: Record<string, Conversation>;
+      activeConversationId: string | null;
+      messageInProgress: boolean;
+      isInitialized: boolean;
+      isInitializing: boolean;
+      client: IFDClient;
+  } = {
+    conversations: {
+      ['test-conv']: {
+        id: 'test-conv',
+        messages: activeConversationMessages,
+        title: 'Test Conversation',
+        locked: false,
+      },
+    },
+    activeConversationId: 'test-conv',
+    client: {
+      sendMessageFeedback: cy.stub(),
+    } as unknown as IFDClient,
+    isInitialized: true,
     isInitializing: false,
-    inProgress: false,
+    messageInProgress: false,
   };
 
-  return {
-    getState: () => ({
-      getState: () => state,
-      // This is the key - getActiveConversationMessages must return the custom messages
-      getActiveConversationMessages: () => activeConversationMessages,
-      createNewConversation: () => Promise.resolve(),
-      setActiveConversation: () => {},
-      sendMessage: () => {},
-      subscribe: () => () => {},
-      dispatch: () => {},
-    }),
-    createNewConversation: () => Promise.resolve(),
-    setActiveConversation: () => {},
-    sendMessage: () => {},
+  const manager: StateManager = {
+    getState: () => state,
+    getActiveConversationMessages: () => activeConversationMessages,
+    getClient: () => state.client,
     subscribe: () => () => {},
-    dispatch: () => {},
-  };
+  } as unknown as StateManager;
+  return manager
 };
 
 const TestWrapper = ({ children, messages }: { children: React.ReactNode; messages?: any[] }) => {
@@ -45,9 +54,9 @@ const TestWrapper = ({ children, messages }: { children: React.ReactNode; messag
   
   return (
     <MemoryRouter>
-      <AIStateContext.Provider value={mockStateManager}>
+      <AIStateProvider stateManager={mockStateManager}>
         {children}
-      </AIStateContext.Provider>
+      </AIStateProvider>
     </MemoryRouter>
   );
 };
@@ -60,7 +69,6 @@ describe('ARHMessages Component', () => {
     setIsBannerOpen: () => {},
     username: 'testuser',
   };
-
   it('should render messages container', () => {
     cy.mount(
       <TestWrapper>
@@ -543,6 +551,377 @@ describe('ARHMessages Component', () => {
         cy.get('li').should('contain.text', 'List item 1');
         cy.get('li').should('contain.text', 'List item 2');
         cy.get('code').should('contain.text', 'code block');
+      });
+    });
+  });
+
+  describe('Message Feedback', () => {
+    const botMessageWithFeedback = [
+      { 
+        id: '1', 
+        answer: 'Hello!', 
+        role: 'user' 
+      },
+      { 
+        id: '2', 
+        answer: 'Here is a helpful response about OpenShift that you can provide feedback on.', 
+        role: 'bot'
+      }
+    ];
+
+    it('should display feedback actions for bot messages', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should render bot message
+      cy.contains('Here is a helpful response about OpenShift').should('exist');
+      
+      // Debug: Check what's actually in the bot message
+      cy.get('.pf-chatbot__message--bot').should('exist');
+      
+      // Let's see if there are any buttons at all in the bot message
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        // Check if the message-and-actions container exists
+        cy.get('.pf-chatbot__message-and-actions').should('exist');
+        
+        // Look for any buttons at all
+        cy.get('button').then(($buttons) => {
+          if ($buttons.length === 0) {
+            throw new Error('No buttons found in bot message - feedback actions not rendered');
+          } else {
+            cy.log(`Found ${$buttons.length} buttons in bot message`);
+            // If buttons exist, they should be in response actions container
+            cy.get('.pf-chatbot__response-actions').should('exist');
+            cy.get('.pf-chatbot__response-actions button').should('have.length', 3);
+          }
+        });
+      });
+    });
+
+    it('should not display feedback actions for user messages', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should render user message
+      cy.contains('Hello!').should('exist');
+      
+      // Should not display feedback actions for user messages
+      cy.get('.pf-chatbot__message--user').within(() => {
+        cy.get('.pf-chatbot__response-actions').should('not.exist');
+      });
+    });
+
+    it('should open positive feedback form when positive button is clicked', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Debug: log button information before clicking
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().then(($btn) => {
+          cy.log(`Button text: ${$btn.text()}`);
+          cy.log(`Button aria-label: ${$btn.attr('aria-label')}`);
+          cy.log(`Button disabled: ${$btn.prop('disabled')}`);
+        });
+        
+        // Try clicking the button and force the click if needed
+        cy.get('.pf-chatbot__response-actions button').first().click({ force: true });
+      });
+      
+      // Wait a bit for the state to update
+      cy.wait(100);
+      
+      // Should show feedback form
+      cy.get('.pf-chatbot__feedback-card').should('exist');
+      
+      // Should show positive feedback title
+      cy.contains('Thank you. Any more feedback?').should('be.visible');
+      
+      // Should show positive quick responses
+      cy.contains('Solved my issue').should('be.visible');
+      cy.contains('Easy to understand').should('be.visible');
+      cy.contains('Accurate').should('be.visible');
+      
+      // Should have text area for additional feedback
+      cy.get('textarea').should('exist');
+      
+      // Should have submit button
+      cy.contains('Send feedback').should('be.visible');
+    });
+
+    it('should open negative feedback form when negative button is clicked', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Click negative feedback button - use the second button which should be thumbs down
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').eq(1).click();
+      });
+      
+      // Should show feedback form
+      cy.get('.pf-chatbot__feedback-card').should('exist');
+      
+      // Should show negative feedback title
+      cy.contains('Thank you. How can we improve?').should('be.visible');
+      
+      // Should show negative quick responses
+      cy.contains("Didn't solve my issue").should('be.visible');
+      cy.contains('Confusing').should('be.visible');
+      cy.contains('Inaccurate').should('be.visible');
+      
+      // Should have text area for additional feedback
+      cy.get('textarea').should('exist');
+      
+      // Should have submit button
+      cy.contains('Send feedback').should('be.visible');
+    });
+
+    it('should close feedback form when close button is clicked', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Open feedback form
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().click();
+      });
+      
+      // Should show feedback form
+      cy.get('.pf-chatbot__feedback-card').should('exist');
+      
+      // Close the form
+      cy.get('.pf-chatbot__feedback-card').within(() => {
+        cy.get('.pf-v6-c-card__actions button').click();
+      });
+      
+      // Form should be hidden
+      cy.get('.pf-chatbot__feedback-card').should('not.exist');
+    });
+
+    it('should submit positive feedback with quick response', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Open positive feedback form
+      cy.get('.pf-chatbot__message--bot').last().within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().click();
+      });
+      
+      // Select a quick response
+      cy.contains('Solved my issue').click();
+      
+      // Submit feedback
+      cy.contains('Send feedback').click();
+      
+      // Should show feedback completed message
+      cy.get('.pf-chatbot__feedback-card-complete').should('exist');
+      cy.contains('Thank you.').should('be.visible');
+      cy.contains('We appreciate your input.').should('be.visible');
+      cy.contains('It helps us improve this experience.').should('be.visible');
+    });
+
+    it('should submit negative feedback with free form text', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Open negative feedback form
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').eq(1).click();
+      });
+      
+      // Type in free form feedback
+      cy.get('textarea').type('The response could be more detailed and include examples.');
+      
+      // Submit feedback
+      cy.contains('Send feedback').click();
+      
+      // Should show feedback completed message
+      cy.get('.pf-chatbot__feedback-card-complete').should('exist');
+      cy.contains('Thank you.').should('be.visible');
+    });
+
+    it('should submit feedback with both quick response and free form text', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Open positive feedback form
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().click();
+      });
+      
+      // Select quick response and add free form text
+      cy.contains('Easy to understand').click();
+      cy.get('textarea').type('Very clear and well structured response.');
+      
+      // Submit feedback
+      cy.contains('Send feedback').click();
+      
+      // Should show feedback completed message
+      cy.get('.pf-chatbot__feedback-card-complete').should('exist');
+    });
+
+    it('should disable feedback buttons after submission', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Submit positive feedback
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().click();
+      });
+      
+      cy.contains('Solved my issue').click();
+      cy.contains('Send feedback').click();
+      
+      // Close feedback completed message
+      cy.get('.pf-chatbot__feedback-card-complete').within(() => {
+        cy.get('.pf-v6-c-card__actions button').click();
+      });
+      
+      // Feedback buttons should be disabled
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().should('be.disabled');
+        cy.get('.pf-chatbot__response-actions button').eq(1).should('be.disabled');
+      });
+    });
+
+    it('should close feedback completed message when close button is clicked', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Submit feedback
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().click();
+      });
+      
+      cy.contains('Solved my issue').click();
+      cy.contains('Send feedback').click();
+      
+      // Should show completed message
+      cy.get('.pf-chatbot__feedback-card-complete').should('exist');
+      
+      // Close the completed message
+      cy.get('.pf-chatbot__feedback-card-complete').within(() => {
+        cy.get('.pf-v6-c-card__actions button').click();
+      });
+      
+      // Completed message should be hidden
+      cy.get('.pf-chatbot__feedback-card-complete').should('not.exist');
+    });
+
+    it('should copy message content to clipboard when copy button is clicked', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Mock clipboard API
+      cy.window().then((win) => {
+        cy.stub(win.navigator.clipboard, 'writeText').as('writeText');
+      });
+      
+      // Click copy button
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        cy.get('.pf-chatbot__response-actions button').eq(2).click();
+      });
+      
+      // Should call clipboard writeText with message content
+      cy.get('@writeText').should('have.been.calledWith', 'Here is a helpful response about OpenShift that you can provide feedback on.');
+    });
+
+    it('should handle multiple bot messages with independent feedback', () => {
+      const multipleBotMessages = [
+        { 
+          id: '1', 
+          answer: 'First bot response about containers.', 
+          role: 'bot'
+        },
+        { 
+          id: '2', 
+          answer: 'Second bot response about networking.', 
+          role: 'bot'
+        }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={multipleBotMessages}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Each message should have its own feedback buttons
+      cy.get('.pf-chatbot__message--bot').should('have.length', 2);
+      
+      cy.get('.pf-chatbot__message--bot').first().within(() => {
+        cy.get('.pf-chatbot__response-actions button').should('have.length', 3);
+      });
+      
+      cy.get('.pf-chatbot__message--bot').last().within(() => {
+        cy.get('.pf-chatbot__response-actions button').should('have.length', 3);
+      });
+      
+      // Submit feedback on first message
+      cy.get('.pf-chatbot__message--bot').first().within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().click();
+      });
+      
+      cy.contains('Solved my issue').click();
+      cy.contains('Send feedback').click();
+      
+      // First message buttons should be disabled
+      cy.get('.pf-chatbot__message--bot').first().within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().should('be.disabled');
+        cy.get('.pf-chatbot__response-actions button').eq(1).should('be.disabled');
+      });
+      
+      // Second message buttons should still be enabled
+      cy.get('.pf-chatbot__message--bot').last().within(() => {
+        cy.get('.pf-chatbot__response-actions button').first().should('not.be.disabled');
+        cy.get('.pf-chatbot__response-actions button').eq(1).should('not.be.disabled');
+      });
+    });
+
+    it('should have proper accessibility attributes for feedback buttons', () => {
+      cy.mount(
+        <TestWrapper messages={botMessageWithFeedback}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      cy.get('.pf-chatbot__message--bot').within(() => {
+        // Feedback buttons should be accessible
+        cy.get('.pf-chatbot__response-actions button')
+          .should('have.attr', 'type', 'button')
+          .should('be.visible')
+          .should('have.length', 3);
       });
     });
   });

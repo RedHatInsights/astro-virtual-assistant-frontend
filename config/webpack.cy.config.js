@@ -9,7 +9,15 @@ const JSConfig = {
     rules: [
       {
         test: /\.(js|ts)x?$/,
-        exclude: /node_modules/,
+        exclude: (path) => {
+          return (
+            /node_modules/.test(path) ||
+            /__tests__/.test(path) ||
+            /\.test\.(js|jsx|ts|tsx)$/.test(path) ||
+            /\.spec\.(js|jsx|ts|tsx)$/.test(path) ||
+            /useMessageFeedback\.test\.tsx$/.test(path)
+          );
+        },
         use: {
           loader: 'swc-loader',
           options: {

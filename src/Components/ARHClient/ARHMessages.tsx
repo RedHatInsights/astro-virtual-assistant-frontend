@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import ARHBanner from './ARHBanner';
 import ARH_BOT_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import { useMessageFeedback } from './useMessageFeedback';
 
 import './ARHMessages.scss';
 
@@ -14,6 +15,7 @@ const currentUrl = new URL(window.location.href);
 
 function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalAttributes>; avatar: string }) {
   const navigate = useNavigate();
+  const { messageActions, userFeedbackForm, feedbackCompleted } = useMessageFeedback(message);
   const sources = useMemo(() => {
     if (!message.additionalAttributes?.sources || message.additionalAttributes.sources.length === 0) {
       return undefined;
@@ -46,7 +48,8 @@ function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalA
       return acc;
     }, []);
     return { sources: sourceItems };
-  }, [message.additionalAttributes]);
+  }, [message.additionalAttributes, navigate]);
+
   return (
     <Message
       id={`message-${message.id}`}
@@ -58,6 +61,9 @@ function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalA
       content={message.answer}
       aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
       sources={sources}
+      actions={messageActions}
+      userFeedbackForm={userFeedbackForm}
+      userFeedbackComplete={feedbackCompleted}
     />
   );
 }
