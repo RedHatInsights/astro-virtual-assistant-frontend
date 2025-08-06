@@ -44,6 +44,8 @@ const ARHMessages = ({
           <Fragment key={message.id || index}>
             <Message
               id={`message-${message.id}`}
+              // Don't want users to paste MD and display it
+              isMarkdownDisabled={message.role === 'user'}
               isLoading={message.role === 'bot' && message.answer === ''}
               role={message.role}
               avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}

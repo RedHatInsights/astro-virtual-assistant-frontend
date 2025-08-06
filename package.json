@@ -27,7 +27,7 @@
     "verify": "npm-run-all build lint"
   },
   "dependencies": {
-    "@patternfly/chatbot": "^2.2.1",
+    "@patternfly/chatbot": "6.4.0-prerelease.7",
     "@patternfly/patternfly": "^6.3.0",
     "@patternfly/react-core": "^6.3.0",
     "@patternfly/react-icons": "^6.3.0",
