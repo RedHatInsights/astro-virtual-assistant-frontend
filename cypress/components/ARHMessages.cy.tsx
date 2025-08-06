@@ -1,4 +1,5 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import ARHMessages from '../../src/Components/ARHClient/ARHMessages';
 import { AIStateContext } from '@redhat-cloud-services/ai-react-state';
 
@@ -43,9 +44,11 @@ const TestWrapper = ({ children, messages }: { children: React.ReactNode; messag
   const mockStateManager = React.useMemo(() => createMockStateManager(messages), [messages]);
   
   return (
-    <AIStateContext.Provider value={mockStateManager}>
-      {children}
-    </AIStateContext.Provider>
+    <MemoryRouter>
+      <AIStateContext.Provider value={mockStateManager}>
+        {children}
+      </AIStateContext.Provider>
+    </MemoryRouter>
   );
 };
 
@@ -121,7 +124,7 @@ describe('ARHMessages Component', () => {
           sources: [
             {
               title: 'Getting Started with OpenShift',
-              body: 'This guide covers the basics of getting started with Red Hat OpenShift Container Platform.',
+              snippet: 'This guide covers the basics of getting started with Red Hat OpenShift Container Platform.',
               link: 'https://docs.openshift.com/getting-started'
             }
           ]
@@ -143,17 +146,17 @@ describe('ARHMessages Component', () => {
           sources: [
             {
               title: 'OpenShift Installation Guide',
-              body: 'Complete installation guide for OpenShift Container Platform.',
+              snippet: 'Complete installation guide for OpenShift Container Platform.',
               link: 'https://docs.openshift.com/install'
             },
             {
               title: 'OpenShift Developer Guide',
-              body: 'Developer-focused documentation for building applications on OpenShift.',
+              snippet: 'Developer-focused documentation for building applications on OpenShift.',
               link: 'https://docs.openshift.com/developer'
             },
             {
               title: 'OpenShift Administration',
-              body: 'Administrative tasks and cluster management documentation.',
+              snippet: 'Administrative tasks and cluster management documentation.',
               link: 'https://docs.openshift.com/admin'
             }
           ]
@@ -328,6 +331,122 @@ describe('ARHMessages Component', () => {
       // Should not render PatternFly source components for empty sources array
       cy.get('.pf-chatbot__source').should('not.exist');
       cy.get('.pf-chatbot__sources-card').should('not.exist');
+    });
+  });
+
+  describe('Internal Navigation', () => {
+    const messagesWithInternalLinks = [
+      { 
+        id: '1', 
+        answer: 'Hello!', 
+        role: 'user' 
+      },
+      { 
+        id: '2', 
+        answer: 'Here are some internal Red Hat resources.', 
+        role: 'bot',
+        additionalAttributes: {
+          sources: [
+            {
+              title: 'Internal Documentation',
+              snippet: 'Internal Red Hat documentation.',
+              link: '/internal/docs'
+            },
+            {
+              title: 'External Documentation',
+              snippet: 'External documentation.',
+              link: 'https://external.example.com/docs'
+            }
+          ]
+        }
+      }
+    ];
+
+    it('should handle internal navigation for internal links', () => {
+      cy.mount(
+        <TestWrapper messages={messagesWithInternalLinks}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Find the internal link - it should prevent default and handle navigation internally
+      cy.get('.pf-chatbot__sources-card-title').within(() => {
+        cy.get('a[href="/internal/docs"]').should('exist');
+        // We can't easily test the navigate function being called, but we can verify the link exists
+        // and has the correct structure for internal navigation
+      });
+    });
+
+    it('should handle external links normally', () => {
+      cy.mount(
+        <TestWrapper messages={messagesWithInternalLinks}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Navigate to the external source
+      cy.get('button[data-action="next"]').click();
+      
+      // Find the external link - it should link normally
+      cy.get('.pf-chatbot__sources-card-title').within(() => {
+        cy.get('a[href="https://external.example.com/docs"]')
+          .should('exist')
+          .should('contain.text', 'External Documentation');
+      });
+    });
+
+    it('should properly identify internal vs external links', () => {
+      const messagesWithMixedLinks = [
+        { 
+          id: '1', 
+          answer: 'Hello!', 
+          role: 'user' 
+        },
+        { 
+          id: '2', 
+          answer: 'Mixed link types.', 
+          role: 'bot',
+          additionalAttributes: {
+            sources: [
+              {
+                title: 'Internal Path',
+                snippet: 'Internal Red Hat path.',
+                link: '/settings/account'
+              },
+              {
+                title: 'External Site',
+                snippet: 'External site.',
+                link: 'https://docs.example.com'
+              },
+              {
+                title: 'Invalid URL',
+                snippet: 'Invalid URL format.',
+                link: 'not-a-valid-url'
+              }
+            ]
+          }
+        }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={messagesWithMixedLinks}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should render all sources correctly regardless of link type
+      cy.get('.pf-chatbot__source').within(() => {
+        cy.contains('3 sources').should('be.visible');
+      });
+      
+      // Check each source type
+      cy.get('.pf-chatbot__sources-card-title a[href="/settings/account"]').should('exist');
+      
+      cy.get('button[data-action="next"]').click();
+      cy.get('.pf-chatbot__sources-card-title a[href="https://docs.example.com"]').should('exist');
+      
+      cy.get('button[data-action="next"]').click();
+      cy.get('.pf-chatbot__sources-card-title a[href="not-a-valid-url"]').should('exist');
     });
   });
 

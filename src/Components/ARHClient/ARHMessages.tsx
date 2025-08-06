@@ -1,16 +1,66 @@
-import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox, SourcesCard } from '@patternfly/chatbot';
+import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox, SourcesCardProps } from '@patternfly/chatbot';
 import React, { Fragment, useEffect, useMemo } from 'react';
 import { useActiveConversation, useMessages } from '@redhat-cloud-services/ai-react-state';
+import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
+import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
+import { useNavigate } from 'react-router-dom';
+
 import ARHBanner from './ARHBanner';
 import ARH_BOT_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 
 import './ARHMessages.scss';
 
-type ARHSource = {
-  title: string;
-  body: string;
-  link: string;
-};
+const currentUrl = new URL(window.location.href);
+
+function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalAttributes>; avatar: string }) {
+  const navigate = useNavigate();
+  const sources = useMemo(() => {
+    if (!message.additionalAttributes?.sources || message.additionalAttributes.sources.length === 0) {
+      return undefined;
+    }
+
+    const sourceItems = message.additionalAttributes.sources.reduce<SourcesCardProps['sources']>((acc, source) => {
+      if (source.title && source.link) {
+        let isExternal = true;
+        try {
+          const linkUrl = new URL(source.link);
+          isExternal = linkUrl.origin !== currentUrl.origin;
+        } catch (error) {
+          isExternal = true;
+        }
+        acc.push({
+          title: source.title,
+          link: source.link,
+          body: source.snippet,
+          isExternal,
+          onClick: (event) => {
+            // handle internal HCC navigation
+            if (!isExternal && source.link?.startsWith('/')) {
+              event.preventDefault();
+              event.stopPropagation();
+              navigate(source.link);
+            }
+          },
+        });
+      }
+      return acc;
+    }, []);
+    return { sources: sourceItems };
+  }, [message.additionalAttributes]);
+  return (
+    <Message
+      id={`message-${message.id}`}
+      // Don't want users to paste MD and display it
+      isMarkdownDisabled={message.role === 'user'}
+      isLoading={message.role === 'bot' && message.answer === ''}
+      role={message.role}
+      avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}
+      content={message.answer}
+      aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
+      sources={sources}
+    />
+  );
+}
 
 const ARHMessages = ({
   isBannerOpen,
@@ -26,7 +76,7 @@ const ARHMessages = ({
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
 }) => {
   const activeConversation = useActiveConversation();
-  const messages = useMessages<{ sources: ARHSource[] }>();
+  const messages = useMessages<IFDAdditionalAttributes>();
   const welcomeMessageConfig = useMemo(() => {
     return { title: `Hello${username ? `, ${username}` : ''}`, description: 'How may I help you today?' };
   }, [username]);
@@ -44,21 +94,7 @@ const ARHMessages = ({
         {messages.length === 0 && <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" />}
         {messages.map((message, index) => (
           <Fragment key={index}>
-            <Message
-              id={`message-${message.id}`}
-              // Don't want users to paste MD and display it
-              isMarkdownDisabled={message.role === 'user'}
-              isLoading={message.role === 'bot' && message.answer === ''}
-              role={message.role}
-              avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}
-              content={message.answer}
-              aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
-              sources={
-                Array.isArray(message.additionalAttributes?.sources) && message.additionalAttributes.sources.length > 0
-                  ? { sources: message.additionalAttributes.sources }
-                  : undefined
-              }
-            />
+            <MessageEntry message={message} avatar={avatar} />
           </Fragment>
         ))}
         <div ref={scrollToBottomRef}></div>
