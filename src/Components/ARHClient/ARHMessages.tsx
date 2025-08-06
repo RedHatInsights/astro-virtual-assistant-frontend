@@ -4,6 +4,8 @@ import { useActiveConversation, useMessages } from '@redhat-cloud-services/ai-re
 import ARHBanner from './ARHBanner';
 import ARH_BOT_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 
+import './ARHMessages.scss';
+
 type ARHSource = {
   title: string;
   body: string;
@@ -41,7 +43,7 @@ const ARHMessages = ({
         <ARHBanner variant={activeConversation?.locked ? 'readOnly' : 'privacy'} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
         {messages.length === 0 && <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" />}
         {messages.map((message, index) => (
-          <Fragment key={message.id || index}>
+          <Fragment key={index}>
             <Message
               id={`message-${message.id}`}
               // Don't want users to paste MD and display it
@@ -51,10 +53,12 @@ const ARHMessages = ({
               avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}
               content={message.answer}
               aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
+              sources={
+                Array.isArray(message.additionalAttributes?.sources) && message.additionalAttributes.sources.length > 0
+                  ? { sources: message.additionalAttributes.sources }
+                  : undefined
+              }
             />
-            {Array.isArray(message.additionalAttributes?.sources) && message.additionalAttributes.sources.length > 0 && (
-              <SourcesCard sources={message.additionalAttributes.sources} />
-            )}
           </Fragment>
         ))}
         <div ref={scrollToBottomRef}></div>
