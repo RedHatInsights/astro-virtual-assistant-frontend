@@ -20,6 +20,16 @@ module.exports = {
   routes: getRoutes(),
   interceptChromeConfig: false,
   moduleFederation: {
+    exclude: ['react-router-dom'],
+    shared: [
+      {
+        'react-router-dom': {
+          singleton: true,
+          import: false,
+          version: '^6.3.0',
+        },
+      },
+    ],
     exposes: {
       './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
       ...extraExposes,
