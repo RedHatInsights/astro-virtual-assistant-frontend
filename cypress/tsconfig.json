@@ -22,7 +22,8 @@
     "../src/**/*.test.tsx",
     "../src/**/*.spec.tsx",
     "../src/**/*.spec.ts",
+    "../src/**/__tests__/**/*",
     "../src/**/__mocks__/**/*.ts",
-    "../src/**/__mocks__/**/*.tx",
+    "../src/**/__mocks__/**/*.tsx"
   ]
 }

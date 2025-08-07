@@ -5,7 +5,7 @@ const webpackConfig = require('./config/webpack.cy.config.js');
 export default defineConfig({
   component: {
     specPattern: 'cypress/components/**/*.cy.{js,jsx,ts,tsx}',
-    excludeSpecPattern: ['/snapshots/*', '/image_snapshots/*', '/src/*'],
+    excludeSpecPattern: ['/snapshots/*', '/image_snapshots/*', '/src/*', '**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}'],
     setupNodeEvents(on, config) {
       on('before:browser:launch', (browser, launchOptions) => {
         if (browser.name === 'chrome' && browser.isHeadless) {

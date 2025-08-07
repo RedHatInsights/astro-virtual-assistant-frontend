@@ -49,14 +49,18 @@ export const useActiveConversation = jest.fn(() => mockActiveConversation);
 export const useMessages = jest.fn(() => mockMessages);
 export const useInProgress = jest.fn(() => false);
 export const useSendMessage = jest.fn(() => jest.fn());
+export const useClient = jest.fn(() => ({
+  sendMessageFeedback: jest.fn().mockResolvedValue({}),
+}));
 
 // Allow mocking different states for tests
 export const __setMockState = (overrides: any) => {
   if (overrides.conversations) useConversations.mockReturnValue(overrides.conversations);
   if (overrides.messages) useMessages.mockReturnValue(overrides.messages);
-  if (overrides.activeConversation) useActiveConversation.mockReturnValue(overrides.activeConversation);
+  if (overrides.activeConversation !== undefined) useActiveConversation.mockReturnValue(overrides.activeConversation);
   if (overrides.isInitializing !== undefined) useIsInitializing.mockReturnValue(overrides.isInitializing);
   if (overrides.inProgress !== undefined) useInProgress.mockReturnValue(overrides.inProgress);
+  if (overrides.client) useClient.mockReturnValue(overrides.client);
 };
 
 export const __resetMocks = () => {
@@ -65,4 +69,7 @@ export const __resetMocks = () => {
   useActiveConversation.mockReturnValue(mockActiveConversation);
   useIsInitializing.mockReturnValue(false);
   useInProgress.mockReturnValue(false);
+  useClient.mockReturnValue({
+    sendMessageFeedback: jest.fn().mockResolvedValue({}),
+  });
 };
