@@ -23,6 +23,7 @@ objects:
         paths:
           - /apps/virtual-assistant
       image: ${IMAGE}:${IMAGE_TAG}
+      pushCacheEnabled: true
       module:
         manifestLocation: "/apps/virtual-assistant/fed-mods.json"
         modules:
