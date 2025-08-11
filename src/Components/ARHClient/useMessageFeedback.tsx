@@ -51,6 +51,7 @@ export function useMessageFeedback(message: MessageType<IFDAdditionalAttributes>
           positive: isPositive,
           sent: true,
           sending: false,
+          detailOpened: false,
           showFeedbackCompleted: true,
         }));
       } catch (error) {

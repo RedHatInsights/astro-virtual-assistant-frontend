@@ -6,7 +6,7 @@ import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ARHChatbot } from '../../src/Components/ARHClient/ARHChatbot';
 
 // Create mock state manager with all methods that ARHChatbot hooks expect
-const createMockStateManager = () => {
+const createMockStateManager = (overrides: any = {}) => {
   const state = {
     conversations: [
       { id: 'conv-1', title: 'Test Conversation 1', locked: false },
@@ -16,6 +16,8 @@ const createMockStateManager = () => {
     messages: [],
     isInitializing: false,
     inProgress: false,
+    initLimitations: undefined,
+    ...overrides,
   };
 
   return {
@@ -24,6 +26,7 @@ const createMockStateManager = () => {
       getConversations: () => state.conversations,
       getActiveConversationMessages: () => state.messages,
       isInitializing: () => state.isInitializing,
+      getInitLimitation: () => state.initLimitations,
       createNewConversation: () => Promise.resolve({ id: 'new-conv', title: 'New Conversation' }),
       setActiveConversation: () => {},
       sendMessage: () => {},
@@ -32,6 +35,7 @@ const createMockStateManager = () => {
     }),
     getConversations: () => state.conversations,
     isInitializing: () => state.isInitializing,
+    getInitLimitation: () => state.initLimitations,
     createNewConversation: () => Promise.resolve({ id: 'new-conv', title: 'New Conversation' }),
     setActiveConversation: () => {},
     sendMessage: () => {},
@@ -40,8 +44,8 @@ const createMockStateManager = () => {
   };
 };
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => {
-  const mockStateManager = React.useMemo(() => createMockStateManager(), []);
+const TestWrapper = ({ children, stateOverrides }: { children: React.ReactNode; stateOverrides?: any }) => {
+  const mockStateManager = React.useMemo(() => createMockStateManager(stateOverrides), [stateOverrides]);
   
   return (
     <AIStateContext.Provider value={mockStateManager}>
@@ -133,6 +137,160 @@ describe('ARHChatbot Component', () => {
       cy.contains('Ask Red Hat').should('exist');
       // Message input should be present  
       cy.get('#query-input').should('exist');
+    });
+  });
+
+  describe('Conversation Limit Handling', () => {
+    it('should allow new chat when no quota limitations exist', () => {
+      const mockSetOpen = cy.stub();
+      const mockSetIsBannerOpen = cy.stub();
+      
+      const props = {
+        avatar: 'test-avatar.svg',
+        setOpen: mockSetOpen,
+        isBannerOpen: false,
+        setIsBannerOpen: mockSetIsBannerOpen,
+        username: 'testuser',
+      };
+
+      cy.mount(
+        <TestWrapper>
+          <ARHChatbot {...props} />
+        </TestWrapper>
+      );
+      
+      // Should render normally with new chat functionality available
+      cy.get('#ai-chatbot').should('exist');
+      cy.get('#ai-chatbot').within(() => {
+        cy.contains('Ask Red Hat').should('exist');
+        // Message input should be enabled when no quota limitations
+        cy.get('#query-input').should('exist').should('not.be.disabled');
+      });
+    });
+
+    it('should disable new chat when initLimitation reason is quota-breached', () => {
+      const mockSetOpen = cy.stub();
+      const mockSetIsBannerOpen = cy.stub();
+      
+      const props = {
+        avatar: 'test-avatar.svg',
+        setOpen: mockSetOpen,
+        isBannerOpen: false,
+        setIsBannerOpen: mockSetIsBannerOpen,
+        username: 'testuser',
+      };
+
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          initLimitations: { reason: 'quota-breached' }
+        }}>
+          <ARHChatbot {...props} />
+        </TestWrapper>
+      );
+      
+      // Should render chatbot but with limitations
+      cy.get('#ai-chatbot').should('exist');
+      cy.get('#ai-chatbot').within(() => {
+        cy.contains('Ask Red Hat').should('exist');
+        // Message input should be disabled when quota is breached
+        cy.get('#query-input').should('exist');
+        // The send button should be disabled (tested in ARHFooter tests)
+        cy.get('button[aria-label="Send"]').should('be.disabled');
+      });
+    });
+
+    it('should allow new chat when initLimitation has different reason', () => {
+      const mockSetOpen = cy.stub();
+      const mockSetIsBannerOpen = cy.stub();
+      
+      const props = {
+        avatar: 'test-avatar.svg',
+        setOpen: mockSetOpen,
+        isBannerOpen: false,
+        setIsBannerOpen: mockSetIsBannerOpen,
+        username: 'testuser',
+      };
+
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          initLimitations: { reason: 'other-limitation' }
+        }}>
+          <ARHChatbot {...props} />
+        </TestWrapper>
+      );
+      
+      // Should render normally since only quota-breached disables new chat
+      cy.get('#ai-chatbot').should('exist');
+      cy.get('#ai-chatbot').within(() => {
+        cy.contains('Ask Red Hat').should('exist');
+        // Message input should be enabled for other limitation types
+        cy.get('#query-input').should('exist').should('not.be.disabled');
+      });
+    });
+
+    it('should display conversation limit banner when quota is breached', () => {
+      const mockSetOpen = cy.stub();
+      const mockSetIsBannerOpen = cy.stub();
+      
+      const props = {
+        avatar: 'test-avatar.svg',
+        setOpen: mockSetOpen,
+        isBannerOpen: true, // Show banner
+        setIsBannerOpen: mockSetIsBannerOpen,
+        username: 'testuser',
+      };
+
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          initLimitations: { reason: 'quota-breached' },
+          activeConversation: null // No active conversation when quota breached
+        }}>
+          <ARHChatbot {...props} />
+        </TestWrapper>
+      );
+      
+      // Should show conversation limit banner instead of privacy banner
+      cy.get('#ai-chatbot').should('exist');
+      cy.get('#ai-chatbot').within(() => {
+        // Should show danger alert for conversation limit
+        cy.get('.pf-v6-c-alert').should('exist').should('have.class', 'pf-m-danger');
+        cy.contains('Chat limit reached').should('be.visible');
+        cy.contains("You've reached the maximum number of chats").should('be.visible');
+      });
+    });
+
+    it('should preserve other chatbot functionality when quota is breached', () => {
+      const mockSetOpen = cy.stub();
+      const mockSetIsBannerOpen = cy.stub();
+      
+      const props = {
+        avatar: 'test-avatar.svg',
+        setOpen: mockSetOpen,
+        isBannerOpen: false,
+        setIsBannerOpen: mockSetIsBannerOpen,
+        username: 'testuser',
+      };
+
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          initLimitations: { reason: 'quota-breached' }
+        }}>
+          <ARHChatbot {...props} />
+        </TestWrapper>
+      );
+      
+      // Other functionality should still work
+      cy.get('#ai-chatbot').should('exist');
+      cy.get('#ai-chatbot').within(() => {
+        // Header should still be present and functional
+        cy.contains('Ask Red Hat').should('exist');
+        
+        // Footer should be present even if input is disabled
+        cy.get('#query-input').should('exist');
+        
+        // The chatbot structure should remain intact
+        cy.get('.pf-chatbot__content').should('exist');
+      });
     });
   });
 });

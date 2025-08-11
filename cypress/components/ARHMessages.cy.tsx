@@ -6,7 +6,7 @@ import { Conversation, createClientStateManager, StateManager } from '@redhat-cl
 import { IFDClient } from '@redhat-cloud-services/arh-client';
 
 // Create mock state manager - ARHMessages needs the double-nested getState interface
-const createMockStateManager = (customMessages?: any[]) => {
+const createMockStateManager = (customMessages?: any[], overrides?: any) => {
   const defaultMessages = [
     { id: '1', answer: 'Hello!', role: 'user' },
     { id: '2', answer: 'Hi there! How can I help you?', role: 'bot' }
@@ -22,6 +22,7 @@ const createMockStateManager = (customMessages?: any[]) => {
       isInitialized: boolean;
       isInitializing: boolean;
       client: IFDClient;
+      initLimitations?: any;
   } = {
     conversations: {
       ['test-conv']: {
@@ -29,6 +30,7 @@ const createMockStateManager = (customMessages?: any[]) => {
         messages: activeConversationMessages,
         title: 'Test Conversation',
         locked: false,
+        ...overrides?.activeConversation,
       },
     },
     activeConversationId: 'test-conv',
@@ -38,6 +40,8 @@ const createMockStateManager = (customMessages?: any[]) => {
     isInitialized: true,
     isInitializing: false,
     messageInProgress: false,
+    initLimitations: overrides?.initLimitations,
+    ...overrides,
   };
 
   const manager: StateManager = {
@@ -45,12 +49,13 @@ const createMockStateManager = (customMessages?: any[]) => {
     getActiveConversationMessages: () => activeConversationMessages,
     getClient: () => state.client,
     subscribe: () => () => {},
+    getInitLimitation: () => state.initLimitations
   } as unknown as StateManager;
   return manager
 };
 
-const TestWrapper = ({ children, messages }: { children: React.ReactNode; messages?: any[] }) => {
-  const mockStateManager = React.useMemo(() => createMockStateManager(messages), [messages]);
+const TestWrapper = ({ children, messages, stateOverrides }: { children: React.ReactNode; messages?: any[]; stateOverrides?: any }) => {
+  const mockStateManager = React.useMemo(() => createMockStateManager(messages, stateOverrides), [messages, stateOverrides]);
   
   return (
     <MemoryRouter>
@@ -923,6 +928,261 @@ describe('ARHMessages Component', () => {
           .should('be.visible')
           .should('have.length', 3);
       });
+    });
+  });
+
+  describe('Quota Alerts', () => {
+    it('should display warning alert when message quota is approaching limit', () => {
+      const messagesWithQuotaWarning = [
+        { 
+          id: '1', 
+          answer: 'Hello!', 
+          role: 'user' 
+        },
+        { 
+          id: '2', 
+          answer: 'Response with quota warning', 
+          role: 'bot',
+          additionalAttributes: {
+            quota: {
+              enabled: true,
+              quota: {
+                limit: 20,
+                used: 15, // 15 + 5 = 20 (warning threshold)
+              },
+            },
+          },
+        }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={messagesWithQuotaWarning}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should display warning alert after the message
+      cy.get('.pf-v6-c-alert').should('exist').should('have.class', 'pf-m-warning');
+      cy.contains('You are nearing the message limit').should('be.visible');
+      cy.contains('15 of 20 messages used').should('be.visible');
+    });
+
+    it('should display danger alert when message quota is exceeded', () => {
+      const messagesWithQuotaExceeded = [
+        { 
+          id: '1', 
+          answer: 'Hello!', 
+          role: 'user' 
+        },
+        { 
+          id: '2', 
+          answer: 'Response with quota exceeded', 
+          role: 'bot',
+          additionalAttributes: {
+            quota: {
+              enabled: true,
+              quota: {
+                limit: 10,
+                used: 10, // quota exceeded
+              },
+            },
+          },
+        }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={messagesWithQuotaExceeded}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should display danger alert after the message
+      cy.get('.pf-v6-c-alert').should('exist').should('have.class', 'pf-m-danger');
+      cy.contains('Message limit reached').should('be.visible');
+      cy.contains('You have reached the message limit for this conversation').should('be.visible');
+      cy.contains('To continue, you can start a new chat').should('be.visible');
+      
+      // Should have "Start a new chat" action link
+      cy.contains('button', 'Start a new chat').should('exist');
+    });
+
+    it('should not display quota alert when quota is not enabled', () => {
+      const messagesWithQuotaDisabled = [
+        { 
+          id: '1', 
+          answer: 'Hello!', 
+          role: 'user' 
+        },
+        { 
+          id: '2', 
+          answer: 'Response without quota', 
+          role: 'bot',
+          additionalAttributes: {
+            quota: {
+              enabled: false,
+              quota: {
+                limit: 10,
+                used: 10,
+              },
+            },
+          },
+        }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={messagesWithQuotaDisabled}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should not display any quota alerts
+      cy.get('.pf-v6-c-alert.pf-m-warning').should('not.exist');
+      cy.get('.pf-v6-c-alert.pf-m-danger').should('not.exist');
+      cy.contains('message limit').should('not.exist');
+    });
+
+    it('should not display quota alert when quota data is incomplete', () => {
+      const messagesWithIncompleteQuota = [
+        { 
+          id: '1', 
+          answer: 'Hello!', 
+          role: 'user' 
+        },
+        { 
+          id: '2', 
+          answer: 'Response with incomplete quota', 
+          role: 'bot',
+          additionalAttributes: {
+            quota: {
+              enabled: true,
+              quota: {
+                limit: undefined,
+                used: 5,
+              },
+            },
+          },
+        }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={messagesWithIncompleteQuota}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should not display any quota alerts
+      cy.get('.pf-v6-c-alert.pf-m-warning').should('not.exist');
+      cy.get('.pf-v6-c-alert.pf-m-danger').should('not.exist');
+    });
+  });
+
+  describe('Welcome Message Content', () => {
+    it('should display welcome prompt and bot welcome message when no messages exist', () => {
+      cy.mount(
+        <TestWrapper messages={[]}>
+          <ARHMessages {...defaultProps} username="TestUser" />
+        </TestWrapper>
+      );
+      
+      // Should display welcome prompt
+      cy.get('.pf-chatbot--layout--welcome').should('exist');
+      cy.contains('Hello, TestUser').should('be.visible');
+      cy.contains('How may I help you today?').should('be.visible');
+      
+      // Should display welcome message from bot
+      cy.get('#welcome-message').should('exist');
+      cy.get('#welcome-message').within(() => {
+        cy.contains('Hello Hallo Hola Bonjour こんにちは Olá مرحباً Ahoj Ciao 안녕하세요 Hallo 你好').should('be.visible');
+        cy.contains('Get answers from our library of support resources.').should('be.visible');
+      });
+    });
+
+    it('should display welcome prompt without username when username is not provided', () => {
+      cy.mount(
+        <TestWrapper messages={[]}>
+          <ARHMessages {...defaultProps} username="" />
+        </TestWrapper>
+      );
+      
+      // Should display welcome prompt without username
+      cy.contains('Hello').should('be.visible');
+      cy.contains('How may I help you today?').should('be.visible');
+      // Should not contain a comma (which would indicate username was appended)
+      cy.contains('Hello,').should('not.exist');
+    });
+
+    it('should not display welcome message when messages exist', () => {
+      const existingMessages = [
+        { id: '1', answer: 'Hello!', role: 'user' },
+        { id: '2', answer: 'Hi there!', role: 'bot' }
+      ];
+
+      cy.mount(
+        <TestWrapper messages={existingMessages}>
+          <ARHMessages {...defaultProps} />
+        </TestWrapper>
+      );
+      
+      // Should not display welcome prompt
+      cy.get('.pf-chatbot--layout--welcome').should('not.exist');
+      cy.get('#welcome-message').should('not.exist');
+      
+      // Should display actual messages
+      cy.contains('Hello!').should('be.visible');
+      cy.contains('Hi there!').should('be.visible');
+    });
+  });
+
+  describe('Banner Variants', () => {
+    it('should show conversation limit banner when initLimitations reason is quota-breached', () => {
+      cy.mount(
+        <TestWrapper 
+          messages={[]}
+          stateOverrides={{
+            initLimitations: { reason: 'quota-breached' },
+            activeConversationId: null
+          }}
+        >
+          <ARHMessages {...defaultProps} isBannerOpen={true} />
+        </TestWrapper>
+      );
+      
+      // Should show conversation limit banner
+      cy.get('.pf-v6-c-alert').should('exist').should('have.class', 'pf-m-danger');
+      cy.contains('Chat limit reached').should('be.visible');
+      cy.contains("You've reached the maximum number of chats").should('be.visible');
+      cy.contains('You can start up to 50 chats within a 24-hour period').should('be.visible');
+    });
+
+    it('should show read-only banner when active conversation is locked', () => {
+      cy.mount(
+        <TestWrapper 
+          messages={[]}
+          stateOverrides={{
+            activeConversation: { locked: true }
+          }}
+        >
+          <ARHMessages {...defaultProps} isBannerOpen={true} />
+        </TestWrapper>
+      );
+      
+      // Should show read-only banner
+      cy.get('.pf-v6-c-alert').should('exist').should('have.class', 'pf-m-info');
+      cy.contains('View-only chat').should('be.visible');
+      cy.contains('Previous chats are view-only').should('be.visible');
+    });
+
+    it('should show privacy banner by default', () => {
+      cy.mount(
+        <TestWrapper messages={[]}>
+          <ARHMessages {...defaultProps} isBannerOpen={true} />
+        </TestWrapper>
+      );
+      
+      // Should show privacy banner
+      cy.get('.pf-v6-c-alert').should('exist').should('have.class', 'pf-m-info');
+      cy.contains('Important').should('be.visible');
+      cy.contains('This feature uses AI technology').should('be.visible');
     });
   });
 });

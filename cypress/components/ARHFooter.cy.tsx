@@ -3,13 +3,17 @@ import ARHFooter from '../../src/Components/ARHClient/ARHFooter';
 import { AIStateContext } from '@redhat-cloud-services/ai-react-state';
 
 // Create mock state manager - ARHFooter expects a different interface
-const createMockStateManager = () => {
+const createMockStateManager = (overrides: any = {}) => {
   const state = {
     conversations: [],
-    activeConversation: { id: 'test-conv', locked: false },
-    messages: [],
+    activeConversationId: 'test-conv',
+    messages: {
+      'test-conv': { id: 'test-conv', locked: false }
+    },
     isInitializing: false,
-    inProgress: false,
+    messageInProgress: false,
+    initLimitations: undefined,
+    ...overrides,
   };
 
   // ARHFooter uses hooks that expect the state manager to have a getState method that returns another object with getState
@@ -21,6 +25,8 @@ const createMockStateManager = () => {
       sendMessage: () => {},
       subscribe: () => () => {},
       dispatch: () => {},
+      getInitLimitation: () => state.initLimitations,
+      getActiveConversationMessages: () => state.messages,
     }),
     createNewConversation: () => Promise.resolve(),
     setActiveConversation: () => {},
@@ -30,8 +36,8 @@ const createMockStateManager = () => {
   };
 };
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => {
-  const mockStateManager = React.useMemo(() => createMockStateManager(), []);
+const TestWrapper = ({ children, stateOverrides }: { children: React.ReactNode; stateOverrides?: any }) => {
+  const mockStateManager = React.useMemo(() => createMockStateManager(stateOverrides), [stateOverrides]);
   
   return (
     <AIStateContext.Provider value={mockStateManager}>
@@ -82,5 +88,120 @@ describe('ARHFooter Component', () => {
     
     // Input should have correct ID
     cy.get('#query-input').should('exist');
+  });
+
+  describe('Send button disabled states', () => {
+    it('should disable send button when in progress', () => {
+      cy.mount(
+        <TestWrapper stateOverrides={{ messageInProgress: true }}>
+          <ARHFooter />
+        </TestWrapper>
+      );
+      
+      // Send button should be disabled
+      cy.get('button[aria-label="Send"]').should('be.disabled');
+    });
+
+    it('should disable send button when active conversation is locked', () => {
+      cy.mount(
+        <TestWrapper
+          stateOverrides={{ 
+            conversations: {
+              'test-conv': { id: 'test-conv', locked: true }
+            }
+          }}>
+          <ARHFooter />
+        </TestWrapper>
+      );
+      
+      // Send button should be disabled
+      cy.get('button[aria-label="Send"]').should('be.disabled');
+    });
+
+    it('should disable send button when conversation limit is reached (no active conversation with quota-breached)', () => {
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          activeConversation: null,
+          initLimitations: { reason: 'quota-breached' }
+        }}>
+          <ARHFooter />
+        </TestWrapper>
+      );
+      
+      // Send button should be disabled
+      cy.get('button[aria-label="Send"]').should('be.disabled');
+    });
+
+    it('should disable send button when message quota is exceeded (danger variant)', () => {
+      const quotaExceededMessage = {
+        id: 'test-message',
+        role: 'bot',
+        answer: 'Test response',
+        additionalAttributes: {
+          quota: {
+            enabled: true,
+            quota: {
+              limit: 10,
+              used: 10, // quota exceeded
+            },
+          },
+        },
+      };
+
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          messages: [quotaExceededMessage]
+        }}>
+          <ARHFooter />
+        </TestWrapper>
+      );
+      
+      // Send button should be disabled
+      cy.get('button[aria-label="Send"]').should('be.disabled');
+    });
+
+    it('should enable send button when all conditions are normal', () => {
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          inProgress: false,
+          activeConversation: { id: 'test-conv', locked: false },
+          initLimitations: undefined,
+          messages: []
+        }}>
+          <ARHFooter />
+        </TestWrapper>
+      );
+      
+      // Send button should be enabled
+      cy.get('button[aria-label="Send"]').should('not.be.disabled');
+    });
+
+    it('should enable send button when quota warning is shown (not exceeded)', () => {
+      const quotaWarningMessage = {
+        id: 'test-message',
+        role: 'bot',
+        answer: 'Test response',
+        additionalAttributes: {
+          quota: {
+            enabled: true,
+            quota: {
+              limit: 20,
+              used: 15, // warning but not exceeded
+            },
+          },
+        },
+      };
+
+      cy.mount(
+        <TestWrapper stateOverrides={{ 
+          messages: [quotaWarningMessage]
+        }}>
+          <ARHFooter />
+        </TestWrapper>
+      );
+      
+      // Send button should still be enabled for warning
+      cy.get('button[aria-label="Send"]').should('not.be.disabled');
+    });
   });
 });
