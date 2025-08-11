@@ -1,11 +1,12 @@
 import React from 'react';
-import { Alert, AlertActionCloseButton, Button, Content } from '@patternfly/react-core';
+import { Alert, AlertActionCloseButton, AlertProps, Button, Content } from '@patternfly/react-core';
 import './ARHBanner.scss';
 import { useCreateNewConversation } from '@redhat-cloud-services/ai-react-state';
 
-const privacyMessage = () => ({
+const privacyMessage = (): AlertProps => ({
+  variant: 'info',
   title: 'Important',
-  description: (
+  children: (
     <>
       This feature uses AI technology. Do not include personal or sensitive information in your input. Interactions may be used to improve Red
       Hat&apos;s products or services. For more information about Red Hat&apos;s privacy practices, please refer to the{' '}
@@ -17,9 +18,10 @@ const privacyMessage = () => ({
   ),
 });
 
-const readOnlyMessage = (createNewConversation: () => void) => ({
+const readOnlyMessage = (createNewConversation: () => void): AlertProps => ({
+  variant: 'info',
   title: 'View-only chat',
-  description: (
+  children: (
     <>
       Previous chats are view-only. To ask a new question, please start a new chat.{' '}
       <Button onClick={createNewConversation} variant="link" isInline>
@@ -30,9 +32,16 @@ const readOnlyMessage = (createNewConversation: () => void) => ({
   ),
 });
 
+const conversationLimitMessage = (): AlertProps => ({
+  variant: 'danger',
+  title: 'Chat limit reached',
+  children: `You've reached the maximum number of chats. You can start up to 50 chats within a 24-hour period. Please try again after your limit resets`,
+});
+
 const messages = {
   privacy: privacyMessage,
   readOnly: readOnlyMessage,
+  conversationLimit: conversationLimitMessage,
 };
 
 const ARHBanner = ({
@@ -42,7 +51,7 @@ const ARHBanner = ({
 }: {
   isOpen: boolean;
   setOpen: (isOpen: boolean) => void;
-  variant?: 'readOnly' | 'privacy';
+  variant?: 'readOnly' | 'privacy' | 'conversationLimit';
 }) => {
   const createNewConversation = useCreateNewConversation();
   if (!isOpen) {
@@ -51,8 +60,13 @@ const ARHBanner = ({
   const message = messages[variant](createNewConversation);
   return (
     <div className="pf-v6-u-mb-md va-c-arh-banner__alert ">
-      <Alert variant="info" title={message.title} ouiaId="InfoAlert" actionClose={<AlertActionCloseButton onClose={() => setOpen(false)} />}>
-        <Content className="pf-v6-u-mb-md">{message.description}</Content>
+      <Alert
+        variant={message.variant}
+        title={message.title}
+        ouiaId="InfoAlert"
+        actionClose={<AlertActionCloseButton onClose={() => setOpen(false)} />}
+      >
+        <Content className="pf-v6-u-mb-md">{message.children}</Content>
         <div>
           <Button size="sm" onClick={() => setOpen(false)} variant="secondary">
             Got it

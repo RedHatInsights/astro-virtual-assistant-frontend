@@ -1,6 +1,7 @@
 import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox, SourcesCardProps } from '@patternfly/chatbot';
+import { Alert } from '@patternfly/react-core';
 import React, { Fragment, useEffect, useMemo } from 'react';
-import { useActiveConversation, useMessages } from '@redhat-cloud-services/ai-react-state';
+import { useActiveConversation, useInitLimitation, useMessages } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import ARHBanner from './ARHBanner';
 import ARH_BOT_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import { useMessageFeedback } from './useMessageFeedback';
+import useArhMessageQuota from './useArhMessageQuota';
 
 import './ARHMessages.scss';
 
@@ -49,22 +51,31 @@ function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalA
     }, []);
     return { sources: sourceItems };
   }, [message.additionalAttributes, navigate]);
+  console.log({ message });
 
+  const messageDate = `${message.date?.toLocaleDateString()} ${message.date?.toLocaleTimeString()}`;
+
+  const quota = useArhMessageQuota(message);
   return (
-    <Message
-      id={`message-${message.id}`}
-      // Don't want users to paste MD and display it
-      isMarkdownDisabled={message.role === 'user'}
-      isLoading={message.role === 'bot' && message.answer === ''}
-      role={message.role}
-      avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}
-      content={message.answer}
-      aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
-      sources={sources}
-      actions={messageActions}
-      userFeedbackForm={userFeedbackForm}
-      userFeedbackComplete={feedbackCompleted}
-    />
+    <>
+      <Message
+        id={`message-${message.id}`}
+        // Don't want users to paste MD and display it
+        isMarkdownDisabled={message.role === 'user'}
+        isLoading={message.role === 'bot' && message.answer === ''}
+        role={message.role}
+        avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}
+        content={message.answer}
+        aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
+        sources={sources}
+        actions={messageActions}
+        userFeedbackForm={userFeedbackForm}
+        userFeedbackComplete={feedbackCompleted}
+        timestamp={messageDate}
+      />
+      {/* Will require new PF API to add alerts directly to the message layout */}
+      {quota && <Alert {...quota} />}
+    </>
   );
 }
 
@@ -82,10 +93,21 @@ const ARHMessages = ({
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
 }) => {
   const activeConversation = useActiveConversation();
+  const initLimitations = useInitLimitation();
   const messages = useMessages<IFDAdditionalAttributes>();
   const welcomeMessageConfig = useMemo(() => {
-    return { title: `Hello${username ? `, ${username}` : ''}`, description: 'How may I help you today?' };
+    return {
+      title: `Hello${username ? `, ${username}` : ''}`,
+      description: 'How may I help you today?',
+      content: `Hello Hallo Hola Bonjour こんにちは Olá مرحباً Ahoj Ciao 안녕하세요 Hallo 你好\n\nGet answers from our library of support resources.`,
+    };
   }, [username]);
+  const bannerVariant = useMemo(() => {
+    if (initLimitations?.reason === 'quota-breached') {
+      return 'conversationLimit';
+    }
+    return activeConversation?.locked ? 'readOnly' : 'privacy';
+  }, [initLimitations, activeConversation]);
   useEffect(() => {
     if (activeConversation?.locked) {
       setIsBannerOpen(true);
@@ -96,8 +118,19 @@ const ARHMessages = ({
     // The PF seems to be doing some sort of caching, we have to force reset the elements on conversation change
     <ChatbotContent key={activeConversation?.id || 'no-active-conversation'}>
       <MessageBox>
-        <ARHBanner variant={activeConversation?.locked ? 'readOnly' : 'privacy'} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
-        {messages.length === 0 && <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" />}
+        <ARHBanner variant={bannerVariant} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
+        {messages.length === 0 && (
+          <>
+            <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" />
+            <Message
+              timestamp={`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`}
+              id="welcome-message"
+              role="bot"
+              avatar={ARH_BOT_ICON}
+              content={welcomeMessageConfig.content}
+            />
+          </>
+        )}
         {messages.map((message, index) => (
           <Fragment key={index}>
             <MessageEntry message={message} avatar={avatar} />

@@ -1,9 +1,10 @@
-import React, { PropsWithChildren, useEffect, useMemo, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
 import {
   AIStateProvider,
   useConversations,
   useCreateNewConversation,
+  useInitLimitation,
   useIsInitializing,
   useSetActiveConversation,
 } from '@redhat-cloud-services/ai-react-state';
@@ -20,6 +21,7 @@ import emptyAvatar from './img_avatar.svg';
 import type { ChromeUser } from '@redhat-cloud-services/types';
 
 import '@patternfly/chatbot/dist/css/main.css';
+import ARHNewChatModal from './ARHNewChatModal';
 
 const ARHProvider = ({ children, baseUrl }: PropsWithChildren<{ baseUrl: string }>) => {
   const chrome = useChrome();
@@ -40,6 +42,10 @@ const ARHProvider = ({ children, baseUrl }: PropsWithChildren<{ baseUrl: string 
             'App-Source-ID': 'CPIN-001',
           },
         });
+      },
+      initOptions: {
+        // preserve latest history if there was a full page refresh within the domain (SSO reauth, scope changes, etc)
+        initializeNewConversation: document.referrer === window.location.origin,
       },
     });
     const stateManager = createClientStateManager(client);
@@ -63,21 +69,27 @@ export const ARHChatbot = ({
   setIsBannerOpen: (isOpen: boolean) => void;
   username: string;
 }) => {
+  const rootElementRef = useRef<HTMLDivElement>(null);
   const conversations = useConversations();
   const createNewConversation = useCreateNewConversation();
   const setActiveConversation = useSetActiveConversation();
   const scrollToBottomRef = useScrollToBottom(isBannerOpen);
+  const initLimitations = useInitLimitation();
   const initializingMessages = useIsInitializing();
   const [conversationsDrawerOpened, setConversationsDrawerOpened] = useState(false);
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
+  const [showNewConversationWarning, setShowNewConversationWarning] = useState(false);
 
   async function handleNewChat() {
     if (initializingMessages) {
       return;
     }
     try {
+      setShowNewConversationWarning(false);
       await createNewConversation();
+      setConversationsDrawerOpened(false);
     } catch (error) {
+      setShowNewConversationWarning(false);
       // Some alert handling should be done here
       console.error('Error creating new conversation:', error);
     }
@@ -124,7 +136,7 @@ export const ARHChatbot = ({
   }, [displayMode]);
 
   return (
-    <div id="ai-chatbot" aria-label="AI Assistant Chatbot">
+    <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot">
       <Chatbot displayMode={displayMode}>
         <ChatbotConversationHistoryNav
           displayMode={displayMode}
@@ -137,7 +149,8 @@ export const ARHChatbot = ({
               setConversationsDrawerOpened(false);
             }
           }}
-          onNewChat={handleNewChat}
+          // do not allow sending new chats if quota is breached
+          onNewChat={initLimitations?.reason === 'quota-breached' ? undefined : () => setShowNewConversationWarning(true)}
           conversations={conversations.map((conversation) => ({
             id: conversation.id,
             text: conversation.title,
@@ -145,6 +158,12 @@ export const ARHChatbot = ({
           drawerContent={drawerContent}
         />
       </Chatbot>
+      <ARHNewChatModal
+        isOpen={showNewConversationWarning}
+        onClose={() => setShowNewConversationWarning(false)}
+        createNewChat={handleNewChat}
+        parentRef={rootElementRef}
+      />
     </div>
   );
 };

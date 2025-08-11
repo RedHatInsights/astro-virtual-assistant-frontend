@@ -52,6 +52,7 @@ export const useSendMessage = jest.fn(() => jest.fn());
 export const useClient = jest.fn(() => ({
   sendMessageFeedback: jest.fn().mockResolvedValue({}),
 }));
+export const useInitLimitation = jest.fn(() => undefined);
 
 // Allow mocking different states for tests
 export const __setMockState = (overrides: any) => {
@@ -61,6 +62,7 @@ export const __setMockState = (overrides: any) => {
   if (overrides.isInitializing !== undefined) useIsInitializing.mockReturnValue(overrides.isInitializing);
   if (overrides.inProgress !== undefined) useInProgress.mockReturnValue(overrides.inProgress);
   if (overrides.client) useClient.mockReturnValue(overrides.client);
+  if (overrides.initLimitations !== undefined) useInitLimitation.mockReturnValue(overrides.initLimitations);
 };
 
 export const __resetMocks = () => {
@@ -72,4 +74,5 @@ export const __resetMocks = () => {
   useClient.mockReturnValue({
     sendMessageFeedback: jest.fn().mockResolvedValue({}),
   });
+  useInitLimitation.mockReturnValue(undefined);
 };

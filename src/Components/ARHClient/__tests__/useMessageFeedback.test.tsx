@@ -228,6 +228,26 @@ describe('useMessageFeedback', () => {
       });
     });
 
+    it('should close detail form after successful feedback submission', async () => {
+      const { result } = renderHook(() => useMessageFeedback(mockMessage));
+
+      // Open positive feedback
+      act(() => {
+        clickAction(result, 'positive', {});
+      });
+
+      // Verify form is open
+      expect(result.current.userFeedbackForm).toBeDefined();
+
+      // Submit feedback
+      await act(async () => {
+        result.current.userFeedbackForm?.onSubmit('Solved my issue', 'Great response!');
+      });
+
+      // Verify form is closed after submission (detailOpened: false)
+      expect(result.current.userFeedbackForm).toBeUndefined();
+    });
+
     it('should close feedback completed message when onClose is called', async () => {
       const { result } = renderHook(() => useMessageFeedback(mockMessage));
 

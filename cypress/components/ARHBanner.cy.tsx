@@ -130,6 +130,57 @@ describe('ARHBanner Component', () => {
     });
   });
 
+  describe('Conversation limit variant', () => {
+    it('should render conversation limit banner when open', () => {
+      const mockSetOpen = cy.stub();
+      
+      cy.mount(
+        <TestWrapper>
+          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
+        </TestWrapper>
+      );
+      
+      // Should show the alert with danger variant
+      cy.get('.pf-v6-c-alert').should('exist').should('have.class', 'pf-m-danger');
+      
+      // Should have correct title
+      cy.contains('Chat limit reached').should('be.visible');
+      
+      // Should contain conversation limit message
+      cy.contains("You've reached the maximum number of chats").should('be.visible');
+      cy.contains('You can start up to 50 chats within a 24-hour period').should('be.visible');
+      cy.contains('Please try again after your limit resets').should('be.visible');
+    });
+
+    it('should have close functionality for conversation limit', () => {
+      const mockSetOpen = cy.stub().as('setOpen');
+      
+      cy.mount(
+        <TestWrapper>
+          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
+        </TestWrapper>
+      );
+      
+      // Click the X button to close (PatternFly close button)
+      cy.get('.pf-v6-c-alert__action button').click();
+      cy.get('@setOpen').should('have.been.calledWith', false);
+    });
+
+    it('should have "Got it" button functionality for conversation limit', () => {
+      const mockSetOpen = cy.stub().as('setOpen');
+      
+      cy.mount(
+        <TestWrapper>
+          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
+        </TestWrapper>
+      );
+      
+      // Click the "Got it" button
+      cy.contains('button', 'Got it').click();
+      cy.get('@setOpen').should('have.been.calledWith', false);
+    });
+  });
+
   describe('Visibility control', () => {
     it('should not render when isOpen is false', () => {
       const mockSetOpen = cy.stub();

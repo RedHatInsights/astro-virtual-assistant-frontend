@@ -273,6 +273,72 @@ npm run test:watch            # Jest watch mode
 3. **Verify PatternFly versions**: Selectors may change between versions
 4. **Use meaningful test descriptions**: Help identify failing scenarios
 
+## 🎓 Lessons Learned from Implementation
+
+### Critical Testing Rules
+1. **ALWAYS run the full test suite** before claiming success:
+   ```bash
+   npm run cypress:run:cp  # Run ALL Cypress component tests
+   npm test               # Run ALL Jest tests
+   ```
+   Never trust individual test runs - only the complete suite confirms success.
+
+2. **Keep mock state structures simple**: Don't overcomplicate mocks. Match the expected component interface:
+   ```typescript
+   // ✅ Good: Simple, focused state structure
+   const state = {
+     conversations: [],
+     activeConversationId: 'test-conv',
+     messages: { 'test-conv': { id: 'test-conv', locked: false } },
+     isInitializing: false,
+     messageInProgress: false,
+     initLimitations: undefined,
+   };
+   
+   // ❌ Bad: Overly complex mock with unnecessary hooks
+   const mockEveryHookIndividually = () => { /* complex setup */ };
+   ```
+
+3. **Read PatternFly source for CSS selectors**: Before writing tests, check actual classes:
+   ```bash
+   # Check node_modules for actual CSS classes
+   cat node_modules/@patternfly/react-styles/css/components/Alert/alert.mjs
+   ```
+   Use `pf-m-danger`, `pf-m-warning`, `pf-m-info` - not made-up classes like `pf-v6-c-alert--danger`.
+
+4. **Debug failing tests, never delete them**: When tests fail:
+   - Check mock state structure matches component expectations
+   - Verify CSS selectors exist in PatternFly source
+   - Ensure all required hooks/methods are mocked
+   - Use Cypress `--headed` mode for visual debugging
+
+5. **Focus on realistic testing**: Test what the component actually does, not every edge case:
+   - UI rendering and interactions
+   - State-dependent behaviors (disabled states, variants)
+   - User workflows
+   - Don't try to test complex internal hook logic in component tests
+
+### State Manager Mock Patterns
+For complex components using multiple hooks, create a unified state manager mock:
+
+```typescript
+const createMockStateManager = (overrides: any = {}) => {
+  const state = { /* simple flat structure */ };
+  
+  return {
+    getState: () => ({
+      getState: () => state,
+      // Add only methods the component actually uses
+      getInitLimitation: () => state.initLimitations,
+      getActiveConversationMessages: () => state.messages,
+    }),
+    // Top-level methods for context
+    sendMessage: () => {},
+    subscribe: () => () => {},
+  };
+};
+```
+
 ---
 
 This guide provides everything needed to maintain and extend the ARH chatbot test suite. Always prioritize proper selectors and realistic mocking for maintainable, reliable tests.
