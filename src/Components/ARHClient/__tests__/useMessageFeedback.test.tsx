@@ -64,6 +64,7 @@ describe('useMessageFeedback', () => {
       title: 'Test Conversation',
       messages: [],
       locked: false,
+      createdAt: new Date(),
     } as Conversation<Record<string, unknown>>;
 
     // Setup mocks

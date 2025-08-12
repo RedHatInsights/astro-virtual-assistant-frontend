@@ -25,7 +25,7 @@ describe('ARHFooter Logic', () => {
     jest.clearAllMocks();
 
     // Set default values
-    mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: false, title: 'Test Conversation', messages: [] });
+    mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: false, title: 'Test Conversation', messages: [], createdAt: new Date() });
     mockUseInProgress.mockReturnValue(false);
     mockUseInitLimitation.mockReturnValue(undefined);
     mockUseMessages.mockReturnValue([]);
@@ -57,7 +57,7 @@ describe('ARHFooter Logic', () => {
     });
 
     it('should disable send button when active conversation is locked', () => {
-      mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: true, title: 'Test Conversation', messages: [] });
+      mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: true, title: 'Test Conversation', messages: [], createdAt: new Date() });
 
       expect(shouldDisableSendButton()).toBe(true);
     });
@@ -94,7 +94,7 @@ describe('ARHFooter Logic', () => {
 
     it('should enable send button when all conditions are normal', () => {
       mockUseInProgress.mockReturnValue(false);
-      mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: false, title: 'Test Conversation', messages: [] });
+      mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: false, title: 'Test Conversation', messages: [], createdAt: new Date() });
       mockUseInitLimitation.mockReturnValue(undefined);
       mockUseMessages.mockReturnValue([]);
       mockUseArhMessageQuota.mockReturnValue(undefined);
@@ -126,7 +126,7 @@ describe('ARHFooter Logic', () => {
     });
 
     it('should not disable for other initLimitation reasons', () => {
-      mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: false, messages: [], title: 'Test Conversation' });
+      mockUseActiveConversation.mockReturnValue({ id: 'test-conv', locked: false, messages: [], title: 'Test Conversation', createdAt: new Date() });
       mockUseInitLimitation.mockReturnValue({ reason: 'other-reason' });
 
       expect(shouldDisableSendButton()).toBe(false);
