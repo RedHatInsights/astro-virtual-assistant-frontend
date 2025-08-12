@@ -15,6 +15,7 @@ import ARHChatbot from '../../Components/ARHClient/ARHChatbot';
 import ARHBadge from '../../Components/ARHClient/ARHBadge';
 import type { ChromeUser } from '@redhat-cloud-services/types';
 import checkARHAuth from '../../Components/ARHClient/checkARHAuth';
+import useArhClient from '../../Components/ARHClient/useArhClient';
 
 const messageProcessors = [commandMessageProcessor];
 
@@ -139,13 +140,19 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
   useEffect(() => {
     handleArhSetup();
   }, [useArh, chrome.auth.token]);
+  const { stateManager, setChatbotAccessed } = useArhClient(ARHBaseUrl, showArh);
   const nodes = useMemo(() => {
     if (showArh && props.showAssistant) {
       return (
         <>
-          <StackItem>{isOpen ? <ARHChatbot setOpen={setOpen} baseUrl={ARHBaseUrl} user={auth.user!} /> : null}</StackItem>
+          <StackItem>{isOpen ? <ARHChatbot setOpen={setOpen} stateManager={stateManager} user={auth.user!} /> : null}</StackItem>
           <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
-            <ARHBadge onClick={() => setOpen((prev) => !prev)} />
+            <ARHBadge
+              onClick={() => {
+                setChatbotAccessed(true);
+                setOpen((prev) => !prev);
+              }}
+            />
           </StackItem>
         </>
       );

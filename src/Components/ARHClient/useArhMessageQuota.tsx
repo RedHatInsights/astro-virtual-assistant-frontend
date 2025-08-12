@@ -1,7 +1,7 @@
-import React, { Fragment, ReactNode, useMemo } from 'react';
+import React, { Fragment, useMemo } from 'react';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
 import { Message } from '@redhat-cloud-services/ai-client-state';
-import { AlertActionLink, AlertProps, AlertVariant, Button, Content } from '@patternfly/react-core';
+import { AlertActionLink, AlertProps, AlertVariant, Content } from '@patternfly/react-core';
 import { useCreateNewConversation } from '@redhat-cloud-services/ai-react-state';
 
 export type ARHMessageQuotaState = AlertProps | undefined;
@@ -41,7 +41,7 @@ const useArhMessageQuota = (message?: Message<IFDAdditionalAttributes>) => {
         children: <Content>You have reached the message limit for this conversation. To continue, you can start a new chat.</Content>,
         actionLinks: (
           <Fragment>
-            <AlertActionLink onClick={createNewConversation}>Start a new chat</AlertActionLink>
+            <AlertActionLink onClick={() => createNewConversation()}>Start a new chat</AlertActionLink>
           </Fragment>
         ),
       };
