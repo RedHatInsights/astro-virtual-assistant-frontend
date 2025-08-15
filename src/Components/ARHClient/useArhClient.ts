@@ -25,10 +25,6 @@ function useArhClient(baseUrl: string, useArh = false) {
           },
         });
       },
-      initOptions: {
-        // preserve latest history if there was a full page refresh within the domain (SSO reauth, scope changes, etc)
-        initializeNewConversation: document.referrer === window.location.origin,
-      },
     });
     const stateManager = createClientStateManager(client);
     return stateManager;
