@@ -49,7 +49,8 @@ const createMockStateManager = (customMessages?: any[], overrides?: any) => {
     getActiveConversationMessages: () => activeConversationMessages,
     getClient: () => state.client,
     subscribe: () => () => {},
-    getInitLimitation: () => state.initLimitations
+    getInitLimitation: () => state.initLimitations,
+    isInitializing: () => state.isInitializing,
   } as unknown as StateManager;
   return manager
 };

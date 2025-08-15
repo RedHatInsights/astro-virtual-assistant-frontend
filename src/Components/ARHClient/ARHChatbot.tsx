@@ -61,35 +61,26 @@ export const ARHChatbot = ({
     }
   }
 
-  let drawerContent = null;
-  if (initializingMessages) {
-    drawerContent = (
-      <Bullseye>
-        <Spinner />
-      </Bullseye>
-    );
-  } else {
-    drawerContent = (
-      <>
-        <ARHHeader
-          conversationsDrawerOpened={conversationsDrawerOpened}
-          setConversationsDrawerOpened={setConversationsDrawerOpened}
-          scrollToBottomRef={scrollToBottomRef}
-          setOpen={setOpen}
-          setDisplayMode={setDisplayMode}
-          displayMode={displayMode}
-        />
-        <ARHMessages
-          isBannerOpen={isBannerOpen}
-          avatar={avatar}
-          username={username}
-          scrollToBottomRef={scrollToBottomRef}
-          setIsBannerOpen={setIsBannerOpen}
-        />
-        <ARHFooter />
-      </>
-    );
-  }
+  const drawerContent = (
+    <>
+      <ARHHeader
+        conversationsDrawerOpened={conversationsDrawerOpened}
+        setConversationsDrawerOpened={setConversationsDrawerOpened}
+        scrollToBottomRef={scrollToBottomRef}
+        setOpen={setOpen}
+        setDisplayMode={setDisplayMode}
+        displayMode={displayMode}
+      />
+      <ARHMessages
+        isBannerOpen={isBannerOpen}
+        avatar={avatar}
+        username={username}
+        scrollToBottomRef={scrollToBottomRef}
+        setIsBannerOpen={setIsBannerOpen}
+      />
+      <ARHFooter />
+    </>
+  );
 
   useEffect(() => {
     if (displayMode === ChatbotDisplayMode.fullscreen) {
