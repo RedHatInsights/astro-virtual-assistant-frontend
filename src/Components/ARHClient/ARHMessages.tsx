@@ -1,7 +1,7 @@
 import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox, SourcesCardProps } from '@patternfly/chatbot';
-import { Alert } from '@patternfly/react-core';
+import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
 import React, { Fragment, useEffect, useMemo } from 'react';
-import { useActiveConversation, useInitLimitation, useMessages } from '@redhat-cloud-services/ai-react-state';
+import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
 import { useNavigate } from 'react-router-dom';
@@ -51,7 +51,6 @@ function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalA
     }, []);
     return { sources: sourceItems };
   }, [message.additionalAttributes, navigate]);
-  console.log({ message });
 
   const messageDate = `${message.date?.toLocaleDateString()} ${message.date?.toLocaleTimeString()}`;
 
@@ -95,6 +94,7 @@ const ARHMessages = ({
   const activeConversation = useActiveConversation();
   const initLimitations = useInitLimitation();
   const messages = useMessages<IFDAdditionalAttributes>();
+  const initializingMessages = useIsInitializing();
   const welcomeMessageConfig = useMemo(() => {
     return {
       title: `Hello${username ? `, ${username}` : ''}`,
@@ -113,6 +113,14 @@ const ARHMessages = ({
       setIsBannerOpen(true);
     }
   }, [activeConversation?.id, setIsBannerOpen]);
+
+  if (initializingMessages) {
+    return (
+      <Bullseye>
+        <Spinner />
+      </Bullseye>
+    );
+  }
 
   return (
     // The PF seems to be doing some sort of caching, we have to force reset the elements on conversation change
