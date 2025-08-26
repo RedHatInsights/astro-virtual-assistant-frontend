@@ -13,7 +13,6 @@ import { commandMessageProcessor } from './CommandMessageProcessor';
 
 import UniversalBadge from '../../Components/UniversalChatbot/UniversalBadge';
 import useStateManager from '../../aiClients/useStateManager';
-import getChatbot from '../../Components/ChatbotMapper/ChatbotMapper';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 
 const messageProcessors = [commandMessageProcessor];
