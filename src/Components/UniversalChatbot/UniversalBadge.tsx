@@ -1,14 +1,14 @@
 import React from 'react';
 import { Button, Tooltip } from '@patternfly/react-core';
-import ARHBadgeIcon from './ARH-Bottom-Right-Toggle.svg';
+import ARHBadgeIcon from '../../assets/ARH-Bottom-Right-Toggle.svg';
 
-import './ARHBadge.scss';
+import './UniversalBadge.scss';
 
-interface ARHAvatarProps {
+interface UniversalBadgeProps {
   onClick: () => void;
 }
 
-const ARHBadge: React.FunctionComponent<ARHAvatarProps> = ({ onClick }) => {
+const UniversalBadge: React.FunctionComponent<UniversalBadgeProps> = ({ onClick }) => {
   return (
     <Tooltip position="left" content={<div>Ask Red Hat</div>}>
       <Button variant="plain" className="pf-v6-u-p-0 arh__badge__button" onClick={onClick}>
@@ -18,4 +18,4 @@ const ARHBadge: React.FunctionComponent<ARHAvatarProps> = ({ onClick }) => {
   );
 };
 
-export default ARHBadge;
+export default UniversalBadge;

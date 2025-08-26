@@ -1,0 +1,36 @@
+import React, { useMemo } from 'react';
+import { ChatbotFooter, ChatbotFootnote, MessageBar } from '@patternfly/chatbot';
+import { useActiveConversation, useInProgress, useInitLimitation, useSendMessage } from '@redhat-cloud-services/ai-react-state';
+
+const UniversalFooter = ({ streamMessages }: { streamMessages: boolean }) => {
+  const sendMessage = useSendMessage();
+  const inProgress = useInProgress();
+  const activeConversation = useActiveConversation();
+  const initLimitations = useInitLimitation();
+  const handleSend = (message: string | number) => {
+    sendMessage(`${message}`, {
+      stream: streamMessages,
+    });
+  };
+  const conversationLock = useMemo(() => {
+    return !activeConversation && initLimitations?.reason === 'quota-breached';
+  }, [activeConversation, initLimitations]);
+  const isDisabled = useMemo(() => {
+    return inProgress || activeConversation?.locked || conversationLock;
+  }, [inProgress, activeConversation, conversationLock]);
+  return (
+    <ChatbotFooter>
+      <MessageBar
+        id="query-input"
+        onSendMessage={handleSend}
+        aria-label="Type your message to the AI assistant"
+        alwayShowSendButton
+        isSendButtonDisabled={isDisabled}
+        hasAttachButton={false}
+      />
+      <ChatbotFootnote label="Always review AI generated content prior to use." />
+    </ChatbotFooter>
+  );
+};
+
+export default UniversalFooter;

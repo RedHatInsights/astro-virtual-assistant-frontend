@@ -1,11 +1,11 @@
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
 import { IFDClient } from '@redhat-cloud-services/arh-client';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import ARHChatbot from '../Components/ARHClient/ARHChatbot';
+import { Models, StateManagerConfiguration } from './types';
 
-function useArhClient(baseUrl: string, useArh = false) {
-  const [chatbotAccessed, setChatbotAccessed] = useState(false);
-  const [arhInitialized, setArhInitialized] = useState(false);
+function useArhClient({ baseUrl }: { baseUrl: string }): StateManagerConfiguration<IFDClient> {
   const chrome = useChrome();
   const stateManager = useMemo(() => {
     const client = new IFDClient({
@@ -30,16 +30,17 @@ function useArhClient(baseUrl: string, useArh = false) {
     return stateManager;
   }, [baseUrl]);
 
-  useEffect(() => {
-    if (useArh && chatbotAccessed && !arhInitialized) {
-      setArhInitialized(true);
-      stateManager.init().catch(() => {
-        setArhInitialized(false);
-      });
-    }
-  }, [chatbotAccessed, useArh, arhInitialized]);
-
-  return { stateManager, setChatbotAccessed };
+  const configuration: StateManagerConfiguration<IFDClient> = {
+    model: Models.ASK_RED_HAT,
+    historyManagement: true,
+    streamMessages: true,
+    modelName: 'Ask Red Hat',
+    selectionTitle: 'General Red Hat (Default)',
+    selectionDescription: 'Ask Red Hat',
+    Component: ARHChatbot,
+    stateManager,
+  };
+  return configuration;
 }
 
 export default useArhClient;
