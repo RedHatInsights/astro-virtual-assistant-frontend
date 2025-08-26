@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { renderHook } from '@testing-library/react';
-import useScrollToBottom from '../useScrollToBottom';
+import useScrollToBottom from '../../UniversalChatbot/useScrollToBottom';
 import { useMessages } from '@redhat-cloud-services/ai-react-state';
 
 // Mock the external hook

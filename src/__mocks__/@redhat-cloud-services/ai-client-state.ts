@@ -4,6 +4,8 @@ export const createClientStateManager = jest.fn(() => ({
   dispose: jest.fn(),
   getState: jest.fn(() => ({})),
   subscribe: jest.fn(() => jest.fn()), // returns unsubscribe function
+  isInitialized: jest.fn(() => false),
+  isInitializing: jest.fn(() => false),
 }));
 
 export const __resetMocks = () => {
