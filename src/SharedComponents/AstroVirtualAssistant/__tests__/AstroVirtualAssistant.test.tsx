@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import AstroVirtualAssistant from '../AstroVirtualAssistant';
@@ -15,6 +15,7 @@ const mockChrome = {
   isBeta: jest.fn(() => false),
   auth: {
     getUser: jest.fn(),
+    getToken: jest.fn(() => Promise.resolve('mock-token')),
     token: 'mock-token',
   },
 };
@@ -70,7 +71,9 @@ jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({
 const mockStore = createStore(() => ({}));
 
 const mockUser: ChromeUser = {
-  entitlements: {},
+  entitlements: {
+    rhel: { is_entitled: true, is_trial: false },
+  },
   identity: {
     org_id: 'org-123',
     account_number: '123456',
@@ -206,10 +209,10 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     });
   });
 
-  it('should show RHEL LightSpeed when user is not available', async () => {
+  it('should show legacy badge when user is not available', async () => {
     mockChrome.auth.getUser.mockResolvedValue(undefined);
 
-    const { queryByTestId } = render(
+    render(
       <Provider store={mockStore}>
         <AstroVirtualAssistant showAssistant={true} />
       </Provider>
@@ -217,8 +220,9 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
 
     await waitFor(() => {
       expect(fetch).not.toHaveBeenCalled();
-      // Badge should still be visible since it falls back to RHEL LightSpeed
-      expect(queryByTestId('arh-badge')).toBeInTheDocument();
+      // Badge should be visible since it falls back to legacy AstroBadge (rendered in portal)
+      // Expecting 2 elements because both the main component and AstroVirtualAssistantLegacy render badges with the same alt text
+      expect(screen.getAllByAltText('Launch virtual assistant')).toHaveLength(2);
     });
   });
 
@@ -241,6 +245,52 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     });
 
     consoleSpy.mockRestore();
+  });
+
+  it('should show legacy badge when user has no ARH access and no RHEL entitlements', async () => {
+    // Mock user with no entitlements and not internal
+    const noAccessUser: ChromeUser = {
+      entitlements: {},
+      identity: {
+        org_id: 'org-123',
+        account_number: '123456',
+        internal: {
+          org_id: 'org-123',
+          account_id: 'account-123',
+        },
+        type: 'User',
+        user: {
+          is_internal: false,
+          is_org_admin: false,
+          locale: 'en-US',
+          username: 'noentitlements',
+          email: 'noentitlements@example.com',
+          first_name: 'No',
+          last_name: 'Access',
+          is_active: true,
+        },
+      },
+    };
+
+    mockChrome.auth.getUser.mockResolvedValue(noAccessUser);
+    // ARH auth fails
+    (fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
+      ok: false,
+    } as Response);
+
+    render(
+      <Provider store={mockStore}>
+        <AstroVirtualAssistant showAssistant={true} />
+      </Provider>
+    );
+
+    await waitFor(() => {
+      // Should fall back to legacy badge when both authentication systems fail
+      // Expecting 2 elements because both the main component and AstroVirtualAssistantLegacy render badges with the same alt text
+      expect(screen.getAllByAltText('Launch virtual assistant')).toHaveLength(2);
+      // Should not show universal badge (UniversalBadge has different alt text)
+      expect(screen.queryByAltText('Launch Ask Red Hat assistant')).not.toBeInTheDocument();
+    });
   });
 
   it('should not show any badge when feature flag is disabled', async () => {

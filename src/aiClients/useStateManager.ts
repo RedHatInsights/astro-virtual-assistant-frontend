@@ -1,69 +1,62 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Models } from './types';
-import useArhClient from './useArhClient';
-import useRhelLightSpeedManager from './useRhelLightSpeedManager';
-import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { ChromeUser } from '@redhat-cloud-services/types';
+import useArhClient, { useArhAuthenticated } from './useArhClient';
+import useRhelLightSpeedManager, { useRhelLightSpeedAuthenticated } from './useRhelLightSpeedManager';
 import { useFlag } from '@unleash/proxy-client-react';
-import checkARHAuth from '../Components/ARHClient/checkARHAuth';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotProvider';
+import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
 function useInitialModel() {
   // Use ARH used as a generic "show chatbot" flag
-  const useArh = useFlag('platform.arh.enabled');
-  const [showArh, setShowArh] = useState<boolean>(false);
-  const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
-  const [initializing, setInitializing] = useState(true);
+  const useChatBots = useFlag('platform.arh.enabled');
+  const arhEnabled = useArhAuthenticated();
+  const rhelLightspeedEnabled = useRhelLightSpeedAuthenticated();
   const chrome = useChrome();
-  const ARHBaseUrl = useMemo(() => {
-    // currently we are only allowed to talk to stage
-    // we need KC deployed to accept new scope
-    // FF is disabled for now in production/dev envs
-    if (['prod', 'dev'].includes(chrome.getEnvironment())) {
-      return 'https://access.redhat.com';
-    }
-    return 'https://access.stage.redhat.com';
-  }, []);
+  const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
 
-  async function handleArhSetup() {
-    try {
-      if (!useArh) {
-        setShowArh(false);
-        setAuth({ user: undefined });
-        return;
-      }
-      const user = await chrome.auth.getUser();
-      if (user) {
-        const isEntitled = await checkARHAuth(ARHBaseUrl, user, chrome.auth.token);
-        setShowArh(isEntitled);
-        setAuth({ user });
-      } else {
-        setShowArh(false);
-        setAuth({ user: undefined });
-      }
-    } catch (error) {
-      setShowArh(false);
-    } finally {
-      setInitializing(false);
+  const enabledList = [arhEnabled, rhelLightspeedEnabled];
+
+  const initializing = enabledList.some((e) => e.loading);
+  const model = useMemo<Models | undefined>(() => {
+    if (initializing) {
+      return undefined;
     }
-  }
+
+    // models are ordered in priority order, pick the first one that is authenticated
+    return enabledList.find((e) => e.isAuthenticated)?.model;
+  }, [initializing]);
 
   useEffect(() => {
-    handleArhSetup();
-  }, [useArh, chrome.auth.token]);
-  if (!useArh) {
-    return { model: undefined, auth, initializing: false, ARHBaseUrl, showArh: false };
+    async function getUser() {
+      try {
+        const user = await chrome.auth.getUser();
+        if (user) {
+          setAuth({ user });
+        }
+      } catch {
+        setAuth({ user: undefined });
+      }
+    }
+    getUser();
+  }, [chrome.auth.token]);
+  if (!useChatBots) {
+    return { model: undefined, auth, initializing: false, ARHBaseUrl: '' };
   }
 
-  return { model: showArh ? Models.ASK_RED_HAT : Models.RHEL_LIGHTSPEED, auth, initializing, ARHBaseUrl, showArh };
+  if (arhEnabled.loading || rhelLightspeedEnabled.loading || !auth) {
+    return { model: undefined, auth, initializing: true, ARHBaseUrl: '' };
+  }
+
+  return { model, auth, initializing };
 }
 
 function useStateManager() {
   const [isOpen, setOpen] = useState<boolean>(false);
-  const { model, auth, initializing, ARHBaseUrl, showArh } = useInitialModel();
+  const { model, auth, initializing } = useInitialModel();
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
-  const arhManager = useArhClient({ baseUrl: ARHBaseUrl });
+  const arhManager = useArhClient();
   const rhelLightspeedManager = useRhelLightSpeedManager();
   const stateManagers = useMemo(() => {
     const managers = [arhManager, rhelLightspeedManager];
@@ -75,10 +68,6 @@ function useStateManager() {
     if (!model) {
       return;
     }
-    // do not initialize ARH if its not allowed
-    if (model === Models.ASK_RED_HAT && !showArh) {
-      return;
-    }
     const manager = stateManagers.find((m) => m.model === model);
     if (manager) {
       setCurrentModel(model);
@@ -86,7 +75,7 @@ function useStateManager() {
         manager.stateManager.init();
       }
     }
-  }, [model, initializing, showArh]);
+  }, [model, initializing]);
 
   const currentManager = useMemo(() => {
     if (!currentModel) {
@@ -96,7 +85,7 @@ function useStateManager() {
   }, [currentModel, stateManagers]);
 
   const chatbotProps: ChatbotProps = {
-    user: auth.user!,
+    user: auth.user,
     displayMode,
     setDisplayMode,
     setCurrentModel,

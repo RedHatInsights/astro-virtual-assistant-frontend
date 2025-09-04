@@ -1,11 +1,75 @@
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
 import { IFDClient } from '@redhat-cloud-services/arh-client';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
 import ARHChatbot from '../Components/ARHClient/ARHChatbot';
 import { Models, StateManagerConfiguration } from './types';
+import checkARHAuth from '../Components/ARHClient/checkARHAuth';
 
-function useArhClient({ baseUrl }: { baseUrl: string }): StateManagerConfiguration<IFDClient> {
+function useArhBaseUrl() {
+  const chrome = useChrome();
+  const ARHBaseUrl = useMemo(() => {
+    // currently we are only allowed to talk to stage
+    // we need KC deployed to accept new scope
+    // FF is disabled for now in production/dev envs
+    if (['prod', 'dev'].includes(chrome.getEnvironment())) {
+      return 'https://access.redhat.com';
+    }
+    return 'https://access.stage.redhat.com';
+  }, []);
+  return ARHBaseUrl;
+}
+
+export function useArhAuthenticated(): {
+  loading: boolean;
+  isAuthenticated: boolean;
+  error?: Error;
+  model: Models;
+} {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | undefined>(undefined);
+  const chrome = useChrome();
+  const ARHBaseUrl = useArhBaseUrl();
+
+  async function handleArhSetup() {
+    try {
+      const user = await chrome.auth.getUser();
+      if (user) {
+        const isEntitled = await checkARHAuth(ARHBaseUrl, user, chrome.auth.token);
+        setIsAuthenticated(isEntitled);
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      setIsAuthenticated(false);
+      if (error instanceof Error) {
+        setError(error);
+      } else if (typeof error === 'string') {
+        setError(new Error(error));
+      } else {
+        setError(new Error('An unknown error occurred'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    handleArhSetup();
+  }, [chrome.auth.token]);
+
+  return {
+    loading,
+    isAuthenticated,
+    error,
+    model: Models.ASK_RED_HAT,
+  };
+}
+
+function useArhClient(): StateManagerConfiguration<IFDClient> {
+  const baseUrl = useArhBaseUrl();
   const chrome = useChrome();
   const stateManager = useMemo(() => {
     const client = new IFDClient({
