@@ -43,4 +43,10 @@
       color: var(--pf-t--global--text--color--inverse);
     }
   }
+  &__help-icon {
+    color: var(--pf-t--global--icon--color--200);
+    &:hover {
+      color: var(--pf-t--global--icon--color--100);
+    }
+  }
 }

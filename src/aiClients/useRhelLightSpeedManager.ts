@@ -68,9 +68,12 @@ function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedCli
     streamMessages: false,
     modelName: 'RHEL LightSpeed',
     selectionTitle: 'RHEL LightSpeed',
-    selectionDescription: 'Interact with RHEL LightSpeed',
+    selectionDescription:
+      'Gen answers to RHEL-related questions, support with troubleshooting, help understanding log files, ask for recommendations, and more.',
     Component: RHELChatBot,
     stateManager,
+    docsUrl:
+      'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/introducing-rhel-lightspeed-for-rhel-systems',
   };
 
   return configuration;

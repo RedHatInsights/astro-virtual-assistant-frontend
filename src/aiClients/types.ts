@@ -25,7 +25,7 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   historyManagement: boolean;
   streamMessages: boolean;
   modelName: string;
-  docsUrl?: string;
+  docsUrl: string;
   selectionTitle: string;
   selectionDescription: string;
   Component: React.ComponentType<ChatbotProps>;

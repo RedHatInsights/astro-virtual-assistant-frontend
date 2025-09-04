@@ -100,9 +100,12 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
     streamMessages: true,
     modelName: 'Ask Red Hat',
     selectionTitle: 'General Red Hat (Default)',
-    selectionDescription: 'Ask Red Hat',
+    selectionDescription:
+      'Find answers about Red Hat products, error messages, security vulnerabilities, general usage, and other content from product documentation and our knowledge base.',
     Component: ARHChatbot,
     stateManager,
+    docsUrl:
+      'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
   };
   return configuration;
 }

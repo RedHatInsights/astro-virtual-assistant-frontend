@@ -1,10 +1,11 @@
 import React, { Ref, RefObject, useContext, useState } from 'react';
-import { Flex, FlexItem, Label, MenuToggle, Select, SelectList, SelectOption } from '@patternfly/react-core';
+import { Flex, FlexItem, Label, MenuItemAction, MenuToggle, Select, SelectList, SelectOption } from '@patternfly/react-core';
 
 import { UniversalChatbotContext } from './UniversalChatbotProvider';
 import { isModels } from '../../aiClients/types';
 
 import './UniversalModelSelection.scss';
+import { HelpIcon } from '@patternfly/react-icons';
 
 function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTMLDivElement> }) {
   const { model, setCurrentModel, availableManagers } = useContext(UniversalChatbotContext);
@@ -52,6 +53,17 @@ function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTM
                   value={manager.model}
                   key={manager.model}
                   isSelected={model === manager.model}
+                  actions={[
+                    <MenuItemAction
+                      aria-label={`Documentation for ${manager.model}`}
+                      key="docs-link"
+                      icon={
+                        <a className="universal-model-selection__help-icon" href={manager.docsUrl} target="_blank" rel="noopener noreferrer">
+                          <HelpIcon />
+                        </a>
+                      }
+                    />,
+                  ]}
                 >
                   {manager.selectionTitle}
                 </SelectOption>
