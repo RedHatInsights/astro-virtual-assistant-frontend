@@ -1,16 +1,11 @@
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
 import { RHELLightspeedClient } from '@redhat-cloud-services/rhel-lightspeed-client';
 import { useEffect, useMemo, useState } from 'react';
-import { Models, StateManagerConfiguration } from './types';
+import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import RHELChatBot from '../Components/RhelClient/RhelChatBot';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
-export function useRhelLightSpeedAuthenticated(): {
-  loading: boolean;
-  isAuthenticated: boolean;
-  error?: Error;
-  model: Models;
-} {
+export function useRhelLightSpeedAuthenticated(): ClientAuthStatus {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);

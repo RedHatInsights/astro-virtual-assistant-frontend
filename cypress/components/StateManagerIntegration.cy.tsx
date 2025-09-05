@@ -127,6 +127,9 @@ describe('State Manager Integration Tests', () => {
             <div data-testid="rhel-manager-available">{
               chatbotProps.availableManagers.some(m => m.model === Models.RHEL_LIGHTSPEED).toString()
             }</div>
+            <div data-testid="va-manager-available">{
+              chatbotProps.availableManagers.some(m => m.model === Models.VA).toString()
+            }</div>
           </div>
         );
       };
@@ -137,10 +140,11 @@ describe('State Manager Integration Tests', () => {
         </TestWrapper>
       );
 
-      // Should have both managers available
-      cy.get('[data-testid="available-managers-count"]').should('contain', '2');
+      // Should have all three managers available (ARH, RHEL, VA)
+      cy.get('[data-testid="available-managers-count"]').should('contain', '3');
       cy.get('[data-testid="arh-manager-available"]').should('contain', 'true');
       cy.get('[data-testid="rhel-manager-available"]').should('contain', 'true');
+      cy.get('[data-testid="va-manager-available"]').should('contain', 'true');
       
       // Should have a model selected (either ARH or RHEL based on auth)
       cy.get('[data-testid="model"]').should('not.contain', 'undefined');
@@ -290,8 +294,8 @@ describe('State Manager Integration Tests', () => {
         </TestWrapper>
       );
 
-      // Should still have managers available
-      cy.get('[data-testid="managers-count"]').should('contain', '2');
+      // Should still have all managers available (ARH, RHEL, VA)
+      cy.get('[data-testid="managers-count"]').should('contain', '3');
       
       // Should have a model (either ARH or RHEL fallback)
       cy.get('[data-testid="model"]', { timeout: 10000 }).should('not.contain', 'undefined');
