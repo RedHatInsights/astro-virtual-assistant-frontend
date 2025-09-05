@@ -1,7 +1,11 @@
-This repository holds the federated modules for Console's virtual assistant.
+This repository holds the federated modules for Console's virtual assistant (Chameleon).
 This can be tested on the landing page.
 
 Note: You don't have to run it anymore with the landing page frontend.
+
+## For AI Agent Onboarding
+
+**See [ONBOARDING_GUIDE.md](./ONBOARDING_GUIDE.md)** for instructions on how to integrate your AI agent into Chameleon.
 
 ## Getting started
 
