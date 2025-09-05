@@ -8,7 +8,7 @@ interface SystemMessageProps extends MessageProps<SystemMessage> {
   preview: boolean;
 }
 
-export const SystemMessageEntry: FunctionComponent<SystemMessageProps> = ({ message, preview }) => {
+export function createSystemMessageContent(message: SystemMessage): string {
   let systemMessageText = '';
 
   switch (message.type) {
@@ -24,6 +24,12 @@ export const SystemMessageEntry: FunctionComponent<SystemMessageProps> = ({ mess
     case 'request_error':
       systemMessageText = 'Please try again later.';
   }
+
+  return systemMessageText;
+}
+
+export const SystemMessageEntry: FunctionComponent<SystemMessageProps> = ({ message, preview }) => {
+  const systemMessageText = createSystemMessageContent(message);
 
   return (
     <PFSystemMessageEntry>
