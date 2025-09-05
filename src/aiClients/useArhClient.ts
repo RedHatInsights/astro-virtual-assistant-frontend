@@ -4,7 +4,7 @@ import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { useEffect, useMemo, useState } from 'react';
 
 import ARHChatbot from '../Components/ARHClient/ARHChatbot';
-import { Models, StateManagerConfiguration } from './types';
+import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import checkARHAuth from '../Components/ARHClient/checkARHAuth';
 
 function useArhBaseUrl() {
@@ -21,12 +21,7 @@ function useArhBaseUrl() {
   return ARHBaseUrl;
 }
 
-export function useArhAuthenticated(): {
-  loading: boolean;
-  isAuthenticated: boolean;
-  error?: Error;
-  model: Models;
-} {
+export function useArhAuthenticated(): ClientAuthStatus {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);

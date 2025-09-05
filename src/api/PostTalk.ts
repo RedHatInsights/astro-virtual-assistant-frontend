@@ -9,6 +9,10 @@ export interface ResponseText {
   type: 'TEXT';
 }
 
+export function isResponseText(response: Response): response is ResponseText {
+  return response.type === 'TEXT';
+}
+
 export interface ResponsePause {
   channels?: string[];
   is_typing: boolean;
@@ -24,11 +28,25 @@ export interface ResponseOptions {
   type: 'OPTIONS';
 }
 
+export function isResponseOptions(response: Response): response is ResponseOptions {
+  return response.type === 'OPTIONS';
+}
+
 export interface ResponseCommand {
   args: string[];
   channels?: string[];
   command: CommandType;
   type: 'COMMAND';
+}
+
+export function isResponseCommand(res: unknown): res is ResponseCommand {
+  return (
+    typeof res === 'object' &&
+    res !== null &&
+    (res as ResponseCommand).type === 'COMMAND' &&
+    typeof (res as ResponseCommand).command === 'string' &&
+    Array.isArray((res as ResponseCommand).args)
+  );
 }
 
 export interface PostTalkOption {
@@ -44,7 +62,7 @@ export interface PostTalkResponseAPI {
   session_id: string;
 }
 
-export const postTalk = async (message: string, optionId: string | undefined, session_id: string | undefined, metadata: Metadata) => {
+export const postTalk = async (message: string, optionId?: string | undefined, session_id?: string | undefined) => {
   return axiosInstance.post<unknown, PostTalkResponseAPI>('/api/virtual-assistant-v2/v2/talk', {
     input: {
       text: message,

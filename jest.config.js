@@ -5,6 +5,7 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|scss)$': 'identity-obj-proxy',
     '\\.(svg|png|jpg|jpeg|gif)$': '<rootDir>/src/__mocks__/fileMock.js',
+    '^react-markdown$': '<rootDir>/src/__mocks__/react-markdown.js',
   },
   roots: ['<rootDir>/src/'],
   transformIgnorePatterns: ['/node_modules/(?!(@redhat-cloud-services|@patternfly)/)'],
