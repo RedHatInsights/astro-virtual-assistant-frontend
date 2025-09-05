@@ -1,5 +1,5 @@
 import React from 'react';
-import ARHBanner from '../../src/Components/ARHClient/ARHBanner';
+import UniversalBanner from '../../src/Components/UniversalChatbot/UniversalBanner';
 import { AIStateContext } from '@redhat-cloud-services/ai-react-state';
 
 // Mock state manager that matches the expected interface
@@ -35,14 +35,14 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-describe('ARHBanner Component', () => {
+describe('UniversalBanner Component', () => {
   describe('Privacy variant', () => {
     it('should render privacy banner when open', () => {
       const mockSetOpen = cy.stub();
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
         </TestWrapper>
       );
       
@@ -68,7 +68,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
         </TestWrapper>
       );
       
@@ -82,7 +82,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
         </TestWrapper>
       );
       
@@ -98,7 +98,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="readOnly" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="readOnly" />
         </TestWrapper>
       );
       
@@ -121,7 +121,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="readOnly" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="readOnly" />
         </TestWrapper>
       );
       
@@ -136,7 +136,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
         </TestWrapper>
       );
       
@@ -157,7 +157,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
         </TestWrapper>
       );
       
@@ -171,7 +171,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="conversationLimit" />
         </TestWrapper>
       );
       
@@ -187,7 +187,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={false} setOpen={mockSetOpen} variant="privacy" />
+          <UniversalBanner isOpen={false} setOpen={mockSetOpen} variant="privacy" />
         </TestWrapper>
       );
       
@@ -201,7 +201,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
         </TestWrapper>
       );
       
@@ -217,7 +217,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
         </TestWrapper>
       );
       
@@ -236,7 +236,7 @@ describe('ARHBanner Component', () => {
       
       cy.mount(
         <TestWrapper>
-          <ARHBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
+          <UniversalBanner isOpen={true} setOpen={mockSetOpen} variant="privacy" />
         </TestWrapper>
       );
       

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Alert, AlertActionCloseButton, AlertProps, Button, Content } from '@patternfly/react-core';
-import './ARHBanner.scss';
 import { useCreateNewConversation } from '@redhat-cloud-services/ai-react-state';
+
+import './UniversalBanner.scss';
 
 const privacyMessage = (): AlertProps => ({
   variant: 'info',
@@ -44,7 +45,7 @@ const messages = {
   conversationLimit: conversationLimitMessage,
 };
 
-const ARHBanner = ({
+const UniversalBanner = ({
   isOpen,
   setOpen,
   variant = 'privacy',
@@ -77,4 +78,4 @@ const ARHBanner = ({
   );
 };
 
-export default ARHBanner;
+export default UniversalBanner;

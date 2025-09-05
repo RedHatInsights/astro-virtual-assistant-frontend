@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import AstroVirtualAssistant from '../AstroVirtualAssistant';
@@ -15,6 +15,7 @@ const mockChrome = {
   isBeta: jest.fn(() => false),
   auth: {
     getUser: jest.fn(),
+    getToken: jest.fn(() => Promise.resolve('mock-token')),
     token: 'mock-token',
   },
 };
@@ -25,9 +26,10 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 }));
 
 // Mock feature flag hook - requires Unleash context
-jest.mock('@unleash/proxy-client-react', () => ({
-  useFlag: jest.fn(() => true),
-}));
+jest.mock('@unleash/proxy-client-react');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { useFlag: mockUseFlag } = require('@unleash/proxy-client-react');
+mockUseFlag.mockReturnValue(true);
 
 // Mock navigation hook - requires router context
 jest.mock('@redhat-cloud-services/frontend-components-utilities/useInsightsNavigate', () => ({
@@ -40,13 +42,25 @@ jest.mock('react-markdown', () => ({
   default: ({ children }: { children: string }) => <div>{children}</div>,
 }));
 
+// Mock PatternFly chatbot - ESM module causing parsing issues with markdown dependencies
+jest.mock('@patternfly/chatbot', () => ({
+  __esModule: true,
+  Chatbot: ({ children }: { children: React.ReactNode }) => <div className="pf-chatbot">{children}</div>,
+  ChatbotConversationHistoryNav: ({ drawerContent }: any) => <div className="pf-chatbot__conversation-history-nav">{drawerContent}</div>,
+  ChatbotDisplayMode: {
+    default: 'default',
+    embedded: 'embedded',
+    fullscreen: 'fullscreen',
+  },
+}));
+
 // Mock components that have complex dependencies
 jest.mock('../../../Components/ARHClient/ARHChatbot', () => ({
   __esModule: true,
   default: () => <div data-testid="arh-chatbot">ARH Chatbot</div>,
 }));
 
-jest.mock('../../../Components/ARHClient/ARHBadge', () => ({
+jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({
   __esModule: true,
   default: () => <div data-testid="arh-badge">ARH Badge</div>,
 }));
@@ -57,7 +71,9 @@ jest.mock('../../../Components/ARHClient/ARHBadge', () => ({
 const mockStore = createStore(() => ({}));
 
 const mockUser: ChromeUser = {
-  entitlements: {},
+  entitlements: {
+    rhel: { is_entitled: true, is_trial: false },
+  },
   identity: {
     org_id: 'org-123',
     account_number: '123456',
@@ -84,6 +100,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     jest.clearAllMocks();
     mockChrome.getEnvironment.mockReturnValue('stage');
     mockChrome.auth.getUser.mockResolvedValue(mockUser);
+    mockUseFlag.mockReturnValue(true); // Default to ARH enabled
   });
 
   it('should show ARH when user is entitled', async () => {
@@ -132,7 +149,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     });
   });
 
-  it('should not show ARH when user is neither entitled nor internal', async () => {
+  it('should show RHEL LightSpeed when user is neither entitled nor internal for ARH', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     (fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: true,
@@ -146,7 +163,8 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     );
 
     await waitFor(() => {
-      expect(queryByTestId('arh-badge')).not.toBeInTheDocument();
+      // Badge should still be visible since it falls back to RHEL LightSpeed
+      expect(queryByTestId('arh-badge')).toBeInTheDocument();
     });
 
     consoleSpy.mockRestore();
@@ -191,10 +209,10 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     });
   });
 
-  it('should not show ARH when user is not available', async () => {
+  it('should show legacy badge when user is not available', async () => {
     mockChrome.auth.getUser.mockResolvedValue(undefined);
 
-    const { queryByTestId } = render(
+    render(
       <Provider store={mockStore}>
         <AstroVirtualAssistant showAssistant={true} />
       </Provider>
@@ -202,11 +220,13 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
 
     await waitFor(() => {
       expect(fetch).not.toHaveBeenCalled();
-      expect(queryByTestId('arh-badge')).not.toBeInTheDocument();
+      // Badge should be visible since it falls back to legacy AstroBadge (rendered in portal)
+      // Expecting 2 elements because both the main component and AstroVirtualAssistantLegacy render badges with the same alt text
+      expect(screen.getAllByAltText('Launch virtual assistant')).toHaveLength(2);
     });
   });
 
-  it('should not show ARH when API request fails', async () => {
+  it('should show RHEL LightSpeed when API request fails', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     (fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: false,
@@ -220,9 +240,71 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalled();
-      expect(queryByTestId('arh-badge')).not.toBeInTheDocument();
+      // Badge should still be visible since it falls back to RHEL LightSpeed
+      expect(queryByTestId('arh-badge')).toBeInTheDocument();
     });
 
     consoleSpy.mockRestore();
+  });
+
+  it('should show legacy badge when user has no ARH access and no RHEL entitlements', async () => {
+    // Mock user with no entitlements and not internal
+    const noAccessUser: ChromeUser = {
+      entitlements: {},
+      identity: {
+        org_id: 'org-123',
+        account_number: '123456',
+        internal: {
+          org_id: 'org-123',
+          account_id: 'account-123',
+        },
+        type: 'User',
+        user: {
+          is_internal: false,
+          is_org_admin: false,
+          locale: 'en-US',
+          username: 'noentitlements',
+          email: 'noentitlements@example.com',
+          first_name: 'No',
+          last_name: 'Access',
+          is_active: true,
+        },
+      },
+    };
+
+    mockChrome.auth.getUser.mockResolvedValue(noAccessUser);
+    // ARH auth fails
+    (fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
+      ok: false,
+    } as Response);
+
+    render(
+      <Provider store={mockStore}>
+        <AstroVirtualAssistant showAssistant={true} />
+      </Provider>
+    );
+
+    await waitFor(() => {
+      // Should fall back to legacy badge when both authentication systems fail
+      // Expecting 2 elements because both the main component and AstroVirtualAssistantLegacy render badges with the same alt text
+      expect(screen.getAllByAltText('Launch virtual assistant')).toHaveLength(2);
+      // Should not show universal badge (UniversalBadge has different alt text)
+      expect(screen.queryByAltText('Launch Ask Red Hat assistant')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should not show any badge when feature flag is disabled', async () => {
+    mockUseFlag.mockReturnValue(false); // Disable ARH feature flag
+
+    const { queryByTestId } = render(
+      <Provider store={mockStore}>
+        <AstroVirtualAssistant showAssistant={true} />
+      </Provider>
+    );
+
+    await waitFor(() => {
+      // No badge should be visible when feature flag is disabled
+      expect(queryByTestId('arh-badge')).not.toBeInTheDocument();
+    });
   });
 });

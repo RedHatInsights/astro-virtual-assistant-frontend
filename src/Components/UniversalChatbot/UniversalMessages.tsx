@@ -1,57 +1,15 @@
-import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox, SourcesCardProps } from '@patternfly/chatbot';
+import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox } from '@patternfly/chatbot';
 import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
-import React, { Fragment, useEffect, useMemo } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
-import { useNavigate } from 'react-router-dom';
 
-import ARHBanner from './ARHBanner';
-import ARH_BOT_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
-import { useMessageFeedback } from './useMessageFeedback';
-import useArhMessageQuota from './useArhMessageQuota';
+import UniversalBanner from './UniversalBanner';
+import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
 
-import './ARHMessages.scss';
-
-const currentUrl = new URL(window.location.href);
-
-function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalAttributes>; avatar: string }) {
-  const navigate = useNavigate();
-  const { messageActions, userFeedbackForm, feedbackCompleted } = useMessageFeedback(message);
-  const sources = useMemo(() => {
-    if (!message.additionalAttributes?.sources || message.additionalAttributes.sources.length === 0) {
-      return undefined;
-    }
-
-    const sourceItems = message.additionalAttributes.sources.reduce<SourcesCardProps['sources']>((acc, source) => {
-      if (source.title && source.link) {
-        let isExternal = true;
-        try {
-          const linkUrl = new URL(source.link);
-          isExternal = linkUrl.origin !== currentUrl.origin;
-        } catch (error) {
-          isExternal = true;
-        }
-        acc.push({
-          title: source.title,
-          link: source.link,
-          body: source.snippet,
-          isExternal,
-          onClick: (event) => {
-            // handle internal HCC navigation
-            if (!isExternal && source.link?.startsWith('/')) {
-              event.preventDefault();
-              event.stopPropagation();
-              navigate(source.link);
-            }
-          },
-        });
-      }
-      return acc;
-    }, []);
-    return { sources: sourceItems };
-  }, [message.additionalAttributes, navigate]);
-
+function MessageEntry({ message, avatar }: { message: MessageType; avatar: string }) {
   const messageDate = `${message.date?.toLocaleDateString()} ${message.date?.toLocaleTimeString()}`;
 
   const quota = useArhMessageQuota(message);
@@ -66,10 +24,6 @@ function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalA
         avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}
         content={message.answer}
         aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
-        sources={sources}
-        actions={messageActions}
-        userFeedbackForm={userFeedbackForm}
-        userFeedbackComplete={feedbackCompleted}
         timestamp={messageDate}
       />
       {/* Will require new PF API to add alerts directly to the message layout */}
@@ -78,18 +32,20 @@ function MessageEntry({ message, avatar }: { message: MessageType<IFDAdditionalA
   );
 }
 
-const ARHMessages = ({
+const UniversalMessages = ({
   isBannerOpen,
   avatar,
   setIsBannerOpen,
   username,
   scrollToBottomRef,
+  MessageEntryComponent = MessageEntry,
 }: {
   username?: string;
   avatar: string;
   setIsBannerOpen: (isOpen: boolean) => void;
   isBannerOpen: boolean;
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
+  MessageEntryComponent?: React.ComponentType<any>;
 }) => {
   const activeConversation = useActiveConversation();
   const initLimitations = useInitLimitation();
@@ -126,7 +82,7 @@ const ARHMessages = ({
     // The PF seems to be doing some sort of caching, we have to force reset the elements on conversation change
     <ChatbotContent key={activeConversation?.id || 'no-active-conversation'}>
       <MessageBox>
-        <ARHBanner variant={bannerVariant} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
+        <UniversalBanner variant={bannerVariant} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
         {messages.length === 0 && (
           <>
             <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" />
@@ -141,7 +97,7 @@ const ARHMessages = ({
         )}
         {messages.map((message, index) => (
           <Fragment key={index}>
-            <MessageEntry message={message} avatar={avatar} />
+            <MessageEntryComponent message={message} avatar={avatar} />
           </Fragment>
         ))}
         <div ref={scrollToBottomRef}></div>
@@ -150,4 +106,4 @@ const ARHMessages = ({
   );
 };
 
-export default ARHMessages;
+export default UniversalMessages;

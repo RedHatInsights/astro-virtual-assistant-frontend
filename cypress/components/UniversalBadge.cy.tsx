@@ -1,11 +1,11 @@
 import React from 'react';
-import ARHBadge from '../../src/Components/ARHClient/ARHBadge';
+import UniversalBadge from '../../src/Components/UniversalChatbot/UniversalBadge';
 
-describe('ARHBadge Component', () => {
+describe('UniversalBadge Component', () => {
   it('should render the badge with tooltip', () => {
     const mockOnClick = cy.stub();
     
-    cy.mount(<ARHBadge onClick={mockOnClick} />);
+    cy.mount(<UniversalBadge onClick={mockOnClick} />);
     
     // Should render the button
     cy.get('button').should('exist');
@@ -18,7 +18,7 @@ describe('ARHBadge Component', () => {
   it('should show tooltip on hover', () => {
     const mockOnClick = cy.stub();
     
-    cy.mount(<ARHBadge onClick={mockOnClick} />);
+    cy.mount(<UniversalBadge onClick={mockOnClick} />);
     
     // Hover over the button to show tooltip
     cy.get('button').trigger('mouseenter');
@@ -30,7 +30,7 @@ describe('ARHBadge Component', () => {
   it('should call onClick when clicked', () => {
     const mockOnClick = cy.stub().as('onClick');
     
-    cy.mount(<ARHBadge onClick={mockOnClick} />);
+    cy.mount(<UniversalBadge onClick={mockOnClick} />);
     
     // Click the button
     cy.get('button').click();
@@ -42,7 +42,7 @@ describe('ARHBadge Component', () => {
   it('should have correct accessibility attributes', () => {
     const mockOnClick = cy.stub();
     
-    cy.mount(<ARHBadge onClick={mockOnClick} />);
+    cy.mount(<UniversalBadge onClick={mockOnClick} />);
     
     // Button should be accessible
     cy.get('button').should('have.attr', 'type', 'button');

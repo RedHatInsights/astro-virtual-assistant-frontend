@@ -8,36 +8,43 @@ import {
   ChatbotHeaderTitle,
 } from '@patternfly/chatbot';
 import { Brand, Button, Icon, Title } from '@patternfly/react-core';
-import React from 'react';
+import React, { useContext } from 'react';
 import { CompressAltIcon, ExpandAltIcon } from '@patternfly/react-icons';
-import ARH_ICON from './Ask_Red_Hat_OFFICIAL-whitebackground.svg';
-import './ARHHeader.scss';
+import ARH_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import { UniversalChatbotContext } from './UniversalChatbotProvider';
 
-function ARHHeader({
+import './UniversalHeader.scss';
+
+function UniversalHeader({
   scrollToBottomRef,
   conversationsDrawerOpened,
-  setConversationsDrawerOpened,
   setOpen,
   setDisplayMode,
   displayMode,
+  historyManagement,
 }: {
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
   setOpen: (open: boolean) => void;
   setDisplayMode: React.Dispatch<React.SetStateAction<ChatbotDisplayMode>>;
   displayMode: ChatbotDisplayMode;
   conversationsDrawerOpened: boolean;
-  setConversationsDrawerOpened: React.Dispatch<React.SetStateAction<boolean>>;
+  historyManagement: boolean;
 }) {
+  const { setConversationsDrawerOpened, availableManagers, model } = useContext(UniversalChatbotContext);
+  const modelName = availableManagers.find((m) => m.model === model)?.modelName || '';
   return (
     <ChatbotHeader className="arh__header">
       <ChatbotHeaderMain>
-        <ChatbotHeaderMenu aria-expanded={conversationsDrawerOpened} onMenuToggle={() => setConversationsDrawerOpened((prev) => !prev)} />
+        {historyManagement ? (
+          <ChatbotHeaderMenu aria-expanded={conversationsDrawerOpened} onMenuToggle={() => setConversationsDrawerOpened((prev) => !prev)} />
+        ) : null}
+
         <ChatbotHeaderTitle>
           <div className="pf-v6-u-mr-md">
             <Brand src={ARH_ICON} alt="Ask Red Hat" />
           </div>
           <Title headingLevel="h1" size="2xl">
-            Ask Red Hat
+            {modelName}
           </Title>
         </ChatbotHeaderTitle>
       </ChatbotHeaderMain>
@@ -68,4 +75,4 @@ function ARHHeader({
   );
 }
 
-export default ARHHeader;
+export default UniversalHeader;
