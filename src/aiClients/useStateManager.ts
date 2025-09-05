@@ -71,9 +71,6 @@ function useStateManager() {
     const manager = stateManagers.find((m) => m.model === model);
     if (manager) {
       setCurrentModel(model);
-      if (!manager.stateManager.isInitialized() && !manager.stateManager.isInitializing()) {
-        manager.stateManager.init();
-      }
     }
   }, [model, initializing]);
 
@@ -81,8 +78,14 @@ function useStateManager() {
     if (!currentModel) {
       return undefined;
     }
-    return stateManagers.find((m) => m.model === currentModel);
-  }, [currentModel, stateManagers]);
+    const manager = stateManagers.find((m) => m.model === currentModel);
+
+    if (isOpen && manager && !manager.stateManager.isInitialized() && !manager.stateManager.isInitializing()) {
+      manager.stateManager.init();
+    }
+
+    return manager;
+  }, [isOpen, currentModel, stateManagers]);
 
   const chatbotProps: ChatbotProps = {
     user: auth.user,
