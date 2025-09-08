@@ -17,7 +17,10 @@ module.exports = {
   debug: true,
   useProxy: true,
   proxyVerbose: true,
-  routes: getRoutes(),
+  // routes: getRoutes(),
+  routes: {
+    '/apps/assisted-installer-app': { host: 'http://localhost:8003' },
+  },
   interceptChromeConfig: false,
   moduleFederation: {
     exclude: ['react-router-dom'],
@@ -32,6 +35,7 @@ module.exports = {
     ],
     exposes: {
       './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
+      './AsyncLSC': path.resolve(__dirname, './src/asyncClientInit/AsyncLSC.tsx'),
       ...extraExposes,
     },
   },

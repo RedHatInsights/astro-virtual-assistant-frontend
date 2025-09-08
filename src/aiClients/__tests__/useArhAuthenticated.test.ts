@@ -23,8 +23,8 @@ jest.mock('../../Components/ARHClient/checkARHAuth', () => ({
   default: jest.fn(),
 }));
 
-// Mock ARHChatbot component to avoid PatternFly imports
-jest.mock('../../Components/ARHClient/ARHChatbot', () => ({
+// Mock UniversalChatbot component to avoid PatternFly imports
+jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
   __esModule: true,
   default: () => null,
 }));

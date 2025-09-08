@@ -1,12 +1,14 @@
 import React from 'react';
 import { ScalprumProvider } from '@scalprum/react-core';
 import { FlagProvider } from '@unleash/proxy-client-react';
-import VAChatbot from '../../src/Components/VAClient/VAChatbot';
+import UniversalChatbot from '../../src/Components/UniversalChatbot/UniversalChatbot';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { Models } from '../../src/aiClients/types';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import VAClient from '../../src/aiClients/vaClient';
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
+import UniversalChatbotProvider from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
+import VAMessageEntry from '../../src/Components/VAClient/VAMessageEntry';
 
 // Mock Chrome API for Scalprum
 const mockChromeApi = {
@@ -57,7 +59,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-describe('VAChatbot Component', () => {
+describe('VAChatbot Component (UniversalChatbot)', () => {
   beforeEach(() => {
     // Mock Unleash API calls
     cy.intercept('GET', '**/api/frontend**', {
@@ -74,19 +76,26 @@ describe('VAChatbot Component', () => {
 
   it('should render VAChatbot component with VA-specific props', () => {
     const mockProps = {
-      isOpen: true,
       setOpen: cy.stub(),
       displayMode: ChatbotDisplayMode.default,
       setDisplayMode: cy.stub(),
-      availableManagers: [],
-      currentModel: Models.VA,
+      model: Models.VA,
       setCurrentModel: cy.stub(),
-      stateManager: undefined,
+      showNewConversationWarning: false,
+      setConversationsDrawerOpened: cy.stub(),
+      setShowNewConversationWarning: cy.stub(),
+      rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
+      availableManagers: [],
+      historyManagement: false,
+      streamMessages: false,
+      MessageEntryComponent: VAMessageEntry,
     };
 
     cy.mount(
       <TestWrapper>
-        <VAChatbot {...mockProps} />
+        <UniversalChatbotProvider {...mockProps}>
+          <UniversalChatbot {...mockProps} />
+        </UniversalChatbotProvider>
       </TestWrapper>
     );
 
@@ -97,19 +106,26 @@ describe('VAChatbot Component', () => {
 
   it('should use VAMessageEntry for VA message rendering', () => {
     const mockProps = {
-      isOpen: true,
       setOpen: cy.stub(),
       displayMode: ChatbotDisplayMode.default,
       setDisplayMode: cy.stub(),
-      availableManagers: [],
-      currentModel: Models.VA,
+      model: Models.VA,
       setCurrentModel: cy.stub(),
-      stateManager: undefined,
+      showNewConversationWarning: false,
+      setConversationsDrawerOpened: cy.stub(),
+      setShowNewConversationWarning: cy.stub(),
+      rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
+      availableManagers: [],
+      historyManagement: false,
+      streamMessages: false,
+      MessageEntryComponent: VAMessageEntry,
     };
 
     cy.mount(
       <TestWrapper>
-        <VAChatbot {...mockProps} />
+        <UniversalChatbotProvider {...mockProps}>
+          <UniversalChatbot {...mockProps} />
+        </UniversalChatbotProvider>
       </TestWrapper>
     );
 

@@ -6,6 +6,7 @@ export enum Models {
   ASK_RED_HAT = 'Ask Red Hat',
   RHEL_LIGHTSPEED = 'RHEL LightSpeed',
   VA = 'Virtual Assistant',
+  OAI = 'OpenShift assisted Installer',
 }
 
 export type ModelsSelection = {
@@ -29,8 +30,10 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   docsUrl: string;
   selectionTitle: string;
   selectionDescription: string;
-  Component: React.ComponentType<ChatbotProps>;
   stateManager: StateManager<Record<string, unknown>, S>;
+  handleNewChat?: (toggleDrawer: (isOpen: boolean) => void) => void;
+  MessageEntryComponent?: React.ComponentType<any>;
+  FooterComponent?: React.ComponentType<any>;
 };
 
 export type ClientAuthStatus = {

@@ -3,6 +3,7 @@ import { ChatbotFooter, ChatbotFootnote, MessageBar } from '@patternfly/chatbot'
 import { useActiveConversation, useInProgress, useInitLimitation, useMessages, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
 import useArhMessageQuota from './useArhMessageQuota';
+import ARHNewChatModal from './ARHNewChatModal';
 
 const ARHFooter = () => {
   const sendMessage = useSendMessage();
@@ -33,6 +34,8 @@ const ARHFooter = () => {
         hasAttachButton={false}
       />
       <ChatbotFootnote label="Always review AI generated content prior to use." />
+      {/* used to confirm to create a new chat */}
+      <ARHNewChatModal />
     </ChatbotFooter>
   );
 };

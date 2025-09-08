@@ -3,10 +3,9 @@ import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ScalprumProvider } from '@scalprum/react-core';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 
-import { UniversalChatbotContext } from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
+import UniversalChatbotProvider, { UniversalChatbotContext } from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
 import { Models } from '../../src/aiClients/types';
-import ARHChatbot from '../../src/Components/ARHClient/ARHChatbot';
-import RHELChatBot from '../../src/Components/RhelClient/RhelChatBot';
+import UniversalChatbot from '../../src/Components/UniversalChatbot/UniversalChatbot';
 import useArhClient from '../../src/aiClients/useArhClient';
 import useRhelLightSpeedManager from '../../src/aiClients/useRhelLightSpeedManager';
 
@@ -224,21 +223,11 @@ describe('Chatbot Initialization Tests', () => {
           availableManagers: [arhManager],
         };
 
-        const contextValue = {
-          model: Models.ASK_RED_HAT,
-          setCurrentModel: mockChatbotProps.setCurrentModel,
-          showNewConversationWarning: false,
-          setConversationsDrawerOpened: mockChatbotProps.setConversationsDrawerOpened,
-          setShowNewConversationWarning: mockChatbotProps.setShowNewConversationWarning,
-          rootElementRef: mockChatbotProps.rootElementRef,
-          availableManagers: [arhManager],
-        };
-
         return (
           <AIStateProvider stateManager={arhManager.stateManager}>
-            <UniversalChatbotContext.Provider value={contextValue}>
-              <ARHChatbot {...mockChatbotProps} />
-            </UniversalChatbotContext.Provider>
+            <UniversalChatbotProvider {...mockChatbotProps}>
+              <UniversalChatbot {...mockChatbotProps} />
+            </UniversalChatbotProvider>
           </AIStateProvider>
         );
       };
@@ -295,21 +284,11 @@ describe('Chatbot Initialization Tests', () => {
           availableManagers: [rhelManager],
         };
 
-        const contextValue = {
-          model: Models.RHEL_LIGHTSPEED,
-          setCurrentModel: mockChatbotProps.setCurrentModel,
-          showNewConversationWarning: false,
-          setConversationsDrawerOpened: mockChatbotProps.setConversationsDrawerOpened,
-          setShowNewConversationWarning: mockChatbotProps.setShowNewConversationWarning,
-          rootElementRef: mockChatbotProps.rootElementRef,
-          availableManagers: [rhelManager],
-        };
-
         return (
           <AIStateProvider stateManager={rhelManager.stateManager}>
-            <UniversalChatbotContext.Provider value={contextValue}>
-              <RHELChatBot {...mockChatbotProps} />
-            </UniversalChatbotContext.Provider>
+            <UniversalChatbotProvider {...mockChatbotProps}>
+              <UniversalChatbot {...mockChatbotProps} />
+            </UniversalChatbotProvider>
           </AIStateProvider>
         );
       };
@@ -367,25 +346,15 @@ describe('Chatbot Initialization Tests', () => {
           availableManagers: [arhManager, rhelManager],
         };
 
-        const contextValue = {
-          model: Models.ASK_RED_HAT,
-          setCurrentModel: mockChatbotProps.setCurrentModel,
-          showNewConversationWarning: false,
-          setConversationsDrawerOpened: mockChatbotProps.setConversationsDrawerOpened,
-          setShowNewConversationWarning: mockChatbotProps.setShowNewConversationWarning,
-          rootElementRef: mockChatbotProps.rootElementRef,
-          availableManagers: [arhManager, rhelManager],
-        };
-
         return (
           <div>
             <div data-testid="managers-count">{mockChatbotProps.availableManagers.length}</div>
             <div data-testid="arh-model">{arhManager.model}</div>
             <div data-testid="rhel-model">{rhelManager.model}</div>
             <AIStateProvider stateManager={arhManager.stateManager}>
-              <UniversalChatbotContext.Provider value={contextValue}>
-                <ARHChatbot {...mockChatbotProps} />
-              </UniversalChatbotContext.Provider>
+              <UniversalChatbotProvider {...mockChatbotProps}>
+                <UniversalChatbot {...mockChatbotProps} />
+              </UniversalChatbotProvider>
             </AIStateProvider>
           </div>
         );
