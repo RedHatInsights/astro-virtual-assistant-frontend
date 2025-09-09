@@ -42,11 +42,11 @@ function useInitialModel() {
     getUser();
   }, [chrome.auth.token]);
   if (!useChatBots) {
-    return { model: undefined, auth, initializing: false, ARHBaseUrl: '' };
+    return { model: undefined, auth, initializing: false };
   }
 
   if (arhEnabled.loading || rhelLightspeedEnabled.loading || !auth) {
-    return { model: undefined, auth, initializing: true, ARHBaseUrl: '' };
+    return { model: undefined, auth, initializing: true };
   }
 
   return { model, auth, initializing };
@@ -66,6 +66,7 @@ function useStateManager() {
 
   useEffect(() => {
     if (!model) {
+      setCurrentModel(undefined);
       return;
     }
     const manager = stateManagers.find((m) => m.model === model);

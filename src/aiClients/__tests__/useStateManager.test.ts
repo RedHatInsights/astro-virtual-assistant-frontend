@@ -1,0 +1,226 @@
+import { act, renderHook } from '@testing-library/react';
+import useStateManager from '../useStateManager';
+import { ChromeUser } from '@redhat-cloud-services/types';
+
+// Mock the useFlag hook for feature flags
+const mockUseFlag = jest.fn();
+jest.mock('@unleash/proxy-client-react', () => ({
+  useFlag: (flag: string) => mockUseFlag(flag),
+}));
+
+// Mock the useChrome hook
+const mockChrome = {
+  getEnvironment: jest.fn().mockReturnValue('stage'),
+  auth: {
+    getUser: jest.fn(),
+    getToken: jest.fn(() => Promise.resolve('mock-token')),
+    token: 'mock-token',
+  },
+};
+
+jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
+  __esModule: true,
+  default: jest.fn(() => mockChrome),
+}));
+
+// Mock checkARHAuth function
+jest.mock('../../Components/ARHClient/checkARHAuth', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+// Mock PatternFly chatbot module
+jest.mock('@patternfly/chatbot', () => ({
+  ChatbotDisplayMode: {
+    default: 'default',
+    docked: 'docked',
+    fullscreen: 'fullscreen',
+    embedded: 'embedded',
+  },
+}));
+
+// Mock ARHChatbot component to avoid PatternFly imports
+jest.mock('../../Components/ARHClient/ARHChatbot', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+// Mock UniversalChatbot components
+jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+jest.mock('../../Components/UniversalChatbot/UniversalChatbotProvider', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+// Mock RhelChatBot component
+jest.mock('../../Components/RhelClient/RhelChatBot', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+// Mock AI client state
+jest.mock('@redhat-cloud-services/ai-client-state', () => ({
+  createClientStateManager: jest.fn(() => ({
+    isInitialized: jest.fn(() => false),
+    isInitializing: jest.fn(() => false),
+    init: jest.fn(),
+  })),
+}));
+
+// Mock ARH client
+jest.mock('@redhat-cloud-services/arh-client', () => ({
+  IFDClient: jest.fn().mockImplementation(() => ({})),
+}));
+
+// Mock the entire useArhClient and useRhelLightSpeedManager hooks
+jest.mock('../useArhClient', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    model: 'Ask Red Hat',
+    stateManager: {
+      isInitialized: jest.fn(() => false),
+      isInitializing: jest.fn(() => false),
+      init: jest.fn(),
+    },
+    historyManagement: true,
+    streamMessages: true,
+  })),
+  useArhAuthenticated: jest.fn(() => ({
+    loading: false,
+    isAuthenticated: true,
+    model: 'Ask Red Hat',
+  })),
+}));
+
+jest.mock('../useRhelLightSpeedManager', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    model: 'RHEL Lightspeed',
+    stateManager: {
+      isInitialized: jest.fn(() => false),
+      isInitializing: jest.fn(() => false),
+      init: jest.fn(),
+    },
+    historyManagement: false,
+    streamMessages: false,
+  })),
+  useRhelLightSpeedAuthenticated: jest.fn(() => ({
+    loading: false,
+    isAuthenticated: false,
+    model: 'RHEL Lightspeed',
+  })),
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const checkARHAuth = require('../../Components/ARHClient/checkARHAuth').default;
+
+describe('useStateManager', () => {
+  const mockUser: ChromeUser = {
+    entitlements: {},
+    identity: {
+      org_id: 'org-123',
+      account_number: '123456',
+      internal: {
+        org_id: 'org-123',
+        account_id: 'account-123',
+      },
+      type: 'User',
+      user: {
+        is_internal: false,
+        is_org_admin: false,
+        locale: 'en-US',
+        username: 'testuser',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_active: true,
+      },
+    },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockChrome.auth.getUser.mockResolvedValue(mockUser);
+    checkARHAuth.mockResolvedValue(true);
+
+    // Mock fetch to prevent network calls and silence warnings
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      })
+    ) as jest.Mock;
+  });
+
+  it('should reset currentModel to undefined when useChatBots changes from false -> true -> false', async () => {
+    // Start with useChatBots = false
+    mockUseFlag.mockReturnValue(false);
+
+    const { result, rerender } = renderHook(() => useStateManager());
+
+    // Wait for initial render to complete
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Initially, model should be undefined when useChatBots is false
+    expect(result.current.model).toBeUndefined();
+
+    // Change useChatBots to true
+    await act(async () => {
+      mockUseFlag.mockReturnValue(true);
+      rerender();
+      // Wait for useEffect to process the change
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Model should now be set (assuming ARH authentication succeeds)
+    expect(result.current.model).toBe('Ask Red Hat');
+
+    // Change useChatBots back to false
+    await act(async () => {
+      mockUseFlag.mockReturnValue(false);
+      rerender();
+      // Wait for useEffect to process the change
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Model should be reset to undefined when useChatBots becomes false
+    // This tests the bug fix where setCurrentModel(undefined) is called in useEffect
+    expect(result.current.model).toBeUndefined();
+  });
+
+  it('should keep currentModel undefined when useChatBots is consistently false', async () => {
+    // Start with useChatBots = false
+    mockUseFlag.mockReturnValue(false);
+
+    const { result } = renderHook(() => useStateManager());
+
+    // Wait for initial render to complete
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Model should remain undefined
+    expect(result.current.model).toBeUndefined();
+  });
+
+  it('should set currentModel when useChatBots is true and authentication succeeds', async () => {
+    // Start with useChatBots = true
+    mockUseFlag.mockReturnValue(true);
+
+    const { result } = renderHook(() => useStateManager());
+
+    // Wait for async operations to complete
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // Model should be set when useChatBots is true and authentication succeeds
+    expect(result.current.model).toBe('Ask Red Hat');
+  });
+});
