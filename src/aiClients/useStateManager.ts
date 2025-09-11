@@ -7,16 +7,18 @@ import { useFlag } from '@unleash/proxy-client-react';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotProvider';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
+import useVaManager, { useVaAuthenticated } from './useVaManager';
 
 function useInitialModel() {
   // Use ARH used as a generic "show chatbot" flag
   const useChatBots = useFlag('platform.arh.enabled');
   const arhEnabled = useArhAuthenticated();
   const rhelLightspeedEnabled = useRhelLightSpeedAuthenticated();
+  const vaEnabled = useVaAuthenticated();
   const chrome = useChrome();
   const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
 
-  const enabledList = [arhEnabled, rhelLightspeedEnabled];
+  const enabledList = [arhEnabled, rhelLightspeedEnabled, vaEnabled];
 
   const initializing = enabledList.some((e) => e.loading);
   const model = useMemo<Models | undefined>(() => {
@@ -42,38 +44,39 @@ function useInitialModel() {
     getUser();
   }, [chrome.auth.token]);
   if (!useChatBots) {
-    return { model: undefined, auth, initializing: false };
+    return { initialModel: undefined, auth, initializing: false };
   }
 
   if (arhEnabled.loading || rhelLightspeedEnabled.loading || !auth) {
-    return { model: undefined, auth, initializing: true };
+    return { initialModel: undefined, auth, initializing: true };
   }
 
-  return { model, auth, initializing };
+  return { initialModel: model, auth, initializing };
 }
 
 function useStateManager() {
   const [isOpen, setOpen] = useState<boolean>(false);
-  const { model, auth, initializing } = useInitialModel();
+  const { initialModel, auth, initializing } = useInitialModel();
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
   const arhManager = useArhClient();
   const rhelLightspeedManager = useRhelLightSpeedManager();
+  const vaManager = useVaManager();
   const stateManagers = useMemo(() => {
-    const managers = [arhManager, rhelLightspeedManager];
+    const managers = [arhManager, rhelLightspeedManager, vaManager];
     return managers;
   }, [initializing]);
-  const [currentModel, setCurrentModel] = useState<Models | undefined>(model);
+  const [currentModel, setCurrentModel] = useState<Models | undefined>(initialModel);
 
   useEffect(() => {
-    if (!model) {
+    if (!initialModel) {
       setCurrentModel(undefined);
       return;
     }
-    const manager = stateManagers.find((m) => m.model === model);
+    const manager = stateManagers.find((m) => m.model === initialModel);
     if (manager) {
-      setCurrentModel(model);
+      setCurrentModel(initialModel);
     }
-  }, [model, initializing]);
+  }, [initialModel, initializing]);
 
   const currentManager = useMemo(() => {
     if (!currentModel) {

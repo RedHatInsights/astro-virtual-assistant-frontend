@@ -8,7 +8,6 @@ import { asyncSleep } from '../../utils/Async';
 import Config from '../../Config';
 import { MessageProcessor, MessageProcessorOptions } from '../Message/MessageProcessor';
 import { v4 as uuidv4 } from 'uuid';
-import { buildMetadata } from '../../utils/Metadata';
 
 type SetMessages = Dispatch<SetStateAction<Array<Message>>>;
 
@@ -224,7 +223,7 @@ export const useAstro = (messageProcessors: Array<MessageProcessor>, astroOption
           );
         }
 
-        const postTalkResponse = postTalk(message, options?.optionId, sessionId, buildMetadata());
+        const postTalkResponse = postTalk(message, options?.optionId, sessionId);
 
         const waitResponses = async () => {
           if (options?.hideResponse) {

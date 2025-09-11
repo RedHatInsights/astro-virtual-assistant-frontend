@@ -6,8 +6,6 @@ import UniversalChatbot from '../UniversalChatbot/UniversalChatbot';
 import ARHMessageEntry from './ARHMessageEntry';
 import { ChatbotProps } from '../UniversalChatbot/UniversalChatbotProvider';
 
-import '@patternfly/chatbot/dist/css/main.css';
-
 const ChromeConnector = (props: ChatbotProps) => {
   return (
     <UniversalChatbot {...props} MessageEntryComponent={ARHMessageEntry} FooterComponent={ARHFooter}>

@@ -5,6 +5,7 @@ import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotPro
 export enum Models {
   ASK_RED_HAT = 'Ask Red Hat',
   RHEL_LIGHTSPEED = 'RHEL LightSpeed',
+  VA = 'Virtual Assistant',
 }
 
 export type ModelsSelection = {
@@ -30,4 +31,11 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   selectionDescription: string;
   Component: React.ComponentType<ChatbotProps>;
   stateManager: StateManager<Record<string, unknown>, S>;
+};
+
+export type ClientAuthStatus = {
+  loading: boolean;
+  isAuthenticated: boolean;
+  error?: Error;
+  model: Models;
 };

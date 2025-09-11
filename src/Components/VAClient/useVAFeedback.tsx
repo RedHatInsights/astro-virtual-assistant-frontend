@@ -1,22 +1,18 @@
 import React, { useMemo, useState } from 'react';
+import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
+import { useFlag } from '@unleash/proxy-client-react';
 import { ActionProps, MessageProps } from '@patternfly/chatbot';
-import { useActiveConversation, useClient } from '@redhat-cloud-services/ai-react-state';
-import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
-import { IFDAdditionalAttributes, IFDClient } from '@redhat-cloud-services/arh-client';
-import { FeedbackState } from '../UniversalChatbot/types';
 
+import { FeedbackState } from '../UniversalChatbot/types';
+import { Message } from '@redhat-cloud-services/ai-client-state';
+import { VAAdditionalAttributes } from '../../aiClients/vaClient';
+import { postFeedback } from '../../api/PostFeedback';
+
+// update this for VA cases
 const positiveQuickResponses = ['Solved my issue', 'Easy to understand', 'Accurate'];
 const negativeQuickResponses = ["Didn't solve my issue", 'Confusing', 'Inaccurate'];
 
-interface UseMessageFeedbackReturn {
-  messageActions: { [key: string]: ActionProps } | undefined;
-  userFeedbackForm: MessageProps['userFeedbackForm'] | undefined;
-  feedbackCompleted: MessageProps['userFeedbackComplete'] | undefined;
-}
-
-export function useMessageFeedback(message: MessageType<IFDAdditionalAttributes>): UseMessageFeedbackReturn {
-  const arhClient = useClient<IFDClient>();
-  const activeConversation = useActiveConversation();
+const useVAFeedback = (message: Message<VAAdditionalAttributes>, onError: (error: Error) => void) => {
   const [feedbackState, setFeedbackState] = useState<FeedbackState>({
     positive: undefined,
     sent: false,
@@ -25,19 +21,29 @@ export function useMessageFeedback(message: MessageType<IFDAdditionalAttributes>
     freeFormValue: '',
     showFeedbackCompleted: false,
   });
-
-  async function handleFeedbackSubmit(isPositive: boolean, quickResponse = '', freeFormResponse = '') {
-    if (feedbackState.sent || feedbackState.sending || !activeConversation || !message.id) {
+  const chrome = useChrome();
+  const env = chrome.getEnvironment();
+  const isAvailable = useFlag('platform.chrome.feedback');
+  const addFeedbackTag = () => (chrome.isProd() ? `[PROD]` : '[PRE-PROD]');
+  async function handleFeedbackSubmit(isPositive: boolean, freeFormResponse = '', quickResponse = '') {
+    if (feedbackState.sent || feedbackState.sending || !message.id) {
       return;
     }
-    if (message.id) {
+    const user = await chrome.auth.getUser();
+    if (!user) {
+      // should never happen but technically the chrome API can return no user
+      throw new Error('User not found');
+    }
+
+    if (isAvailable) {
       try {
         setFeedbackState((prev) => ({ ...prev, sending: true }));
-        await arhClient.sendMessageFeedback(activeConversation?.id, message.id, {
-          rating: isPositive ? 'positive' : 'negative',
-          freeform: freeFormResponse,
-          predefined_response: quickResponse,
+        await postFeedback({
+          summary: addFeedbackTag() + 'App Feedback',
+          description: `${quickResponse ? quickResponse + '; ' : ''}${freeFormResponse}` || 'No description provided',
+          labels: ['VA', isPositive ? 'positive' : 'negative', env],
         });
+
         setFeedbackState((prev) => ({
           ...prev,
           positive: isPositive,
@@ -46,10 +52,19 @@ export function useMessageFeedback(message: MessageType<IFDAdditionalAttributes>
           detailOpened: false,
           showFeedbackCompleted: true,
         }));
-      } catch (error) {
-        console.error('Error sending feedback:', error);
+      } catch (err) {
+        let errorInternal: Error;
+        if (err instanceof Error) {
+          errorInternal = err;
+        } else {
+          const errMessage = `Error: ${JSON.stringify(err)}`;
+          errorInternal = new Error('Unable to send feedback', { cause: errMessage });
+        }
+        onError(errorInternal);
         setFeedbackState((prev) => ({ ...prev, sending: false }));
       }
+    } else {
+      onError(new Error('Submitting feedback is not available on this environment'));
     }
   }
 
@@ -126,4 +141,6 @@ export function useMessageFeedback(message: MessageType<IFDAdditionalAttributes>
     userFeedbackForm,
     feedbackCompleted,
   };
-}
+};
+
+export default useVAFeedback;
