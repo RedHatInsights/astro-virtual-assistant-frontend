@@ -1,5 +1,5 @@
 // experimental implementation of loading LSC state manager via scalprum modules
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ChromeAPI } from '@redhat-cloud-services/types';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';

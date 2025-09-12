@@ -1,11 +1,11 @@
 import { StateManager } from '@redhat-cloud-services/ai-client-state';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
-import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotProvider';
 
 export enum Models {
   ASK_RED_HAT = 'Ask Red Hat',
   RHEL_LIGHTSPEED = 'RHEL LightSpeed',
   VA = 'Virtual Assistant',
+  OAI = 'OpenShift assisted Installer',
 }
 
 export type ModelsSelection = {

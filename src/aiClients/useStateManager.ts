@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Models } from './types';
+import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import { ChromeUser } from '@redhat-cloud-services/types';
 import useArhClient, { useArhAuthenticated } from './useArhClient';
 import useRhelLightSpeedManager, { useRhelLightSpeedAuthenticated } from './useRhelLightSpeedManager';
@@ -8,8 +8,45 @@ import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotProvider';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import useVaManager, { useVaAuthenticated } from './useVaManager';
+import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 
-function useInitialModel() {
+import { getModule } from '@scalprum/core';
+import { AsyncStateManager } from '../asyncClientInit/types';
+
+function useAsyncManagers() {
+  const chrome = useChrome();
+  const [managers, setManagers] = useState<{
+    loading: boolean;
+    error: Error | null;
+    managers: {
+      manager: StateManagerConfiguration<IAIClient<Record<string, unknown>>>;
+      auth: ClientAuthStatus;
+    }[];
+  }>({ managers: [], loading: true, error: null });
+  const meta: { scope: string; module: string }[] = [{ scope: 'virtualAssistant', module: './AsyncLSC' }];
+  async function handleInitManagers() {
+    const modules = await Promise.all(meta.map((m) => getModule<AsyncStateManager<IAIClient>>(m.scope, m.module)));
+    const managers = await Promise.all(
+      modules.map((asyncManager) => {
+        const manager = asyncManager.getStateManager(chrome);
+        const auth = asyncManager.isAuthenticated(chrome);
+        return auth.then((auth) => {
+          return { manager, auth };
+        });
+      })
+    );
+    setManagers({ managers, loading: false, error: null });
+  }
+  useEffect(() => {
+    handleInitManagers();
+  }, []);
+
+  return managers;
+}
+
+type AsyncManagers = ReturnType<typeof useAsyncManagers>;
+
+function useInitialModel(asyncManagers: AsyncManagers) {
   // Use ARH used as a generic "show chatbot" flag
   const useChatBots = useFlag('platform.arh.enabled');
   const arhEnabled = useArhAuthenticated();
@@ -18,7 +55,10 @@ function useInitialModel() {
   const chrome = useChrome();
   const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
 
-  const enabledList = [arhEnabled, rhelLightspeedEnabled, vaEnabled];
+  const enabledList = useMemo(
+    () => [arhEnabled, rhelLightspeedEnabled, vaEnabled, ...asyncManagers.managers.map(({ auth }) => auth)],
+    [asyncManagers, arhEnabled, rhelLightspeedEnabled, vaEnabled]
+  );
 
   const initializing = enabledList.some((e) => e.loading);
   const model = useMemo<Models | undefined>(() => {
@@ -65,18 +105,19 @@ function useInitialModel() {
 }
 
 function useStateManager() {
+  const asyncManagers = useAsyncManagers();
   const [isOpen, setOpen] = useState<boolean>(false);
-  const { initialModel, auth, initializing, enabledList } = useInitialModel();
+  const { initialModel, auth, initializing, enabledList } = useInitialModel(asyncManagers);
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
   const arhManager = useArhClient();
   const rhelLightspeedManager = useRhelLightSpeedManager();
   const vaManager = useVaManager();
   const stateManagers = useMemo(() => {
-    // quick check to see if any of the managers are authenticated
-    // is improved once the openshift lightspeed changes are in
-    const managers = [arhManager, rhelLightspeedManager, vaManager].filter((m, index) => enabledList[index].isAuthenticated);
+    const managers = [arhManager, rhelLightspeedManager, vaManager, ...asyncManagers.managers.map(({ manager }) => manager)].filter(
+      (_m, index) => enabledList[index].isAuthenticated
+    );
     return managers;
-  }, [initializing, enabledList]);
+  }, [initializing, asyncManagers, enabledList]);
   const [currentModel, setCurrentModel] = useState<Models | undefined>(initialModel);
   const isCompact = true;
 
