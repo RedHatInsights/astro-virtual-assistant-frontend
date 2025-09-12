@@ -16,8 +16,8 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
   default: jest.fn(() => mockChrome),
 }));
 
-// Mock RhelChatBot component to avoid PatternFly imports
-jest.mock('../../Components/RhelClient/RhelChatBot', () => ({
+// Mock UniversalChatbot component to avoid PatternFly imports
+jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
   __esModule: true,
   default: () => null,
 }));

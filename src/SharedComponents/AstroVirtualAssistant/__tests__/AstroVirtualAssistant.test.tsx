@@ -54,12 +54,6 @@ jest.mock('@patternfly/chatbot', () => ({
   },
 }));
 
-// Mock components that have complex dependencies
-jest.mock('../../../Components/ARHClient/ARHChatbot', () => ({
-  __esModule: true,
-  default: () => <div data-testid="arh-chatbot">ARH Chatbot</div>,
-}));
-
 jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({
   __esModule: true,
   default: () => <div data-testid="arh-badge">ARH Badge</div>,

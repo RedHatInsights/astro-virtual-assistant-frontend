@@ -6,6 +6,8 @@ import * as checkARHAuthModule from '../../src/Components/ARHClient/checkARHAuth
 import useStateManager from '../../src/aiClients/useStateManager';
 import { Models } from '../../src/aiClients/types';
 
+// We'll handle scalprum mocking in the beforeEach
+
 // Mock Unleash feature flag
 const mockUseFlag = (flag: string) => {
   if (flag === 'platform.arh.enabled') return true;
@@ -114,6 +116,8 @@ describe('State Manager Integration Tests', () => {
       statusCode: 200,
       body: []
     }).as('arhUserHistory');
+    
+    // Scalprum getModule is now handled by webpack alias in cypress config
   });
 
   describe('useStateManager Hook Integration', () => {
@@ -123,8 +127,8 @@ describe('State Manager Integration Tests', () => {
           stateManager, 
           model, 
           initializing, 
-          chatbotProps 
-        } = useStateManager();
+          chatbotProps,
+        } = useStateManager();        
         
         return (
           <div data-testid="state-manager">

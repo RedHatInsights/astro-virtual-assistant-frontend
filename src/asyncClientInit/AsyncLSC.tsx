@@ -11,6 +11,7 @@ import { ClientAuthStatus, Models, StateManagerConfiguration } from '../aiClient
 import { AsyncStateManager } from './types';
 import ARH_BOT_ICON from '../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import { AsyncMessagePlaceholder } from '../Components/AsyncMessagePlaceholder/AsyncMessagePlaceholder';
+import { Message } from '@patternfly/chatbot';
 
 type LightspeedMessage = ScalprumComponentProps<
   Record<string, unknown>,
@@ -20,6 +21,19 @@ type LightspeedMessage = ScalprumComponentProps<
   }
 >;
 
+const AsyncMessageError = () => (
+  <Message
+    avatar={ARH_BOT_ICON}
+    role="bot"
+    content="Unable to load content"
+    error={{
+      title: 'unable to load message component',
+      children: 'Please try again later or contact support',
+      variant: 'danger',
+    }}
+  />
+);
+
 const LSCMessageEntry = ({ message, avatar }: { message: MessageType<LightSpeedCoreAdditionalProperties>; avatar: string }) => {
   const messageProps: LightspeedMessage = {
     message,
@@ -28,7 +42,7 @@ const LSCMessageEntry = ({ message, avatar }: { message: MessageType<LightSpeedC
     module: './ChatbotMessageEntry',
     fallback: null,
   };
-  return <ScalprumComponent {...messageProps} fallback={<AsyncMessagePlaceholder />} />;
+  return <ScalprumComponent {...messageProps} ErrorComponent={<AsyncMessageError />} fallback={<AsyncMessagePlaceholder />} />;
 };
 
 class AsyncLSC implements AsyncStateManager<IAIClient> {
