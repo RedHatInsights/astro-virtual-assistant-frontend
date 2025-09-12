@@ -58,8 +58,6 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
       throw new Error('Failed to initialize VA session');
     }
 
-    console.log('VA initialized', response);
-
     this.sessionId = response.session_id;
     const initialConversation: IConversation = {
       createdAt: new Date(),

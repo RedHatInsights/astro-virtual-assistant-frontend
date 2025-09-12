@@ -12,11 +12,6 @@ import UniversalMessages from './UniversalMessages';
 import '@patternfly/chatbot/dist/css/main.css';
 import UniversalModelSelection from './UniversalModelSelection';
 
-export type UniversalChatbotProps = ChatbotProps & {
-  MessageEntryComponent?: React.ComponentType<any>;
-  FooterComponent?: React.ComponentType<any>;
-};
-
 function UniversalChatbot({
   user,
   setOpen,
@@ -31,7 +26,8 @@ function UniversalChatbot({
   model,
   setCurrentModel,
   availableManagers,
-}: PropsWithChildren<UniversalChatbotProps>) {
+  handleNewChat,
+}: PropsWithChildren<ChatbotProps>) {
   const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState(emptyAvatar);
@@ -60,6 +56,14 @@ function UniversalChatbot({
   useEffect(() => {
     handleUserSetup();
   }, [user]);
+
+  useEffect(() => {
+    const manager = availableManagers.find((m) => m.model === model);
+    if (manager) {
+      // notify any subscribed components that the manager has changed and they should re-render
+      manager.stateManager.notifyAll();
+    }
+  }, [model]);
 
   const drawerContent = (
     <>
@@ -129,7 +133,17 @@ function UniversalChatbot({
               }
             }}
             // do not allow sending new chats if quota is breached
-            onNewChat={initLimitations?.reason === 'quota-breached' ? undefined : () => setShowNewConversationWarning(true)}
+            onNewChat={
+              initLimitations?.reason === 'quota-breached'
+                ? undefined
+                : () => {
+                    // TODO: figure out nice way to handle custom conversation creation flow
+                    setShowNewConversationWarning(true);
+                    if (handleNewChat) {
+                      handleNewChat(setConversationsDrawerOpened);
+                    }
+                  }
+            }
             conversations={conversations.map((conversation) => ({
               id: conversation.id,
               text: conversation.title,

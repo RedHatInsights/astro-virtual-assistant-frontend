@@ -29,9 +29,11 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   docsUrl: string;
   selectionTitle: string;
   selectionDescription: string;
-  Component: React.ComponentType<ChatbotProps>;
   stateManager: StateManager<Record<string, unknown>, S>;
   isPreview?: boolean;
+  handleNewChat?: (toggleDrawer: (isOpen: boolean) => void) => void;
+  MessageEntryComponent?: React.ComponentType<any>;
+  FooterComponent?: React.ComponentType<any>;
 };
 
 export type ClientAuthStatus = {

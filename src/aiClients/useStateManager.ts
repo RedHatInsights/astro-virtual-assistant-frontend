@@ -119,6 +119,9 @@ function useStateManager() {
     setOpen,
     availableManagers: stateManagers,
     isCompact,
+    handleNewChat: currentManager?.handleNewChat,
+    FooterComponent: currentManager?.FooterComponent,
+    MessageEntryComponent: currentManager?.MessageEntryComponent,
   };
 
   return {

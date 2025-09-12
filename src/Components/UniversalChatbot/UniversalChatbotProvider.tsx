@@ -30,14 +30,15 @@ export type ChatbotProps = {
   displayMode: ChatbotDisplayMode;
   isCompact?: boolean;
   setDisplayMode: React.Dispatch<React.SetStateAction<ChatbotDisplayMode>>;
+  handleNewChat?: (toggleDrawer: (isOpen: boolean) => void) => void;
+  MessageEntryComponent?: React.ComponentType<any>;
+  FooterComponent?: React.ComponentType<any>;
 } & UniversalChatbotContextType;
 
 export const UniversalChatbotContext = React.createContext<UniversalChatbotContextType>({
   showNewConversationWarning: false,
   model: Models.ASK_RED_HAT,
-  setCurrentModel: () => {
-    console.log('foobar, I am default setCurrent model and I am not doing anything');
-  },
+  setCurrentModel: () => undefined,
   setConversationsDrawerOpened: () => undefined,
   rootElementRef: React.createRef<HTMLDivElement>(),
   setShowNewConversationWarning: () => undefined,
