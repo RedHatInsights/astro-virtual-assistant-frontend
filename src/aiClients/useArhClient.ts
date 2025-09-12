@@ -3,9 +3,10 @@ import { IFDClient } from '@redhat-cloud-services/arh-client';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { useEffect, useMemo, useState } from 'react';
 
-import ARHChatbot from '../Components/ARHClient/ARHChatbot';
 import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import checkARHAuth from '../Components/ARHClient/checkARHAuth';
+import ARHMessageEntry from '../Components/ARHClient/ARHMessageEntry';
+import ARHFooter from '../Components/ARHClient/ARHFooter';
 
 function useArhBaseUrl() {
   const chrome = useChrome();
@@ -97,7 +98,8 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
     selectionTitle: 'General Red Hat (Default)',
     selectionDescription:
       'Find answers about Red Hat products, error messages, security vulnerabilities, general usage, and other content from product documentation and our knowledge base.',
-    Component: ARHChatbot,
+    MessageEntryComponent: ARHMessageEntry,
+    FooterComponent: ARHFooter,
     stateManager,
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',

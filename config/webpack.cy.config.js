@@ -91,6 +91,13 @@ const JSConfig = {
 
 const { config: webpackConfig, plugins } = config({
   rootFolder: path.resolve(__dirname, '../'),
+  resolve: {
+    alias: {
+      // for cypress component tests
+      '@scalprum/core': path.resolve(__dirname, '../cypress/mocks/scalprum-core.js'),
+      '@scalprum/react-core': path.resolve(__dirname, '../cypress/mocks/scalprum-react-core.js'),
+    },
+  },
 });
 
 module.exports = {

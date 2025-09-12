@@ -1,15 +1,14 @@
 import React from 'react';
 import ARHFooter from '../../src/Components/ARHClient/ARHFooter';
 import { AIStateContext } from '@redhat-cloud-services/ai-react-state';
+import { Events, StateManager } from '@redhat-cloud-services/ai-client-state';
 
 // Create mock state manager - ARHFooter expects a different interface
 const createMockStateManager = (overrides: any = {}) => {
   const state = {
     conversations: [],
     activeConversationId: 'test-conv',
-    messages: {
-      'test-conv': { id: 'test-conv', locked: false }
-    },
+    messages: [{ id: 'test-conv', locked: false }],
     isInitializing: false,
     messageInProgress: false,
     initLimitations: undefined,
@@ -17,23 +16,34 @@ const createMockStateManager = (overrides: any = {}) => {
   };
 
   // ARHFooter uses hooks that expect the state manager to have a getState method that returns another object with getState
-  return {
+  const stateManager: {
+    getState: () => StateManager;
+    subscribe: (event: Events, callback: () => void) => () => void;
+  } = {
     getState: () => ({
       getState: () => state,
-      createNewConversation: () => Promise.resolve(),
+      createNewConversation: () => Promise.resolve({createdAt: new Date(), id: 'new-conv', locked: false, title: ''}),
       setActiveConversation: () => {},
-      sendMessage: () => {},
+      sendMessage: () => Promise.resolve(),
       subscribe: () => () => {},
-      dispatch: () => {},
       getInitLimitation: () => state.initLimitations,
       getActiveConversationMessages: () => state.messages,
+      getActiveConversationId: () => state.activeConversationId,
+      getConversations: () => Object.values(state.conversations),
+      isMessageInProgress: () => state.messageInProgress,
+      isInitializing: () => state.isInitializing,
+      getClient: () => 'test-client-id' as any,
+      getMessageInProgress: () => false,
+      init: () => Promise.resolve(),
+      isInitialized: () => true,
+      isTemporaryConversation: () => false,
+      notifyAll: () => {},
+      setActiveConversationId: () => Promise.resolve(),
     }),
-    createNewConversation: () => Promise.resolve(),
-    setActiveConversation: () => {},
-    sendMessage: () => {},
     subscribe: () => () => {},
-    dispatch: () => {},
   };
+
+  return stateManager
 };
 
 const TestWrapper = ({ children, stateOverrides }: { children: React.ReactNode; stateOverrides?: any }) => {

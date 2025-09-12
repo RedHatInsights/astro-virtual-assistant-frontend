@@ -5,7 +5,8 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|scss)$': 'identity-obj-proxy',
     '\\.(svg|png|jpg|jpeg|gif)$': '<rootDir>/src/__mocks__/fileMock.js',
-    '^react-markdown$': '<rootDir>/src/__mocks__/react-markdown.js',
+    '^@scalprum/core$': '<rootDir>/src/__mocks__/scalprum.js',
+    '^@patternfly/chatbot$': '<rootDir>/src/__mocks__/@patternfly/chatbot.js',
   },
   roots: ['<rootDir>/src/'],
   transformIgnorePatterns: ['/node_modules/(?!(@redhat-cloud-services|@patternfly)/)'],

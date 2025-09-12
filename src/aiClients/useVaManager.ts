@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import VAClient from './vaClient';
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
-import VAChatbot from '../Components/VAClient/VAChatbot';
+import VAMessageEntry from '../Components/VAClient/VAMessageEntry';
 
 export function useVaAuthenticated(): ClientAuthStatus {
   // VA does not have restrictions
@@ -31,6 +31,6 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
     selectionTitle: 'Hybrid Cloud Core console',
     selectionDescription:
       'Update your personal information, request access from your admin, show critical vulnerabilities, get Advisor recommendations, and more.',
-    Component: VAChatbot,
+    MessageEntryComponent: VAMessageEntry,
   };
 }

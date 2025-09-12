@@ -1,10 +1,8 @@
-import ScalprumProvider from '@scalprum/react-core';
 import { commandMessageProcessor } from '../../src/SharedComponents/AstroVirtualAssistant/CommandMessageProcessor';
 import { CommandType } from '../../src/types/Command';
 import { AssistantMessage, From } from '../../src/types/Message';
 import React, { useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { ChromeAPI, ChromeUser } from '@redhat-cloud-services/types';
+import { ChromeUser } from '@redhat-cloud-services/types';
 import { MessageProcessorOptions } from '../../src/Components/Message/MessageProcessor';
 
 
@@ -25,18 +23,7 @@ const CommandMessageProcessor: React.FC<{ message: AssistantMessage; options: an
 };
 
 const CommandMessageProcessorWrapper: React.FC<{ message: AssistantMessage; options: MessageProcessorOptions }> = ({ message, options }) => {
-  return (
-    <ScalprumProvider
-      config={{ foo: { name: 'foo' } }}
-      api={{
-        chrome: {
-          auth: options.auth,
-        }
-      }}
-    >
-      <CommandMessageProcessor message={message} options={options} />
-    </ScalprumProvider>
-  );
+  return (<CommandMessageProcessor message={message} options={options} />);
 }
 
 // Chrome context mock

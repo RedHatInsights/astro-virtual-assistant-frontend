@@ -1,6 +1,6 @@
 import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox } from '@patternfly/chatbot';
 import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
-import React, { Fragment, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
@@ -80,7 +80,7 @@ const UniversalMessages = ({
 
   return (
     // The PF seems to be doing some sort of caching, we have to force reset the elements on conversation change
-    <ChatbotContent key={activeConversation?.id || 'no-active-conversation'}>
+    <ChatbotContent>
       <MessageBox>
         <UniversalBanner variant={bannerVariant} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
         {messages.length === 0 && (
@@ -96,9 +96,7 @@ const UniversalMessages = ({
           </>
         )}
         {messages.map((message, index) => (
-          <Fragment key={index}>
-            <MessageEntryComponent message={message} avatar={avatar} />
-          </Fragment>
+          <MessageEntryComponent key={index} message={message} avatar={avatar} />
         ))}
         <div ref={scrollToBottomRef}></div>
       </MessageBox>

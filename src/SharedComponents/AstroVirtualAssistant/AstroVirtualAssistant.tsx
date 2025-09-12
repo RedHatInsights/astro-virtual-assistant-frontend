@@ -14,6 +14,7 @@ import { commandMessageProcessor } from './CommandMessageProcessor';
 import UniversalBadge from '../../Components/UniversalChatbot/UniversalBadge';
 import useStateManager from '../../aiClients/useStateManager';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
+import UniversalChatbot from '../../Components/UniversalChatbot/UniversalChatbot';
 
 const messageProcessors = [commandMessageProcessor];
 
@@ -103,12 +104,11 @@ export const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistan
 
 const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
   const { stateManager, model, chatbotProps, isOpen, setOpen } = useStateManager();
-  const ChatBot = useMemo(() => stateManager?.Component, [model, stateManager]);
   const nodes = useMemo(() => {
-    if (model && stateManager && ChatBot && props.showAssistant) {
+    if (model && stateManager && props.showAssistant) {
       return (
         <AIStateProvider stateManager={stateManager.stateManager}>
-          <StackItem>{isOpen ? <ChatBot {...chatbotProps} /> : null}</StackItem>
+          <StackItem>{isOpen ? <UniversalChatbot {...chatbotProps} /> : null}</StackItem>
           <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
             <UniversalBadge
               onClick={() => {

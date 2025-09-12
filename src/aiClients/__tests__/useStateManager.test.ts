@@ -39,12 +39,6 @@ jest.mock('@patternfly/chatbot', () => ({
   },
 }));
 
-// Mock ARHChatbot component to avoid PatternFly imports
-jest.mock('../../Components/ARHClient/ARHChatbot', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
 // Mock UniversalChatbot components
 jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
   __esModule: true,
@@ -52,12 +46,6 @@ jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
 }));
 
 jest.mock('../../Components/UniversalChatbot/UniversalChatbotProvider', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
-// Mock RhelChatBot component
-jest.mock('../../Components/RhelClient/RhelChatBot', () => ({
   __esModule: true,
   default: () => null,
 }));
