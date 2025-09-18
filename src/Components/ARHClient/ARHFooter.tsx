@@ -4,7 +4,7 @@ import { useActiveConversation, useInProgress, useInitLimitation, useMessages, u
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
 import useArhMessageQuota from './useArhMessageQuota';
 
-const ARHFooter = () => {
+const ARHFooter = ({ isCompact }: { isCompact?: boolean }) => {
   const sendMessage = useSendMessage();
   const inProgress = useInProgress();
   const activeConversation = useActiveConversation();
@@ -23,7 +23,7 @@ const ARHFooter = () => {
     return inProgress || activeConversation?.locked || quotaExceeded?.variant === 'danger' || conversationLock;
   }, [inProgress, activeConversation, quotaExceeded, conversationLock]);
   return (
-    <ChatbotFooter>
+    <ChatbotFooter isCompact={isCompact}>
       <MessageBar
         id="query-input"
         onSendMessage={handleSend}
@@ -31,6 +31,7 @@ const ARHFooter = () => {
         alwayShowSendButton
         isSendButtonDisabled={isDisabled}
         hasAttachButton={false}
+        isCompact={isCompact}
       />
       <ChatbotFootnote label="Always review AI generated content prior to use." />
     </ChatbotFooter>

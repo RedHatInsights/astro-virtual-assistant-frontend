@@ -28,6 +28,7 @@ export type ChatbotProps = {
   historyManagement: boolean;
   streamMessages: boolean;
   displayMode: ChatbotDisplayMode;
+  isCompact?: boolean;
   setDisplayMode: React.Dispatch<React.SetStateAction<ChatbotDisplayMode>>;
 } & UniversalChatbotContextType;
 

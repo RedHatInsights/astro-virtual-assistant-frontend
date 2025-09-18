@@ -22,6 +22,7 @@ function UniversalHeader({
   setDisplayMode,
   displayMode,
   historyManagement,
+  isCompact,
 }: {
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
   setOpen: (open: boolean) => void;
@@ -29,21 +30,26 @@ function UniversalHeader({
   displayMode: ChatbotDisplayMode;
   conversationsDrawerOpened: boolean;
   historyManagement: boolean;
+  isCompact?: boolean;
 }) {
   const { setConversationsDrawerOpened, availableManagers, model } = useContext(UniversalChatbotContext);
   const modelName = availableManagers.find((m) => m.model === model)?.modelName || '';
   return (
-    <ChatbotHeader className="arh__header">
+    <ChatbotHeader className={isCompact ? 'arh__header pf-v6-u-p-sm' : 'arh__header'}>
       <ChatbotHeaderMain>
         {historyManagement ? (
-          <ChatbotHeaderMenu aria-expanded={conversationsDrawerOpened} onMenuToggle={() => setConversationsDrawerOpened((prev) => !prev)} />
+          <ChatbotHeaderMenu
+            isCompact={isCompact}
+            aria-expanded={conversationsDrawerOpened}
+            onMenuToggle={() => setConversationsDrawerOpened((prev) => !prev)}
+          />
         ) : null}
 
         <ChatbotHeaderTitle>
           <div className="pf-v6-u-mr-md">
             <Brand src={ARH_ICON} alt="Ask Red Hat" />
           </div>
-          <Title headingLevel="h1" size="2xl">
+          <Title headingLevel="h1" size={isCompact ? 'md' : '2xl'}>
             {modelName}
           </Title>
         </ChatbotHeaderTitle>
@@ -51,18 +57,19 @@ function UniversalHeader({
       <ChatbotHeaderActions>
         <Button
           variant="plain"
-          className="pf-chatbot__button--toggle-menu"
+          className={isCompact ? 'pf-chatbot__button--toggle-menu pf-m-compact' : 'pf-chatbot__button--toggle-menu'}
           onClick={() => {
             setDisplayMode((prev) => (prev === ChatbotDisplayMode.default ? ChatbotDisplayMode.fullscreen : ChatbotDisplayMode.default));
           }}
           aria-label={displayMode === ChatbotDisplayMode.default ? 'Switch chatbot to fullscreen mode' : 'Switch to default mode'}
           icon={
-            <Icon color="var(--pf-t--global--icon--color--subtle)" size="xl">
+            <Icon color="var(--pf-t--global--icon--color--subtle)" size={isCompact ? 'lg' : 'xl'}>
               {displayMode === ChatbotDisplayMode.default ? <ExpandAltIcon /> : <CompressAltIcon />}
             </Icon>
           }
         />
         <ChatbotHeaderCloseButton
+          isCompact={isCompact}
           onClick={() => {
             setOpen(false);
             if (scrollToBottomRef.current) {

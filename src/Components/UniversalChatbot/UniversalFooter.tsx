@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { ChatbotFooter, ChatbotFootnote, MessageBar } from '@patternfly/chatbot';
 import { useActiveConversation, useInProgress, useInitLimitation, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 
-const UniversalFooter = ({ streamMessages }: { streamMessages: boolean }) => {
+const UniversalFooter = ({ streamMessages, isCompact }: { streamMessages: boolean; isCompact?: boolean }) => {
   const sendMessage = useSendMessage();
   const inProgress = useInProgress();
   const activeConversation = useActiveConversation();
@@ -19,7 +19,7 @@ const UniversalFooter = ({ streamMessages }: { streamMessages: boolean }) => {
     return inProgress || activeConversation?.locked || conversationLock;
   }, [inProgress, activeConversation, conversationLock]);
   return (
-    <ChatbotFooter>
+    <ChatbotFooter isCompact={isCompact}>
       <MessageBar
         id="query-input"
         onSendMessage={handleSend}
@@ -27,6 +27,7 @@ const UniversalFooter = ({ streamMessages }: { streamMessages: boolean }) => {
         alwayShowSendButton
         isSendButtonDisabled={isDisabled}
         hasAttachButton={false}
+        isCompact={isCompact}
       />
       <ChatbotFootnote label="Always review AI generated content prior to use." />
     </ChatbotFooter>

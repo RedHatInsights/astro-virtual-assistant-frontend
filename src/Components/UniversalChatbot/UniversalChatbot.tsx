@@ -1,7 +1,6 @@
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useConversations, useInitLimitation, useSetActiveConversation } from '@redhat-cloud-services/ai-react-state';
 import { Chatbot, ChatbotConversationHistoryNav, ChatbotDisplayMode } from '@patternfly/chatbot';
-import { useFlag } from '@unleash/proxy-client-react';
 
 import UniversalChatbotProvider, { ChatbotProps } from './UniversalChatbotProvider';
 import emptyAvatar from '../../assets/img_avatar.svg';
@@ -24,6 +23,7 @@ function UniversalChatbot({
   historyManagement,
   streamMessages,
   displayMode,
+  isCompact,
   setDisplayMode,
   MessageEntryComponent,
   FooterComponent = UniversalFooter,
@@ -35,7 +35,7 @@ function UniversalChatbot({
   const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState(emptyAvatar);
-  const isCompact = useFlag('platform.virtual-assistant.compact');
+
   const rootElementRef = useRef<HTMLDivElement>(null);
   const conversations = useConversations();
   const setActiveConversation = useSetActiveConversation();
@@ -70,6 +70,7 @@ function UniversalChatbot({
         setOpen={setOpen}
         setDisplayMode={setDisplayMode}
         displayMode={displayMode}
+        isCompact={isCompact}
       />
       <UniversalModelSelection containerRef={rootElementRef} />
       <UniversalMessages
@@ -79,8 +80,9 @@ function UniversalChatbot({
         scrollToBottomRef={scrollToBottomRef}
         setIsBannerOpen={setIsBannerOpen}
         MessageEntryComponent={MessageEntryComponent}
+        isCompact={isCompact}
       />
-      <FooterComponent streamMessages={streamMessages} />
+      <FooterComponent streamMessages={streamMessages} isCompact={isCompact} />
     </>
   );
 
@@ -133,6 +135,7 @@ function UniversalChatbot({
               text: conversation.title,
             }))}
             drawerContent={drawerContent}
+            isCompact={isCompact}
           />
         </Chatbot>
         {children}

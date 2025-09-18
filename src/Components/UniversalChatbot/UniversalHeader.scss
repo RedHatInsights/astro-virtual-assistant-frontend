@@ -1,4 +1,11 @@
 .arh__header {
   padding-top: var(--pf-t--global--spacer--md);
   padding-bottom: var(--pf-t--global--spacer--md);
+  & .pf-chatbot__menu .pf-chatbot__button--toggle-menu{
+    align-items: center;
+  }
+  &.pf-chatbot__header.pf-v6-u-p-sm .pf-chatbot__title img {
+    max-height: 32px;
+    margin-top: 2px;
+  }
 }
