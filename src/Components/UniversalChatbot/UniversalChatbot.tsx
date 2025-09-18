@@ -1,6 +1,7 @@
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { useConversations, useInitLimitation, useSetActiveConversation } from '@redhat-cloud-services/ai-react-state';
 import { Chatbot, ChatbotConversationHistoryNav, ChatbotDisplayMode } from '@patternfly/chatbot';
+import { useFlag } from '@unleash/proxy-client-react';
 
 import UniversalChatbotProvider, { ChatbotProps } from './UniversalChatbotProvider';
 import emptyAvatar from '../../assets/img_avatar.svg';
@@ -34,7 +35,7 @@ function UniversalChatbot({
   const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState(emptyAvatar);
-
+  const isCompact = useFlag('platform.virtual-assistant.compact');
   const rootElementRef = useRef<HTMLDivElement>(null);
   const conversations = useConversations();
   const setActiveConversation = useSetActiveConversation();
@@ -113,7 +114,7 @@ function UniversalChatbot({
       availableManagers={availableManagers}
     >
       <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot">
-        <Chatbot displayMode={displayMode}>
+        <Chatbot displayMode={displayMode} isCompact={isCompact}>
           <ChatbotConversationHistoryNav
             displayMode={displayMode}
             isDrawerOpen={conversationsDrawerOpened}
