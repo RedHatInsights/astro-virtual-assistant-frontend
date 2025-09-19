@@ -23,6 +23,7 @@ function UniversalChatbot({
   historyManagement,
   streamMessages,
   displayMode,
+  isCompact,
   setDisplayMode,
   MessageEntryComponent,
   FooterComponent = UniversalFooter,
@@ -69,6 +70,7 @@ function UniversalChatbot({
         setOpen={setOpen}
         setDisplayMode={setDisplayMode}
         displayMode={displayMode}
+        isCompact={isCompact}
       />
       <UniversalModelSelection containerRef={rootElementRef} />
       <UniversalMessages
@@ -78,8 +80,9 @@ function UniversalChatbot({
         scrollToBottomRef={scrollToBottomRef}
         setIsBannerOpen={setIsBannerOpen}
         MessageEntryComponent={MessageEntryComponent}
+        isCompact={isCompact}
       />
-      <FooterComponent streamMessages={streamMessages} />
+      <FooterComponent streamMessages={streamMessages} isCompact={isCompact} />
     </>
   );
 
@@ -113,7 +116,7 @@ function UniversalChatbot({
       availableManagers={availableManagers}
     >
       <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot">
-        <Chatbot displayMode={displayMode}>
+        <Chatbot displayMode={displayMode} isCompact={isCompact}>
           <ChatbotConversationHistoryNav
             displayMode={displayMode}
             isDrawerOpen={conversationsDrawerOpened}
@@ -132,6 +135,7 @@ function UniversalChatbot({
               text: conversation.title,
             }))}
             drawerContent={drawerContent}
+            isCompact={isCompact}
           />
         </Chatbot>
         {children}

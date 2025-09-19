@@ -66,6 +66,7 @@ function useStateManager() {
     return managers;
   }, [initializing]);
   const [currentModel, setCurrentModel] = useState<Models | undefined>(initialModel);
+  const isCompact = true;
 
   useEffect(() => {
     if (!initialModel) {
@@ -105,6 +106,7 @@ function useStateManager() {
     showNewConversationWarning: false,
     setOpen,
     availableManagers: stateManagers,
+    isCompact,
   };
 
   return {

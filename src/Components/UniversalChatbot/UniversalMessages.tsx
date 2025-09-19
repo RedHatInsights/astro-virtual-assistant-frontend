@@ -9,7 +9,7 @@ import UniversalBanner from './UniversalBanner';
 import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
 
-function MessageEntry({ message, avatar }: { message: MessageType; avatar: string }) {
+function MessageEntry({ message, avatar, isCompact }: { message: MessageType; avatar: string; isCompact?: boolean }) {
   const messageDate = `${message.date?.toLocaleDateString()} ${message.date?.toLocaleTimeString()}`;
 
   const quota = useArhMessageQuota(message);
@@ -25,6 +25,7 @@ function MessageEntry({ message, avatar }: { message: MessageType; avatar: strin
         content={message.answer}
         aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
         timestamp={messageDate}
+        isCompact={isCompact}
       />
       {/* Will require new PF API to add alerts directly to the message layout */}
       {quota && <Alert {...quota} />}
@@ -39,6 +40,7 @@ const UniversalMessages = ({
   username,
   scrollToBottomRef,
   MessageEntryComponent = MessageEntry,
+  isCompact,
 }: {
   username?: string;
   avatar: string;
@@ -46,6 +48,7 @@ const UniversalMessages = ({
   isBannerOpen: boolean;
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
   MessageEntryComponent?: React.ComponentType<any>;
+  isCompact?: boolean;
 }) => {
   const activeConversation = useActiveConversation();
   const initLimitations = useInitLimitation();
@@ -85,19 +88,20 @@ const UniversalMessages = ({
         <UniversalBanner variant={bannerVariant} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
         {messages.length === 0 && (
           <>
-            <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" />
+            <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" isCompact={isCompact} />
             <Message
               timestamp={`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`}
               id="welcome-message"
               role="bot"
               avatar={ARH_BOT_ICON}
               content={welcomeMessageConfig.content}
+              isCompact={isCompact}
             />
           </>
         )}
         {messages.map((message, index) => (
           <Fragment key={index}>
-            <MessageEntryComponent message={message} avatar={avatar} />
+            <MessageEntryComponent message={message} avatar={avatar} isCompact={isCompact} />
           </Fragment>
         ))}
         <div ref={scrollToBottomRef}></div>
