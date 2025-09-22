@@ -31,7 +31,7 @@ function UniversalHeader({
   historyManagement: boolean;
 }) {
   const { setConversationsDrawerOpened, availableManagers, model } = useContext(UniversalChatbotContext);
-  const modelName = availableManagers.find((m) => m.model === model)?.modelName || '';
+  const modelName = model ? availableManagers[model]?.stateManager.modelName : '';
   return (
     <ChatbotHeader className="arh__header">
       <ChatbotHeaderMain>

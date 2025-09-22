@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { useArhAuthenticated } from '../useArhClient';
+import ArhChatbot from '../ArhChatbot';
 import { ChromeUser } from '@redhat-cloud-services/types';
 
 // Mock the useChrome hook
@@ -75,12 +75,11 @@ describe('useArhAuthenticated', () => {
     mockChrome.auth.getUser.mockResolvedValue(mockUser);
     checkARHAuth.mockResolvedValue(true);
 
-    const { result } = renderHook(() => useArhAuthenticated());
+    const { result } = renderHook(() => ArhChatbot.useIsAuthenticated());
 
     // Initial loading state
     expect(result.current.loading).toBe(true);
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.model).toBe('Ask Red Hat');
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -96,7 +95,7 @@ describe('useArhAuthenticated', () => {
     mockChrome.auth.getUser.mockResolvedValue(mockUser);
     checkARHAuth.mockResolvedValue(false);
 
-    const { result } = renderHook(() => useArhAuthenticated());
+    const { result } = renderHook(() => ArhChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -109,7 +108,7 @@ describe('useArhAuthenticated', () => {
   it('should handle missing user', async () => {
     mockChrome.auth.getUser.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useArhAuthenticated());
+    const { result } = renderHook(() => ArhChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -125,7 +124,7 @@ describe('useArhAuthenticated', () => {
     mockChrome.auth.getUser.mockResolvedValue(mockUser);
     checkARHAuth.mockRejectedValue(error);
 
-    const { result } = renderHook(() => useArhAuthenticated());
+    const { result } = renderHook(() => ArhChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -141,7 +140,7 @@ describe('useArhAuthenticated', () => {
 
     // Test prod environment
     mockChrome.getEnvironment.mockReturnValue('prod');
-    renderHook(() => useArhAuthenticated());
+    renderHook(() => ArhChatbot.useIsAuthenticated());
     await waitFor(() => {
       expect(checkARHAuth).toHaveBeenCalledWith('https://access.redhat.com', mockUser, 'mock-token');
     });
@@ -150,7 +149,7 @@ describe('useArhAuthenticated', () => {
 
     // Test dev environment (should also use prod URL)
     mockChrome.getEnvironment.mockReturnValue('dev');
-    renderHook(() => useArhAuthenticated());
+    renderHook(() => ArhChatbot.useIsAuthenticated());
     await waitFor(() => {
       expect(checkARHAuth).toHaveBeenCalledWith('https://access.redhat.com', mockUser, 'mock-token');
     });

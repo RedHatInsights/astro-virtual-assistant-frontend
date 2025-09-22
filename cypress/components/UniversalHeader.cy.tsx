@@ -1,8 +1,7 @@
 import React from 'react';
 import UniversalHeader from '../../src/Components/UniversalChatbot/UniversalHeader';
-import { UniversalChatbotContext } from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
+import { UniversalChatbotContext, UniversalChatbotContextType } from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
-import { Models } from '../../src/aiClients/types';
 
 describe('UniversalHeader Component', () => {
   const defaultProps = {
@@ -14,25 +13,28 @@ describe('UniversalHeader Component', () => {
     historyManagement: true,
   };
 
-  const mockContextValue = {
-    model: Models.ASK_RED_HAT,
+  const mockContextValue: UniversalChatbotContextType = {
+    model: 'Ask Red Hat',
     setCurrentModel: () => {},
     showNewConversationWarning: false,
     setConversationsDrawerOpened: () => {},
     setShowNewConversationWarning: () => {},
     rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
-    availableManagers: [
-      {
-        model: Models.ASK_RED_HAT,
-        modelName: 'Ask Red Hat',
-        stateManager: {} as any,
-        historyManagement: true,
-        streamMessages: true,
-        Component: () => null,
-        selectionTitle: 'Ask Red Hat',
-        selectionDescription: 'General Red Hat support',
-      }
-    ],
+    availableManagers: {arh: {
+        stateManager : {
+          modelName: 'Ask Red Hat',
+          stateManager: {} as any,
+          historyManagement: true,
+          streamMessages: true,
+          selectionTitle: 'Ask Red Hat',
+          selectionDescription: 'General Red Hat support',
+          docsUrl: 'http://foo.com'
+        },
+        authStatus: {
+          loading: false,
+          isAuthenticated: true,
+        }
+    }},
   };
 
   const TestWrapper = ({ children }: { children: React.ReactNode }) => (

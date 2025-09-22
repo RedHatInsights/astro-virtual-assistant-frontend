@@ -1,20 +1,22 @@
-import React, { FunctionComponent, useEffect, useMemo, useState } from 'react';
+import React, { FunctionComponent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { Stack, StackItem } from '@patternfly/react-core';
 import { useFlag } from '@unleash/proxy-client-react';
+import { IAIClient } from '@redhat-cloud-services/ai-client-common';
+import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 
 import { Status, useAstro } from '../../Components/AstroChat/useAstro';
-import './astro-virtual-assistant.scss';
 import { AstroChat } from '../../Components/AstroChat/AstroChat';
 import { AstroBadge } from '../../Components/AstroAvatar/AstroBadge';
 import { commandMessageProcessor } from './CommandMessageProcessor';
-
 import UniversalBadge from '../../Components/UniversalChatbot/UniversalBadge';
-import useStateManager from '../../aiClients/useStateManager';
-import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
+import useStateManager, { AsyncManagersMap, useAsyncManagers } from '../../aiClients/useStateManager';
 import UniversalChatbot from '../../Components/UniversalChatbot/UniversalChatbot';
+import { AsyncStateManager } from '../../asyncClientInit/types';
+
+import './astro-virtual-assistant.scss';
 
 const messageProcessors = [commandMessageProcessor];
 
@@ -102,11 +104,50 @@ export const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistan
   );
 };
 
+const AsyncManager = ({
+  id,
+  manager,
+  setAsyncManagers,
+}: {
+  id: string;
+  manager: AsyncStateManager<IAIClient<Record<string, unknown>>>;
+  setAsyncManagers: React.Dispatch<React.SetStateAction<AsyncManagersMap>>;
+}) => {
+  const stateManager = manager.useStateManager();
+  const authStatus = manager.useIsAuthenticated();
+  React.useEffect(() => {
+    setAsyncManagers((v) => {
+      return {
+        ...v,
+        [id]: {
+          stateManager,
+          authStatus,
+        },
+      };
+    });
+  }, [stateManager, authStatus]);
+  return null;
+};
+
+const LoadAssistants = ({ setAsyncManagers }: { setAsyncManagers: React.Dispatch<React.SetStateAction<AsyncManagersMap>> }) => {
+  const { loading, managers } = useAsyncManagers();
+  if (loading) {
+    return null;
+  }
+  return (
+    <>
+      {managers.map((m) => (
+        <AsyncManager key={m.id} setAsyncManagers={setAsyncManagers} {...m} />
+      ))}
+    </>
+  );
+};
+
 const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
-  const { stateManager, model, chatbotProps, isOpen, setOpen } = useStateManager();
-  const nodes = useMemo(() => {
-    if (model && stateManager && props.showAssistant) {
-      return (
+  const { stateManager, chatbotProps, isOpen, setOpen, setAsyncManagers } = useStateManager();
+  const nodes = props.showAssistant ? (
+    <>
+      {stateManager && (
         <AIStateProvider stateManager={stateManager.stateManager}>
           <StackItem>{isOpen ? <UniversalChatbot {...chatbotProps} /> : null}</StackItem>
           <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
@@ -117,20 +158,19 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
             />
           </StackItem>
         </AIStateProvider>
-      );
-    }
-
-    return (
-      <>
-        <StackItem>
-          <AstroVirtualAssistantLegacy {...props} isOpen={isOpen} setOpen={setOpen} />
-        </StackItem>
-        <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
-          {props.showAssistant ? <AstroBadge onClick={() => setOpen((prev) => !prev)} /> : null}
-        </StackItem>
-      </>
-    );
-  }, [stateManager, props.showAssistant, isOpen, chatbotProps, model]);
+      )}
+      <LoadAssistants setAsyncManagers={setAsyncManagers} />
+    </>
+  ) : (
+    <>
+      <StackItem>
+        <AstroVirtualAssistantLegacy {...props} isOpen={isOpen} setOpen={setOpen} />
+      </StackItem>
+      <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
+        {props.showAssistant ? <AstroBadge onClick={() => setOpen((prev) => !prev)} /> : null}
+      </StackItem>
+    </>
+  );
   return createPortal(
     <div className="virtualAssistant">
       <Stack className="astro-wrapper-stack">{nodes}</Stack>

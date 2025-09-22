@@ -1,40 +1,46 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
+import { AsyncStateManagerConfiguration, ClientAuthStatus } from './types';
 import { ChromeUser } from '@redhat-cloud-services/types';
-import useArhClient, { useArhAuthenticated } from './useArhClient';
-import useRhelLightSpeedManager, { useRhelLightSpeedAuthenticated } from './useRhelLightSpeedManager';
 import { useFlag } from '@unleash/proxy-client-react';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotProvider';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
-import useVaManager, { useVaAuthenticated } from './useVaManager';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 
 import { getModule } from '@scalprum/core';
 import { AsyncStateManager } from '../asyncClientInit/types';
 
-function useAsyncManagers() {
-  const chrome = useChrome();
+type AsyncManager = {
+  id: string;
+  manager: AsyncStateManager<IAIClient<Record<string, unknown>>>;
+};
+
+export function useAsyncManagers() {
   const [managers, setManagers] = useState<{
     loading: boolean;
     error: Error | null;
-    managers: {
-      manager: StateManagerConfiguration<IAIClient<Record<string, unknown>>>;
-      auth: ClientAuthStatus;
-    }[];
+    managers: AsyncManager[];
   }>({ managers: [], loading: true, error: null });
-  const meta: { scope: string; module: string }[] = [{ scope: 'virtualAssistant', module: './AsyncLSC' }];
+  const meta: { scope: string; module: string }[] = [
+    { scope: 'virtualAssistant', module: './ArhChatbot' },
+    { scope: 'virtualAssistant', module: './RhelLightSpeedChatbot' },
+    { scope: 'virtualAssistant', module: './VaChatbot' },
+    { scope: 'assistedInstallerApp', module: './AsyncLSC' },
+  ];
   async function handleInitManagers() {
-    const modules = await Promise.all(meta.map((m) => getModule<AsyncStateManager<IAIClient>>(m.scope, m.module)));
-    const managers = await Promise.all(
-      modules.map((asyncManager) => {
-        const manager = asyncManager.getStateManager(chrome);
-        const auth = asyncManager.isAuthenticated(chrome);
-        return auth.then((auth) => {
-          return { manager, auth };
+    const modules = await Promise.allSettled(meta.map((m) => getModule<AsyncStateManager<IAIClient>>(m.scope, m.module)));
+    const managers = modules.reduce((acc, moduleResult, idx) => {
+      if (moduleResult.status === 'fulfilled') {
+        acc.push({
+          id: `${meta[idx].scope}-${meta[idx].module}`,
+          manager: moduleResult.value,
         });
-      })
-    );
+      } else {
+        console.log('failed to fetch async manager', meta);
+      }
+      return acc;
+    }, [] as AsyncManager[]);
+
     setManagers({ managers, loading: false, error: null });
   }
   useEffect(() => {
@@ -44,31 +50,21 @@ function useAsyncManagers() {
   return managers;
 }
 
-type AsyncManagers = ReturnType<typeof useAsyncManagers>;
-
-function useInitialModel(asyncManagers: AsyncManagers) {
+function useInitialModel(asyncManagers: AsyncManagersMap) {
   // Use ARH used as a generic "show chatbot" flag
   const useChatBots = useFlag('platform.arh.enabled');
-  const arhEnabled = useArhAuthenticated();
-  const rhelLightspeedEnabled = useRhelLightSpeedAuthenticated();
-  const vaEnabled = useVaAuthenticated();
   const chrome = useChrome();
   const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
 
-  const enabledList = useMemo(
-    () => [arhEnabled, rhelLightspeedEnabled, vaEnabled, ...asyncManagers.managers.map(({ auth }) => auth)],
-    [asyncManagers, arhEnabled, rhelLightspeedEnabled, vaEnabled]
-  );
-
-  const initializing = enabledList.some((e) => e.loading);
-  const model = useMemo<Models | undefined>(() => {
+  const initializing = !Object.values(asyncManagers).length || Object.values(asyncManagers).some(({ authStatus }) => authStatus.loading);
+  const model = useMemo<string | undefined>(() => {
     if (initializing) {
       return undefined;
     }
 
     // models are ordered in priority order, pick the first one that is authenticated
-    return enabledList.find((e) => e.isAuthenticated)?.model;
-  }, [initializing, enabledList]);
+    return Object.keys(asyncManagers).find((id) => asyncManagers[id].authStatus.isAuthenticated);
+  }, [initializing, asyncManagers]);
 
   useEffect(() => {
     async function getUser() {
@@ -87,34 +83,29 @@ function useInitialModel(asyncManagers: AsyncManagers) {
     return { initialModel: undefined, auth, initializing: false };
   }
 
-  if (arhEnabled.loading || rhelLightspeedEnabled.loading || !auth) {
-    return { initialModel: undefined, auth, initializing: true };
-  }
-
   return { initialModel: model, auth, initializing };
 }
 
+export type AsyncManagersMap = {
+  [key: string]: {
+    stateManager: AsyncStateManagerConfiguration<any>;
+    authStatus: ClientAuthStatus;
+  };
+};
+
 function useStateManager() {
-  const asyncManagers = useAsyncManagers();
+  const [asyncManagers, setAsyncManagers] = useState<AsyncManagersMap>({});
   const [isOpen, setOpen] = useState<boolean>(false);
   const { initialModel, auth, initializing } = useInitialModel(asyncManagers);
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
-  const arhManager = useArhClient();
-  const rhelLightspeedManager = useRhelLightSpeedManager();
-  const vaManager = useVaManager();
-  // const LSCManager = useLSCManager();
-  const stateManagers = useMemo(() => {
-    const managers = [arhManager, rhelLightspeedManager, vaManager, ...asyncManagers.managers.map(({ manager }) => manager)];
-    return managers;
-  }, [initializing, asyncManagers]);
-  const [currentModel, setCurrentModel] = useState<Models | undefined>(initialModel);
+  const [currentModel, setCurrentModel] = useState<string | undefined>(initialModel);
 
   useEffect(() => {
     if (!initialModel) {
       setCurrentModel(undefined);
       return;
     }
-    const manager = stateManagers.find((m) => m.model === initialModel);
+    const manager = Object.keys(asyncManagers).find((id) => id === initialModel);
     if (manager) {
       setCurrentModel(initialModel);
     }
@@ -124,14 +115,19 @@ function useStateManager() {
     if (!currentModel) {
       return undefined;
     }
-    const manager = stateManagers.find((m) => m.model === currentModel);
+    const manager = Object.keys(asyncManagers).find((id) => id === currentModel);
 
-    if (isOpen && manager && !manager.stateManager.isInitialized() && !manager.stateManager.isInitializing()) {
-      manager.stateManager.init();
+    if (
+      isOpen &&
+      manager &&
+      !asyncManagers[manager].stateManager.stateManager.isInitialized() &&
+      !asyncManagers[manager].stateManager.stateManager.isInitializing()
+    ) {
+      asyncManagers[manager].stateManager.stateManager.init();
     }
 
-    return manager;
-  }, [isOpen, currentModel, stateManagers]);
+    return manager ? asyncManagers[manager].stateManager : undefined;
+  }, [isOpen, currentModel, asyncManagers]);
 
   const chatbotProps: ChatbotProps = {
     user: auth.user,
@@ -146,7 +142,7 @@ function useStateManager() {
     setShowNewConversationWarning: () => undefined,
     showNewConversationWarning: false,
     setOpen,
-    availableManagers: stateManagers,
+    availableManagers: asyncManagers,
     handleNewChat: currentManager?.handleNewChat,
     FooterComponent: currentManager?.FooterComponent,
     MessageEntryComponent: currentManager?.MessageEntryComponent,
@@ -159,6 +155,7 @@ function useStateManager() {
     stateManager: currentManager,
     initializing,
     model: currentModel,
+    setAsyncManagers,
   };
 }
 

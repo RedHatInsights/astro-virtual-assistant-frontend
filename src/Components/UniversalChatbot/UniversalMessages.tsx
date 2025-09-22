@@ -21,7 +21,7 @@ function MessageEntry({ message, avatar }: { message: MessageType; avatar: strin
         isMarkdownDisabled={message.role === 'user'}
         isLoading={message.role === 'bot' && message.answer === ''}
         role={message.role}
-        avatar={message.role === 'user' ? avatar : ARH_BOT_ICON}
+        avatar={avatar}
         content={message.answer}
         aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
         timestamp={messageDate}
@@ -95,9 +95,10 @@ const UniversalMessages = ({
             />
           </>
         )}
-        {messages.map((message, index) => (
-          <MessageEntryComponent key={index} message={message} avatar={avatar} />
-        ))}
+        {messages.map((message, index) => {
+          const msgAvatar = message.role === 'user' ? avatar : ARH_BOT_ICON;
+          return <MessageEntryComponent key={index} message={message} avatar={msgAvatar} />;
+        })}
         <div ref={scrollToBottomRef}></div>
       </MessageBox>
     </ChatbotContent>

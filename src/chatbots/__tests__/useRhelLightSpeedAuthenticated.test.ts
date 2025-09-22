@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { useRhelLightSpeedAuthenticated } from '../useRhelLightSpeedManager';
+import RhelLightSpeedChatbot from '../RhelLightSpeedChatbot';
 import { ChromeUser } from '@redhat-cloud-services/types';
 
 // Mock the useChrome hook
@@ -69,12 +69,11 @@ describe('useRhelLightSpeedAuthenticated', () => {
     };
     mockChrome.auth.getUser.mockResolvedValue(rhelUser);
 
-    const { result } = renderHook(() => useRhelLightSpeedAuthenticated());
+    const { result } = renderHook(() => RhelLightSpeedChatbot.useIsAuthenticated());
 
     // Initial loading state
     expect(result.current.loading).toBe(true);
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.model).toBe('RHEL LightSpeed');
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -94,7 +93,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
     };
     mockChrome.auth.getUser.mockResolvedValue(noRhelUser);
 
-    const { result } = renderHook(() => useRhelLightSpeedAuthenticated());
+    const { result } = renderHook(() => RhelLightSpeedChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -107,7 +106,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
   it('should handle missing user', async () => {
     mockChrome.auth.getUser.mockResolvedValue(undefined);
 
-    const { result } = renderHook(() => useRhelLightSpeedAuthenticated());
+    const { result } = renderHook(() => RhelLightSpeedChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -121,7 +120,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
     const error = new Error('User fetch failed');
     mockChrome.auth.getUser.mockRejectedValue(error);
 
-    const { result } = renderHook(() => useRhelLightSpeedAuthenticated());
+    const { result } = renderHook(() => RhelLightSpeedChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -134,7 +133,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
   it('should handle different error types', async () => {
     // Test string error
     mockChrome.auth.getUser.mockRejectedValue('String error');
-    const { result: result1 } = renderHook(() => useRhelLightSpeedAuthenticated());
+    const { result: result1 } = renderHook(() => RhelLightSpeedChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result1.current.loading).toBe(false);
@@ -143,7 +142,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
 
     // Test unknown error type
     mockChrome.auth.getUser.mockRejectedValue({ unexpected: 'error' });
-    const { result: result2 } = renderHook(() => useRhelLightSpeedAuthenticated());
+    const { result: result2 } = renderHook(() => RhelLightSpeedChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result2.current.loading).toBe(false);
@@ -160,7 +159,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
     };
     mockChrome.auth.getUser.mockResolvedValue(rhelUser);
 
-    const { result, rerender } = renderHook(() => useRhelLightSpeedAuthenticated());
+    const { result, rerender } = renderHook(() => RhelLightSpeedChatbot.useIsAuthenticated());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

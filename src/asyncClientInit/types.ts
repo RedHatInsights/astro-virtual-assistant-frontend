@@ -1,11 +1,10 @@
-import { ChromeAPI } from '@redhat-cloud-services/types';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 
-import { ClientAuthStatus, StateManagerConfiguration } from '../aiClients/types';
+import { AsyncStateManagerConfiguration, ClientAuthStatus } from '../aiClients/types';
 
-declare class AsyncStateManager<S extends IAIClient> {
-  isAuthenticated(chrome: ChromeAPI): Promise<ClientAuthStatus>;
-  getStateManager(chrome: ChromeAPI): StateManagerConfiguration<S>;
-}
+type AsyncStateManager<S extends IAIClient> = {
+  useIsAuthenticated: () => ClientAuthStatus;
+  useStateManager: () => AsyncStateManagerConfiguration<S>;
+};
 
-export { AsyncStateManager };
+export { type AsyncStateManager };

@@ -57,7 +57,7 @@ function UniversalChatbot({
   }, [user]);
 
   useEffect(() => {
-    const manager = availableManagers.find((m) => m.model === model);
+    const manager = model ? availableManagers[model]?.stateManager : undefined;
     if (manager) {
       // notify any subscribed components that the manager has changed and they should re-render
       manager.stateManager.notifyAll();

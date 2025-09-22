@@ -1,25 +1,17 @@
 import React, { Dispatch, PropsWithChildren } from 'react';
-import { IFDClient } from '@redhat-cloud-services/arh-client';
-import { RHELLightspeedClient } from '@redhat-cloud-services/rhel-lightspeed-client';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ChromeUser } from '@redhat-cloud-services/types';
-import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 
-import { Models, StateManagerConfiguration } from '../../aiClients/types';
-
-export type ModelToClient = {
-  [Models.ASK_RED_HAT]: IFDClient;
-  [Models.RHEL_LIGHTSPEED]: RHELLightspeedClient;
-};
+import { AsyncManagersMap } from '../../aiClients/useStateManager';
 
 export type UniversalChatbotContextType = {
-  model?: Models;
-  setCurrentModel: (model: Models) => void;
+  model?: string;
+  setCurrentModel: (model: string) => void;
   showNewConversationWarning: boolean;
   setConversationsDrawerOpened: Dispatch<React.SetStateAction<boolean>>;
   setShowNewConversationWarning: Dispatch<React.SetStateAction<boolean>>;
   rootElementRef: React.RefObject<HTMLDivElement>;
-  availableManagers: StateManagerConfiguration<IAIClient>[];
+  availableManagers: AsyncManagersMap;
 };
 
 export type ChatbotProps = {
@@ -36,12 +28,11 @@ export type ChatbotProps = {
 
 export const UniversalChatbotContext = React.createContext<UniversalChatbotContextType>({
   showNewConversationWarning: false,
-  model: Models.ASK_RED_HAT,
   setCurrentModel: () => undefined,
   setConversationsDrawerOpened: () => undefined,
   rootElementRef: React.createRef<HTMLDivElement>(),
   setShowNewConversationWarning: () => undefined,
-  availableManagers: [],
+  availableManagers: {},
 });
 
 const UniversalChatbotProvider = ({

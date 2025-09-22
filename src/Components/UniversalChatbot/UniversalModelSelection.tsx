@@ -2,7 +2,6 @@ import React, { Ref, RefObject, useContext, useState } from 'react';
 import { Flex, FlexItem, Label, MenuItemAction, MenuToggle, Select, SelectList, SelectOption } from '@patternfly/react-core';
 
 import { UniversalChatbotContext } from './UniversalChatbotProvider';
-import { isModels } from '../../aiClients/types';
 
 import './UniversalModelSelection.scss';
 import { HelpIcon } from '@patternfly/react-icons';
@@ -11,7 +10,7 @@ function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTM
   const { model, setCurrentModel, availableManagers } = useContext(UniversalChatbotContext);
   const [isOpen, setIsOpen] = useState(false);
 
-  const modelName = availableManagers.find((m) => m.model === model)?.selectionTitle || model;
+  const modelName = model ? availableManagers[model]?.stateManager.selectionTitle : '';
 
   const toggle = (toggleRef: Ref<HTMLButtonElement>) => (
     <MenuToggle className="universal-model-selection__toggle" ref={toggleRef} onClick={() => setIsOpen((prev) => !prev)} isExpanded={isOpen}>
@@ -41,33 +40,34 @@ function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTM
             id="ai-model-select"
             selected={model}
             onSelect={(_e, value) => {
-              if (isModels(value)) {
-                setCurrentModel(value);
-              }
+              setCurrentModel(`${value}`);
+              setIsOpen(false);
             }}
           >
             <SelectList aria-label="AI Model selection">
-              {availableManagers.map((manager) => (
-                <SelectOption
-                  description={manager.selectionDescription}
-                  value={manager.model}
-                  key={manager.model}
-                  isSelected={model === manager.model}
-                  actions={[
-                    <MenuItemAction
-                      aria-label={`Documentation for ${manager.model}`}
-                      key="docs-link"
-                      icon={
-                        <a className="universal-model-selection__help-icon" href={manager.docsUrl} target="_blank" rel="noopener noreferrer">
-                          <HelpIcon />
-                        </a>
-                      }
-                    />,
-                  ]}
-                >
-                  {manager.selectionTitle}
-                </SelectOption>
-              ))}
+              {Object.entries(availableManagers)
+                .sort((a, b) => a[1].stateManager.selectionTitle.localeCompare(b[1].stateManager.selectionTitle))
+                .map(([id, { stateManager }]) => (
+                  <SelectOption
+                    description={stateManager.selectionDescription}
+                    value={id}
+                    key={id}
+                    isSelected={model === id}
+                    actions={[
+                      <MenuItemAction
+                        aria-label={`Documentation for ${stateManager.modelName}`}
+                        key="docs-link"
+                        icon={
+                          <a className="universal-model-selection__help-icon" href={stateManager.docsUrl} target="_blank" rel="noopener noreferrer">
+                            <HelpIcon />
+                          </a>
+                        }
+                      />,
+                    ]}
+                  >
+                    {availableManagers[id].stateManager.selectionTitle}
+                  </SelectOption>
+                ))}
             </SelectList>
           </Select>
         </FlexItem>
