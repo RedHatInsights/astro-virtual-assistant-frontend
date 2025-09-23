@@ -30,18 +30,13 @@
     b {
       font-weight: 500;
     }
+
+    .pf-v6-c-menu-toggle__text {
+      width: 100%;
+    }
   }
   .pf-m-grow {
     display: flex;
-  }
-  .pf-v6-c-label {
-    background-color: var(--pf-t--global--color--brand--200);
-    .pf-v6-c-label__content::before {
-      background-color: var(--pf-t--global--color--brand--200);
-    }
-    .pf-v6-c-label__content {
-      color: var(--pf-t--global--text--color--inverse);
-    }
   }
   &__help-icon {
     color: var(--pf-t--global--icon--color--200);
