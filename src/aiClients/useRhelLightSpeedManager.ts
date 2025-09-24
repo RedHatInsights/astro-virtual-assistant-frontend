@@ -2,7 +2,6 @@ import { createClientStateManager } from '@redhat-cloud-services/ai-client-state
 import { RHELLightspeedClient } from '@redhat-cloud-services/rhel-lightspeed-client';
 import { useEffect, useMemo, useState } from 'react';
 import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
-import RHELChatBot from '../Components/RhelClient/RhelChatBot';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { useFlag } from '@unleash/proxy-client-react';
 
@@ -24,7 +23,7 @@ export function useRhelLightSpeedAuthenticated(): ClientAuthStatus {
       if (user) {
         // only users with RHEL subs can use RHEL LightSpeed
         // otherwise API will return 403/401
-        setIsAuthenticated(!!user.entitlements['rhel']?.is_entitled);
+        setIsAuthenticated(!!user.entitlements?.['rhel']?.is_entitled);
       } else {
         setIsAuthenticated(false);
       }
@@ -72,7 +71,6 @@ function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedCli
     selectionTitle: 'RHEL LightSpeed',
     selectionDescription:
       'Gen answers to RHEL-related questions, support with troubleshooting, help understanding log files, ask for recommendations, and more.',
-    Component: RHELChatBot,
     stateManager,
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/introducing-rhel-lightspeed-for-rhel-systems',

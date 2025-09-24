@@ -32,6 +32,8 @@ module.exports = {
     ],
     exposes: {
       './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
+      // The dynamic LSC module should be eventually exposed in the OpenShift assisted installer app
+      './AsyncLSC': path.resolve(__dirname, './src/asyncClientInit/AsyncLSC.tsx'),
       ...extraExposes,
     },
   },

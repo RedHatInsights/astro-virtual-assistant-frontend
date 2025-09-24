@@ -6,47 +6,9 @@ import * as checkARHAuthModule from '../../src/Components/ARHClient/checkARHAuth
 import useStateManager from '../../src/aiClients/useStateManager';
 import { Models } from '../../src/aiClients/types';
 
-// Mock Unleash feature flag
-const mockUseFlag = (flag: string) => {
-  if (flag === 'platform.arh.enabled') return true;
-  return false;
-};
-
-const mockChromeApi = {
-  auth: {
-    getToken: () => Promise.resolve('mock-token'),
-    getUser: () => Promise.resolve({
-      identity: {
-        user: {
-          username: 'testuser',
-          email: 'test@test.com',
-          first_name: 'Test',
-          last_name: 'User',
-          is_internal: false,
-          is_active: true,
-          is_org_admin: true,
-          locale: 'en-US'
-        },
-        account_number: '123456',
-        internal: {
-          account_id: '123456'
-        },
-        org_id: 'test-org',
-        type: 'User'
-      },
-      entitlements: {
-        rhel: {
-          is_entitled: true,
-        }
-      }
-    }),
-  },
-  getEnvironment: () => 'stage',
-};
-
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <ScalprumProvider config={{}} api={{ chrome: mockChromeApi }}>
+  <ScalprumProvider config={{}} api={{}}>
     <FlagProvider config={{
       url: 'http://localhost:4242/api/frontend',
       clientKey: 'test-key',
@@ -114,6 +76,8 @@ describe('State Manager Integration Tests', () => {
       statusCode: 200,
       body: []
     }).as('arhUserHistory');
+    
+    // Scalprum getModule is now handled by webpack alias in cypress config
   });
 
   describe('useStateManager Hook Integration', () => {
@@ -123,8 +87,8 @@ describe('State Manager Integration Tests', () => {
           stateManager, 
           model, 
           initializing, 
-          chatbotProps 
-        } = useStateManager();
+          chatbotProps,
+        } = useStateManager();        
         
         return (
           <div data-testid="state-manager">

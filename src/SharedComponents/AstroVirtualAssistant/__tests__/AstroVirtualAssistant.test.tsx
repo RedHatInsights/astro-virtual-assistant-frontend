@@ -28,8 +28,9 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 // Mock feature flag hook - requires Unleash context
 jest.mock('@unleash/proxy-client-react');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { useFlag: mockUseFlag } = require('@unleash/proxy-client-react');
+const { useFlag: mockUseFlag, useFlags: mockUseFlags } = require('@unleash/proxy-client-react');
 mockUseFlag.mockReturnValue(true);
+mockUseFlags.mockReturnValue([]);
 
 // Mock navigation hook - requires router context
 jest.mock('@redhat-cloud-services/frontend-components-utilities/useInsightsNavigate', () => ({
@@ -52,12 +53,6 @@ jest.mock('@patternfly/chatbot', () => ({
     embedded: 'embedded',
     fullscreen: 'fullscreen',
   },
-}));
-
-// Mock components that have complex dependencies
-jest.mock('../../../Components/ARHClient/ARHChatbot', () => ({
-  __esModule: true,
-  default: () => <div data-testid="arh-chatbot">ARH Chatbot</div>,
 }));
 
 jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({

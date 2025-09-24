@@ -4,8 +4,10 @@ import { ChromeUser } from '@redhat-cloud-services/types';
 
 // Mock the useFlag hook for feature flags
 const mockUseFlag = jest.fn();
+const mockUseFlags = jest.fn();
 jest.mock('@unleash/proxy-client-react', () => ({
   useFlag: (flag: string) => mockUseFlag(flag),
+  useFlags: () => mockUseFlags([]),
 }));
 
 // Mock the useChrome hook
@@ -39,12 +41,6 @@ jest.mock('@patternfly/chatbot', () => ({
   },
 }));
 
-// Mock ARHChatbot component to avoid PatternFly imports
-jest.mock('../../Components/ARHClient/ARHChatbot', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
 // Mock UniversalChatbot components
 jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
   __esModule: true,
@@ -52,12 +48,6 @@ jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
 }));
 
 jest.mock('../../Components/UniversalChatbot/UniversalChatbotProvider', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
-// Mock RhelChatBot component
-jest.mock('../../Components/RhelClient/RhelChatBot', () => ({
   __esModule: true,
   default: () => null,
 }));
@@ -146,6 +136,7 @@ describe('useStateManager', () => {
     jest.clearAllMocks();
     mockChrome.auth.getUser.mockResolvedValue(mockUser);
     checkARHAuth.mockResolvedValue(true);
+    mockUseFlags.mockReturnValue([]);
 
     // Mock fetch to prevent network calls and silence warnings
     global.fetch = jest.fn(() =>

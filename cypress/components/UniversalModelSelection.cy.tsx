@@ -1,9 +1,9 @@
 import React from 'react';
-import UniversalModelSelection from '../../src/Components/UniversalChatbot/UniversalModelSelection';
+import UniversalAssistantSelection from '../../src/Components/UniversalChatbot/UniversalAssistantSelection';
 import { UniversalChatbotContext } from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
 import { Models } from '../../src/aiClients/types';
 
-describe('UniversalModelSelection Component', () => {
+describe('UniversalAssistantSelection Component', () => {
   let mockSetCurrentModel: any;
 
   const mockContextValue = {
@@ -51,7 +51,7 @@ describe('UniversalModelSelection Component', () => {
   it('should render model selection toggle with current model', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -59,7 +59,7 @@ describe('UniversalModelSelection Component', () => {
     cy.get('.universal-model-selection__toggle').should('exist');
     
     // Should display current model name
-    cy.contains('Model:').should('be.visible');
+    cy.contains('Assistant:').should('be.visible');
     cy.contains('General Red Hat (Default)').should('be.visible');
     
     // Should have AI label
@@ -69,7 +69,7 @@ describe('UniversalModelSelection Component', () => {
   it('should open dropdown when toggle is clicked', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -86,7 +86,7 @@ describe('UniversalModelSelection Component', () => {
   it('should display all available models in dropdown', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -108,7 +108,7 @@ describe('UniversalModelSelection Component', () => {
   it('should highlight currently selected model', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -122,7 +122,7 @@ describe('UniversalModelSelection Component', () => {
   it('should call setCurrentModel when a different model is selected', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -139,7 +139,7 @@ describe('UniversalModelSelection Component', () => {
   it('should close dropdown when option is selected', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -160,7 +160,7 @@ describe('UniversalModelSelection Component', () => {
   it('should close dropdown when Escape key is pressed', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -178,7 +178,7 @@ describe('UniversalModelSelection Component', () => {
   it('should have proper accessibility attributes', () => {
     cy.mount(
       <TestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </TestWrapper>
     );
 
@@ -212,7 +212,7 @@ describe('UniversalModelSelection Component', () => {
 
     cy.mount(
       <UpdatedTestWrapper>
-        <UniversalModelSelection containerRef={{ current: null }} />
+        <UniversalAssistantSelection containerRef={{ current: null }} />
       </UpdatedTestWrapper>
     );
 
