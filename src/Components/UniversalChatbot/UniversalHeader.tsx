@@ -14,6 +14,7 @@ import ARH_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import { UniversalChatbotContext } from './UniversalChatbotProvider';
 
 import './UniversalHeader.scss';
+import UniversalHeaderPreviewBadge from './UniversalHeaderPreviewBadget';
 
 function UniversalHeader({
   scrollToBottomRef,
@@ -33,7 +34,8 @@ function UniversalHeader({
   isCompact?: boolean;
 }) {
   const { setConversationsDrawerOpened, availableManagers, model } = useContext(UniversalChatbotContext);
-  const modelName = availableManagers.find((m) => m.model === model)?.modelName || '';
+  const currentManager = availableManagers.find((m) => m.model === model);
+  const modelName = currentManager?.modelName ?? '';
   return (
     <ChatbotHeader className={isCompact ? 'arh__header pf-v6-u-p-sm' : 'arh__header'}>
       <ChatbotHeaderMain>
@@ -55,6 +57,7 @@ function UniversalHeader({
         </ChatbotHeaderTitle>
       </ChatbotHeaderMain>
       <ChatbotHeaderActions>
+        {currentManager?.isPreview ? <UniversalHeaderPreviewBadge /> : null}
         <Button
           variant="plain"
           className={isCompact ? 'pf-chatbot__button--toggle-menu pf-m-compact' : 'pf-chatbot__button--toggle-menu'}
