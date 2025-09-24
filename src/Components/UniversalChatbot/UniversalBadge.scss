@@ -1,9 +1,34 @@
 .arh__badge {
   &__button {
     border-radius: 52px;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 52px;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    &:hover::before {
+      opacity: 1;
+    }
   }
+  
   &__image {
     width: 52px;
     height: 52px;
+    position: relative;
+    z-index: 0;
   }
 }

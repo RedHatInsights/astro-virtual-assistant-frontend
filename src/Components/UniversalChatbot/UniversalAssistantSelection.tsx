@@ -4,10 +4,10 @@ import { Flex, FlexItem, Label, MenuItemAction, MenuToggle, Select, SelectList, 
 import { UniversalChatbotContext } from './UniversalChatbotProvider';
 import { isModels } from '../../aiClients/types';
 
-import './UniversalModelSelection.scss';
+import './UniversalAssistantSelection.scss';
 import { HelpIcon } from '@patternfly/react-icons';
 
-function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTMLDivElement> }) {
+function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject<HTMLDivElement> }) {
   const { model, setCurrentModel, availableManagers } = useContext(UniversalChatbotContext);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -19,7 +19,7 @@ function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTM
 
   const toggle = (toggleRef: Ref<HTMLButtonElement>) => (
     <MenuToggle className="universal-model-selection__toggle" ref={toggleRef} onClick={() => setIsOpen((prev) => !prev)} isExpanded={isOpen}>
-      <b>Model:</b>
+      <b>Assistant:</b>
       &nbsp;{modelName}
       <Label className="pf-v6-u-ml-md" isCompact>
         AI
@@ -80,4 +80,4 @@ function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTM
   );
 }
 
-export default UniversalModelSelection;
+export default UniversalAssistantSelection;

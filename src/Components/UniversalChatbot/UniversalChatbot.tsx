@@ -10,7 +10,7 @@ import UniversalFooter from './UniversalFooter';
 import UniversalMessages from './UniversalMessages';
 
 import '@patternfly/chatbot/dist/css/main.css';
-import UniversalModelSelection from './UniversalModelSelection';
+import UniversalAssistantSelection from './UniversalAssistantSelection';
 
 function UniversalChatbot({
   user,
@@ -76,7 +76,7 @@ function UniversalChatbot({
         displayMode={displayMode}
         isCompact={isCompact}
       />
-      <UniversalModelSelection containerRef={rootElementRef} />
+      <UniversalAssistantSelection containerRef={rootElementRef} />
       <UniversalMessages
         isBannerOpen={isBannerOpen}
         avatar={avatar}

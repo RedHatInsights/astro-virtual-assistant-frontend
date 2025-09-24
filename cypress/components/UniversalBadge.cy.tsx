@@ -11,7 +11,7 @@ describe('UniversalBadge Component', () => {
     cy.get('button').should('exist');
     
     // Should have the correct image
-    cy.get('img[alt="Launch Ask Red Hat assistant"]').should('exist');
+    cy.get('img[alt="Launch AI assistant"]').should('exist');
     cy.get('img.arh__badge__image').should('exist');
   });
 
@@ -24,7 +24,7 @@ describe('UniversalBadge Component', () => {
     cy.get('button').trigger('mouseenter');
     
     // Tooltip content should appear
-    cy.contains('Ask Red Hat').should('be.visible');
+    cy.contains('AI assistants').should('be.visible');
   });
 
   it('should call onClick when clicked', () => {
@@ -48,6 +48,6 @@ describe('UniversalBadge Component', () => {
     cy.get('button').should('have.attr', 'type', 'button');
     
     // Image should have alt text
-    cy.get('img').should('have.attr', 'alt', 'Launch Ask Red Hat assistant');
+    cy.get('img').should('have.attr', 'alt', 'Launch AI assistant');
   });
 });
