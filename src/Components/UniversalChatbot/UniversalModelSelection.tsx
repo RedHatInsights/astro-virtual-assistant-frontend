@@ -12,6 +12,10 @@ function UniversalModelSelection({ containerRef }: { containerRef: RefObject<HTM
   const [isOpen, setIsOpen] = useState(false);
 
   const modelName = availableManagers.find((m) => m.model === model)?.selectionTitle || model;
+  if (availableManagers.length <= 1) {
+    // no need for switcher if there is only one option
+    return null;
+  }
 
   const toggle = (toggleRef: Ref<HTMLButtonElement>) => (
     <MenuToggle className="universal-model-selection__toggle" ref={toggleRef} onClick={() => setIsOpen((prev) => !prev)} isExpanded={isOpen}>
