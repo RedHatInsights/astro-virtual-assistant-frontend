@@ -4,8 +4,10 @@ import { ChromeUser } from '@redhat-cloud-services/types';
 
 // Mock the useFlag hook for feature flags
 const mockUseFlag = jest.fn();
+const mockUseFlags = jest.fn();
 jest.mock('@unleash/proxy-client-react', () => ({
   useFlag: (flag: string) => mockUseFlag(flag),
+  useFlags: () => mockUseFlags([]),
 }));
 
 // Mock the useChrome hook
@@ -134,6 +136,7 @@ describe('useStateManager', () => {
     jest.clearAllMocks();
     mockChrome.auth.getUser.mockResolvedValue(mockUser);
     checkARHAuth.mockResolvedValue(true);
+    mockUseFlags.mockReturnValue([]);
 
     // Mock fetch to prevent network calls and silence warnings
     global.fetch = jest.fn(() =>

@@ -66,11 +66,12 @@ class AsyncLSC implements AsyncStateManager<IAIClient> {
       stateManager,
       historyManagement: true,
       streamMessages: true,
-      modelName: 'OpenShift assisted Installer',
-      // TBD
-      docsUrl: '#',
-      selectionTitle: 'OpenShift assisted Installer',
-      selectionDescription: 'TBD',
+      modelName: 'OpenShift Assisted Installer',
+      docsUrl:
+        'https://docs.redhat.com/en/documentation/assisted_installer_for_openshift_container_platform/2025/html/installing_openshift_container_platform_with_the_assisted_installer/index',
+      selectionTitle: 'OpenShift Assisted Installer',
+      selectionDescription:
+        'Learn more about using the Assisted Installer as a simplified method for installing and managing OpenShift Container Platform clusters.',
       MessageEntryComponent: LSCMessageEntry,
       handleNewChat: async (toggleDrawer) => {
         // can't use hooks here, we are not yet within the correct React context

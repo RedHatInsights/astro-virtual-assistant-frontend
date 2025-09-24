@@ -3,7 +3,7 @@ import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import { ChromeUser } from '@redhat-cloud-services/types';
 import useArhClient, { useArhAuthenticated } from './useArhClient';
 import useRhelLightSpeedManager, { useRhelLightSpeedAuthenticated } from './useRhelLightSpeedManager';
-import { useFlag } from '@unleash/proxy-client-react';
+import { IToggle, useFlag, useFlags } from '@unleash/proxy-client-react';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotProvider';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
@@ -13,8 +13,19 @@ import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 import { getModule } from '@scalprum/core';
 import { AsyncStateManager } from '../asyncClientInit/types';
 
+// unleash does not expose the function to check if a flag is enabled outside of a React component
+// so we need to implement a simple version here
+function flagEnabled(flag: string | undefined, flags: IToggle[]): boolean {
+  if (!flag) {
+    return false;
+  }
+  const toggle = flags.find((f) => f.name === flag);
+  return toggle ? toggle.enabled : false;
+}
+
 function useAsyncManagers() {
   const chrome = useChrome();
+  const flags = useFlags();
   const [managers, setManagers] = useState<{
     loading: boolean;
     error: Error | null;
@@ -23,23 +34,31 @@ function useAsyncManagers() {
       auth: ClientAuthStatus;
     }[];
   }>({ managers: [], loading: true, error: null });
-  const meta: { scope: string; module: string }[] = [{ scope: 'virtualAssistant', module: './AsyncLSC' }];
+  const meta: { scope: string; module: string; flag?: string }[] = [
+    { scope: 'virtualAssistant', module: './AsyncLSC', flag: 'platform.chatbot.openshift-assisted-installer.enabled' },
+  ];
   async function handleInitManagers() {
     const modules = await Promise.all(meta.map((m) => getModule<AsyncStateManager<IAIClient>>(m.scope, m.module)));
     const managers = await Promise.all(
-      modules.map((asyncManager) => {
+      modules.map((asyncManager, index) => {
         const manager = asyncManager.getStateManager(chrome);
         const auth = asyncManager.isAuthenticated(chrome);
+        const flag = meta[index].flag;
+
         return auth.then((auth) => {
-          return { manager, auth };
+          let internalAuth = auth;
+          if (flag && !flagEnabled(flag, flags)) {
+            internalAuth = { ...auth, isAuthenticated: false };
+          }
+          return { manager, auth: internalAuth };
         });
       })
     );
-    setManagers({ managers, loading: false, error: null });
+    setManagers({ managers: managers.filter((m) => m !== null), loading: false, error: null });
   }
   useEffect(() => {
     handleInitManagers();
-  }, []);
+  }, [flags]);
 
   return managers;
 }

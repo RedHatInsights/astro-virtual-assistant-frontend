@@ -28,8 +28,9 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 // Mock feature flag hook - requires Unleash context
 jest.mock('@unleash/proxy-client-react');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { useFlag: mockUseFlag } = require('@unleash/proxy-client-react');
+const { useFlag: mockUseFlag, useFlags: mockUseFlags } = require('@unleash/proxy-client-react');
 mockUseFlag.mockReturnValue(true);
+mockUseFlags.mockReturnValue([]);
 
 // Mock navigation hook - requires router context
 jest.mock('@redhat-cloud-services/frontend-components-utilities/useInsightsNavigate', () => ({
