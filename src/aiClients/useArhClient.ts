@@ -101,6 +101,7 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
     stateManager,
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
+    isPreview: true,
   };
   return configuration;
 }

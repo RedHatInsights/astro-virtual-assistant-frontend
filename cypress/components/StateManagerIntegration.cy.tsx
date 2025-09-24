@@ -34,7 +34,11 @@ const mockChromeApi = {
         org_id: 'test-org',
         type: 'User'
       },
-      entitlements: {}
+      entitlements: {
+        rhel: {
+          is_entitled: true,
+        }
+      }
     }),
   },
   getEnvironment: () => 'stage',
@@ -62,6 +66,13 @@ describe('State Manager Integration Tests', () => {
         toggles: [
           {
             name: 'platform.arh.enabled',
+            enabled: true,
+            variant: {
+              name: 'disabled',
+              enabled: false
+            }
+          }, {
+            name: 'platform.chatbot.rhel-lightspeed.enabled',
             enabled: true,
             variant: {
               name: 'disabled',

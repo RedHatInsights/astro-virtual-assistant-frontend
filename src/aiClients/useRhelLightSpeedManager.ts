@@ -4,14 +4,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import RHELChatBot from '../Components/RhelClient/RhelChatBot';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
+import { useFlag } from '@unleash/proxy-client-react';
 
 export function useRhelLightSpeedAuthenticated(): ClientAuthStatus {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);
   const chrome = useChrome();
+  const isEnabled = useFlag('platform.chatbot.rhel-lightspeed.enabled');
 
   async function handleRhelLightSpeedSetup() {
+    if (!isEnabled) {
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
     try {
       const user = await chrome.auth.getUser();
       if (user) {
@@ -37,7 +44,7 @@ export function useRhelLightSpeedAuthenticated(): ClientAuthStatus {
 
   useEffect(() => {
     handleRhelLightSpeedSetup();
-  }, [chrome.auth.token]);
+  }, [chrome.auth.token, isEnabled]);
 
   return {
     loading,

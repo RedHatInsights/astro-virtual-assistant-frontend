@@ -28,7 +28,7 @@ function useInitialModel() {
 
     // models are ordered in priority order, pick the first one that is authenticated
     return enabledList.find((e) => e.isAuthenticated)?.model;
-  }, [initializing]);
+  }, [initializing, enabledList]);
 
   useEffect(() => {
     async function getUser() {
@@ -44,27 +44,39 @@ function useInitialModel() {
     getUser();
   }, [chrome.auth.token]);
   if (!useChatBots) {
-    return { initialModel: undefined, auth, initializing: false };
+    return {
+      initialModel: undefined,
+      auth,
+      initializing: false,
+      enabledList: [{ isAuthenticated: false }, { isAuthenticated: false }, { isAuthenticated: false }],
+    };
   }
 
   if (arhEnabled.loading || rhelLightspeedEnabled.loading || !auth) {
-    return { initialModel: undefined, auth, initializing: true };
+    return {
+      initialModel: undefined,
+      auth,
+      initializing: true,
+      enabledList: [{ isAuthenticated: false }, { isAuthenticated: false }, { isAuthenticated: false }],
+    };
   }
 
-  return { initialModel: model, auth, initializing };
+  return { initialModel: model, auth, initializing, enabledList };
 }
 
 function useStateManager() {
   const [isOpen, setOpen] = useState<boolean>(false);
-  const { initialModel, auth, initializing } = useInitialModel();
+  const { initialModel, auth, initializing, enabledList } = useInitialModel();
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
   const arhManager = useArhClient();
   const rhelLightspeedManager = useRhelLightSpeedManager();
   const vaManager = useVaManager();
   const stateManagers = useMemo(() => {
-    const managers = [arhManager, rhelLightspeedManager, vaManager];
+    // quick check to see if any of the managers are authenticated
+    // is improved once the openshift lightspeed changes are in
+    const managers = [arhManager, rhelLightspeedManager, vaManager].filter((m, index) => enabledList[index].isAuthenticated);
     return managers;
-  }, [initializing]);
+  }, [initializing, enabledList]);
   const [currentModel, setCurrentModel] = useState<Models | undefined>(initialModel);
   const isCompact = true;
 

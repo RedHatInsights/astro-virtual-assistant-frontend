@@ -32,6 +32,15 @@ jest.mock('@redhat-cloud-services/rhel-lightspeed-client', () => ({
   RHELLightspeedClient: jest.fn().mockImplementation(() => ({})),
 }));
 
+jest.mock('@unleash/proxy-client-react', () => ({
+  useFlag: jest.fn((flagName: string) => {
+    if (flagName === 'platform.chatbot.rhel-lightspeed.enabled') {
+      return true; // Default to enabled for tests
+    }
+    return false;
+  }),
+}));
+
 describe('useRhelLightSpeedAuthenticated', () => {
   const baseUser: ChromeUser = {
     entitlements: {},
