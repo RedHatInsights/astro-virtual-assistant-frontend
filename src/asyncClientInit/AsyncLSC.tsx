@@ -78,6 +78,7 @@ class AsyncLSC implements AsyncStateManager<IAIClient> {
         await stateManager.createNewConversation();
         toggleDrawer(false);
       },
+      isPreview: true,
     };
 
     return config;
