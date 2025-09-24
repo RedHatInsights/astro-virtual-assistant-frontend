@@ -47,6 +47,7 @@ function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject
             onSelect={(_e, value) => {
               if (isModels(value)) {
                 setCurrentModel(value);
+                setIsOpen(false);
               }
             }}
           >
