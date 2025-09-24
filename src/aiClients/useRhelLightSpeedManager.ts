@@ -23,7 +23,7 @@ export function useRhelLightSpeedAuthenticated(): ClientAuthStatus {
       if (user) {
         // only users with RHEL subs can use RHEL LightSpeed
         // otherwise API will return 403/401
-        setIsAuthenticated(!!user.entitlements['rhel']?.is_entitled);
+        setIsAuthenticated(!!user.entitlements?.['rhel']?.is_entitled);
       } else {
         setIsAuthenticated(false);
       }

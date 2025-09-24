@@ -46,6 +46,13 @@ function useAsyncManagers() {
 
 type AsyncManagers = ReturnType<typeof useAsyncManagers>;
 
+const emptyEnabledMap: { [key in Models]: ClientAuthStatus } = {
+  [Models.ASK_RED_HAT]: { model: Models.ASK_RED_HAT, loading: false, isAuthenticated: false },
+  [Models.RHEL_LIGHTSPEED]: { model: Models.RHEL_LIGHTSPEED, loading: false, isAuthenticated: false },
+  [Models.VA]: { model: Models.VA, loading: false, isAuthenticated: false },
+  [Models.OAI]: { model: Models.OAI, loading: false, isAuthenticated: false },
+};
+
 function useInitialModel(asyncManagers: AsyncManagers) {
   // Use ARH used as a generic "show chatbot" flag
   const useChatBots = useFlag('platform.arh.enabled');
@@ -59,6 +66,18 @@ function useInitialModel(asyncManagers: AsyncManagers) {
     () => [arhEnabled, rhelLightspeedEnabled, vaEnabled, ...asyncManagers.managers.map(({ auth }) => auth)],
     [asyncManagers, arhEnabled, rhelLightspeedEnabled, vaEnabled]
   );
+  // for convenient access
+  const enabledMap = useMemo<Partial<{ [key in Models]: ClientAuthStatus }>>(() => {
+    const enabledMap: { [key in Models]?: ClientAuthStatus } = {
+      [arhEnabled.model]: arhEnabled,
+      [rhelLightspeedEnabled.model]: rhelLightspeedEnabled,
+      [vaEnabled.model]: vaEnabled,
+    };
+    asyncManagers.managers.forEach(({ manager, auth }) => {
+      enabledMap[manager.model] = auth;
+    });
+    return enabledMap;
+  }, [asyncManagers, arhEnabled, rhelLightspeedEnabled, vaEnabled]);
 
   const initializing = enabledList.some((e) => e.loading);
   const model = useMemo<Models | undefined>(() => {
@@ -88,7 +107,7 @@ function useInitialModel(asyncManagers: AsyncManagers) {
       initialModel: undefined,
       auth,
       initializing: false,
-      enabledList: [{ isAuthenticated: false }, { isAuthenticated: false }, { isAuthenticated: false }],
+      enabledMap: emptyEnabledMap,
     };
   }
 
@@ -97,27 +116,27 @@ function useInitialModel(asyncManagers: AsyncManagers) {
       initialModel: undefined,
       auth,
       initializing: true,
-      enabledList: [{ isAuthenticated: false }, { isAuthenticated: false }, { isAuthenticated: false }],
+      enabledMap: emptyEnabledMap,
     };
   }
 
-  return { initialModel: model, auth, initializing, enabledList };
+  return { initialModel: model, auth, initializing, enabledMap };
 }
 
 function useStateManager() {
   const asyncManagers = useAsyncManagers();
   const [isOpen, setOpen] = useState<boolean>(false);
-  const { initialModel, auth, initializing, enabledList } = useInitialModel(asyncManagers);
+  const { initialModel, auth, initializing, enabledMap } = useInitialModel(asyncManagers);
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
   const arhManager = useArhClient();
   const rhelLightspeedManager = useRhelLightSpeedManager();
   const vaManager = useVaManager();
   const stateManagers = useMemo(() => {
     const managers = [arhManager, rhelLightspeedManager, vaManager, ...asyncManagers.managers.map(({ manager }) => manager)].filter(
-      (_m, index) => enabledList[index].isAuthenticated
+      (m) => enabledMap[m.model]?.isAuthenticated
     );
     return managers;
-  }, [initializing, asyncManagers, enabledList]);
+  }, [initializing, asyncManagers, enabledMap]);
   const [currentModel, setCurrentModel] = useState<Models | undefined>(initialModel);
   const isCompact = true;
 
