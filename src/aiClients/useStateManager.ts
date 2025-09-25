@@ -35,7 +35,7 @@ function useAsyncManagers() {
     }[];
   }>({ managers: [], loading: true, error: null });
   const meta: { scope: string; module: string; flag?: string }[] = [
-    { scope: 'virtualAssistant', module: './AsyncLSC', flag: 'platform.chatbot.openshift-assisted-installer.enabled' },
+    { scope: 'assistedInstallerApp', module: './AsyncChatbot', flag: 'platform.chatbot.openshift-assisted-installer.enabled' },
   ];
   async function handleInitManagers() {
     const modules = await Promise.all(meta.map((m) => getModule<AsyncStateManager<IAIClient>>(m.scope, m.module)));
