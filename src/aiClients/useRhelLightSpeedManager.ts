@@ -21,7 +21,7 @@ export function useRhelLightSpeedAuthenticated(): ClientAuthStatus {
     try {
       const user = await chrome.auth.getUser();
       if (user) {
-        // only users with RHEL subs can use RHEL LightSpeed
+        // only users with RHEL subs can use RHEL Lightspeed
         // otherwise API will return 403/401
         setIsAuthenticated(!!user.entitlements?.['rhel']?.is_entitled);
       } else {
@@ -67,8 +67,8 @@ function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedCli
     model: Models.RHEL_LIGHTSPEED,
     historyManagement: false,
     streamMessages: false,
-    modelName: 'RHEL LightSpeed',
-    selectionTitle: 'RHEL LightSpeed',
+    modelName: 'RHEL Lightspeed',
+    selectionTitle: 'RHEL Lightspeed',
     selectionDescription:
       'Gen answers to RHEL-related questions, support with troubleshooting, help understanding log files, ask for recommendations, and more.',
     stateManager,

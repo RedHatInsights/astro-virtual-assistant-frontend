@@ -164,7 +164,7 @@ describe('State Manager Integration Tests', () => {
       // Verify RHEL manager properties (different capabilities)
       cy.get('[data-testid="rhel-history-management"]').should('contain', 'false');
       cy.get('[data-testid="rhel-stream-messages"]').should('contain', 'false');
-      cy.get('[data-testid="rhel-model-name"]').should('contain', 'RHEL LightSpeed');
+      cy.get('[data-testid="rhel-model-name"]').should('contain', 'RHEL Lightspeed');
     });
 
     it('should handle model switching', () => {

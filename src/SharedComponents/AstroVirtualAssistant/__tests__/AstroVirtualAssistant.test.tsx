@@ -144,7 +144,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     });
   });
 
-  it('should show RHEL LightSpeed when user is neither entitled nor internal for ARH', async () => {
+  it('should show RHEL Lightspeed when user is neither entitled nor internal for ARH', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     (fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: true,
@@ -158,7 +158,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     );
 
     await waitFor(() => {
-      // Badge should still be visible since it falls back to RHEL LightSpeed
+      // Badge should still be visible since it falls back to RHEL Lightspeed
       expect(queryByTestId('arh-badge')).toBeInTheDocument();
     });
 
@@ -221,7 +221,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     });
   });
 
-  it('should show RHEL LightSpeed when API request fails', async () => {
+  it('should show RHEL Lightspeed when API request fails', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     (fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: false,
@@ -235,7 +235,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalled();
-      // Badge should still be visible since it falls back to RHEL LightSpeed
+      // Badge should still be visible since it falls back to RHEL Lightspeed
       expect(queryByTestId('arh-badge')).toBeInTheDocument();
     });
 
