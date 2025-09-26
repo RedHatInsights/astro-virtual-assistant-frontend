@@ -25,7 +25,8 @@ export type UniversalChatbotContextType = {
 export type ChatbotProps = {
   setOpen: (isOpen: boolean) => void;
   user?: ChromeUser;
-  historyManagement: boolean;
+  hasHistory: boolean;
+  canDeleteHistory: boolean;
   streamMessages: boolean;
   displayMode: ChatbotDisplayMode;
   isCompact?: boolean;

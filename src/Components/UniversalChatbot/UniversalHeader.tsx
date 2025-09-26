@@ -22,7 +22,7 @@ function UniversalHeader({
   setOpen,
   setDisplayMode,
   displayMode,
-  historyManagement,
+  hasHistory,
   isCompact,
 }: {
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
@@ -30,7 +30,7 @@ function UniversalHeader({
   setDisplayMode: React.Dispatch<React.SetStateAction<ChatbotDisplayMode>>;
   displayMode: ChatbotDisplayMode;
   conversationsDrawerOpened: boolean;
-  historyManagement: boolean;
+  hasHistory: boolean;
   isCompact?: boolean;
 }) {
   const { setConversationsDrawerOpened, availableManagers, model } = useContext(UniversalChatbotContext);
@@ -39,7 +39,7 @@ function UniversalHeader({
   return (
     <ChatbotHeader className={isCompact ? 'arh__header pf-v6-u-p-sm' : 'arh__header'}>
       <ChatbotHeaderMain>
-        {historyManagement ? (
+        {hasHistory ? (
           <ChatbotHeaderMenu
             isCompact={isCompact}
             aria-expanded={conversationsDrawerOpened}

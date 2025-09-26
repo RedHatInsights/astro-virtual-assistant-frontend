@@ -92,7 +92,7 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
 
   const configuration: StateManagerConfiguration<IFDClient> = {
     model: Models.ASK_RED_HAT,
-    historyManagement: true,
+    hasHistory: true,
     streamMessages: true,
     modelName: 'Ask Red Hat',
     selectionTitle: 'General Red Hat (Default)',
