@@ -65,8 +65,6 @@ function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedCli
 
   const configuration: StateManagerConfiguration<RHELLightspeedClient> = {
     model: Models.RHEL_LIGHTSPEED,
-    historyManagement: false,
-    streamMessages: false,
     modelName: 'RHEL LightSpeed',
     selectionTitle: 'RHEL LightSpeed',
     selectionDescription:

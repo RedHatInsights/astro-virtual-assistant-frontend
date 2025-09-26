@@ -23,8 +23,9 @@ export function isModels(value?: string | number): value is Models {
 
 export type StateManagerConfiguration<S extends IAIClient> = {
   model: Models;
-  historyManagement: boolean;
-  streamMessages: boolean;
+  hasHistory?: boolean;
+  canDeleteHistory?: boolean;
+  streamMessages?: boolean;
   modelName: string;
   docsUrl: string;
   selectionTitle: string;

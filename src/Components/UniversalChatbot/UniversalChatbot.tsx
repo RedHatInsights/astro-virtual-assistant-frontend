@@ -11,11 +11,15 @@ import UniversalMessages from './UniversalMessages';
 
 import '@patternfly/chatbot/dist/css/main.css';
 import UniversalAssistantSelection from './UniversalAssistantSelection';
+import { MenuItemAction } from '@patternfly/react-core';
+import { TrashAltIcon } from '@patternfly/react-icons';
+import DeleteConversationModal from './DeleteConversationModal';
 
 function UniversalChatbot({
   user,
   setOpen,
-  historyManagement,
+  hasHistory,
+  canDeleteHistory,
   streamMessages,
   displayMode,
   isCompact,
@@ -29,6 +33,7 @@ function UniversalChatbot({
   handleNewChat,
 }: PropsWithChildren<ChatbotProps>) {
   const [isBannerOpen, setIsBannerOpen] = useState(true);
+  const [deleteConversation, setDeleteConversation] = React.useState<string>();
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState(emptyAvatar);
 
@@ -57,18 +62,19 @@ function UniversalChatbot({
     handleUserSetup();
   }, [user]);
 
+  const manager = availableManagers.find((m) => m.model === model);
+
   useEffect(() => {
-    const manager = availableManagers.find((m) => m.model === model);
     if (manager) {
       // notify any subscribed components that the manager has changed and they should re-render
       manager.stateManager.notifyAll();
     }
-  }, [model]);
+  }, [manager]);
 
   const drawerContent = (
     <>
       <UniversalHeader
-        historyManagement={historyManagement}
+        hasHistory={hasHistory}
         conversationsDrawerOpened={conversationsDrawerOpened}
         scrollToBottomRef={scrollToBottomRef}
         setOpen={setOpen}
@@ -90,7 +96,7 @@ function UniversalChatbot({
     </>
   );
 
-  if (!historyManagement) {
+  if (!hasHistory) {
     return (
       <UniversalChatbotProvider
         model={model}
@@ -147,13 +153,37 @@ function UniversalChatbot({
             conversations={conversations.map((conversation) => ({
               id: conversation.id,
               text: conversation.title,
+              additionalProps: canDeleteHistory
+                ? {
+                    actions: (
+                      <MenuItemAction
+                        icon={<TrashAltIcon />}
+                        actionId="delete"
+                        onClick={() => setDeleteConversation(conversation.id)}
+                        aria-label={`Delete conversation ${conversation.id}`}
+                      />
+                    ),
+                  }
+                : undefined,
             }))}
+            activeItemId={manager?.stateManager.getActiveConversationId() || undefined}
             drawerContent={drawerContent}
             isCompact={isCompact}
           />
         </Chatbot>
         {children}
       </div>
+      {deleteConversation && (
+        <DeleteConversationModal
+          onClose={() => setDeleteConversation(undefined)}
+          onDelete={() => {
+            if (manager) {
+              return manager.stateManager.deleteConversation(deleteConversation);
+            }
+            return Promise.resolve(undefined);
+          }}
+        />
+      )}
     </UniversalChatbotProvider>
   );
 }
