@@ -118,7 +118,7 @@ describe('Chatbot Initialization Tests', () => {
     });
   });
 
-  describe('RHEL LightSpeed State Manager Initialization', () => {
+  describe('RHEL Lightspeed State Manager Initialization', () => {
     it('should create RHEL state manager with proper configuration', () => {
       const TestComponent = () => {
         const rhelManager = useRhelLightSpeedManager();
@@ -142,8 +142,8 @@ describe('Chatbot Initialization Tests', () => {
 
       // Verify RHEL manager configuration
       cy.get('[data-testid="model"]').should('contain', Models.RHEL_LIGHTSPEED);
-      cy.get('[data-testid="model-name"]').should('contain', 'RHEL LightSpeed');
-      cy.get('[data-testid="selection-title"]').should('contain', 'RHEL LightSpeed');
+      cy.get('[data-testid="model-name"]').should('contain', 'RHEL Lightspeed');
+      cy.get('[data-testid="selection-title"]').should('contain', 'RHEL Lightspeed');
       cy.get('[data-testid="history-management"]').should('contain', 'false');
       cy.get('[data-testid="stream-messages"]').should('contain', 'false');
     });
@@ -301,7 +301,7 @@ describe('Chatbot Initialization Tests', () => {
 
       // Should render the RHEL chatbot with real state manager
       cy.get('.pf-chatbot').should('exist');
-      cy.contains('RHEL LightSpeed').should('be.visible');
+      cy.contains('RHEL Lightspeed').should('be.visible');
       cy.get('.pf-chatbot__footer').should('exist');
     });
 

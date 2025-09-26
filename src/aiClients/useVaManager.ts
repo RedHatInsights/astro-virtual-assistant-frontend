@@ -30,7 +30,7 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
     modelName: 'Virtual Assistant',
     selectionTitle: 'Hybrid Cloud Core console',
     selectionDescription:
-      'Update your personal information, request access from your admin, show critical vulnerabilities, get Advisor recommendations, and more.',
+      'Learn about the Hybrid Cloud Console and configure settings like your personal information, request access from your admin, show critical vulnerabilities, and more.',
     MessageEntryComponent: VAMessageEntry,
   };
 }
