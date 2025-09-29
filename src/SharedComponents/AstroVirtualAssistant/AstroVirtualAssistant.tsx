@@ -103,7 +103,7 @@ export const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistan
   );
 };
 
-const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
+const AstroVirtualAssistant = (props: { showAssistant: boolean; className?: string }) => {
   const useArh = useFlag('platform.arh.enabled');
   const [isOpen, setOpen] = useState<boolean>(false);
   const chrome = useChrome();
@@ -170,7 +170,7 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
     );
   }, [showArh, props.showAssistant, isOpen]);
   return createPortal(
-    <div className="virtualAssistant">
+    <div className={`virtualAssistant ${props.className || ''}`}>
       <Stack className="astro-wrapper-stack">{nodes}</Stack>
     </div>,
     document.body
