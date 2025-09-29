@@ -181,10 +181,11 @@ function useStateManager() {
   useEffect(() => {
     if (isOpen && currentManager && !currentManager.stateManager.isInitialized() && !currentManager.stateManager.isInitializing()) {
       // Only initialize when chatbot is opened and manager is selected
-      currentManager.stateManager.init()
-        .catch((error) => {
-          console.error('Failed to initialize state manager:', error);
-        });
+      try {
+        currentManager.stateManager.init();
+      } catch (e) {
+        console.error('Failed to initialize state manager:', e);
+      }
     }
   }, [isOpen, currentManager]);
 
