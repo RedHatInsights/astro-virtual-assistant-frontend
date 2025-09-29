@@ -70,11 +70,7 @@ const UniversalMessages = ({
   }, [username, welcome?.content]);
 
   const welcomePrompts = useMemo(() => {
-    if (!welcome?.buttons || welcome?.buttons.length === 0) {
-      return undefined;
-    }
-
-    return welcome?.buttons.map((button) => ({
+    return welcome?.buttons?.map((button) => ({
       title: button.title,
       message: button.message,
       onClick: () => {
