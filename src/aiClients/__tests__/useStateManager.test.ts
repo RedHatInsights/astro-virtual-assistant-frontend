@@ -105,6 +105,33 @@ jest.mock('../useRhelLightSpeedManager', () => ({
   })),
 }));
 
+jest.mock('../useVaManager', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    model: 'VA',
+    stateManager: {
+      isInitialized: jest.fn(() => false),
+      isInitializing: jest.fn(() => false),
+      init: jest.fn(),
+      getClient: jest.fn(() => ({
+        isInitialized: jest.fn(() => false),
+        isInitializing: jest.fn(() => false),
+        getWelcomeContent: jest.fn(() => ''),
+      })),
+    },
+    historyManagement: false,
+    streamMessages: false,
+    welcome: {
+      content: '',
+    },
+  })),
+  useVaAuthenticated: jest.fn(() => ({
+    loading: false,
+    isAuthenticated: false,
+    model: 'VA',
+  })),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const checkARHAuth = require('../../Components/ARHClient/checkARHAuth').default;
 

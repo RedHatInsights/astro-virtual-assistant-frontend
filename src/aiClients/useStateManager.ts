@@ -174,14 +174,19 @@ function useStateManager() {
     if (!currentModel) {
       return undefined;
     }
-    const manager = stateManagers.find((m) => m.model === currentModel);
+    return stateManagers.find((m) => m.model === currentModel);
+  }, [currentModel, stateManagers]);
 
-    if (isOpen && manager && !manager.stateManager.isInitialized() && !manager.stateManager.isInitializing()) {
-      manager.stateManager.init();
+  // Handle initialization in useEffect instead of useMemo to avoid side effects in render
+  useEffect(() => {
+    if (isOpen && currentManager && !currentManager.stateManager.isInitialized() && !currentManager.stateManager.isInitializing()) {
+      // Only initialize when chatbot is opened and manager is selected
+      currentManager.stateManager.init()
+        .catch((error) => {
+          console.error('Failed to initialize state manager:', error);
+        });
     }
-
-    return manager;
-  }, [isOpen, currentModel, stateManagers]);
+  }, [isOpen, currentManager]);
 
   const chatbotProps: ChatbotProps = {
     user: auth.user,
@@ -201,6 +206,7 @@ function useStateManager() {
     handleNewChat: currentManager?.handleNewChat,
     FooterComponent: currentManager?.FooterComponent,
     MessageEntryComponent: currentManager?.MessageEntryComponent,
+    welcome: currentManager?.welcome,
   };
 
   return {

@@ -74,6 +74,23 @@ function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedCli
     stateManager,
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/introducing-rhel-lightspeed-for-rhel-systems',
+    welcome: {
+      content: 'RHEL Lightspeed can help answer RHEL-related questions, help with troubleshooting RHEL, and can be used as a learning aid.  See the [RHEL Lightspeed documentation](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/index) for more details and to learn about the command line assistant.',
+      buttons: [
+        {
+          title: 'What is RHEL LightSpeed?',
+          value: 'What is RHEL LightSpeed?',
+        },
+        {
+          title: 'How do I troubleshoot boot issues?',
+          value: 'How do I troubleshoot boot issues?',
+        },
+        {
+          title: 'How do I analyze a log file?',
+          value: 'How do I analyze a log file?',
+        },
+      ],
+    },
   };
 
   return configuration;

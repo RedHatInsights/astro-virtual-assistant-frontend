@@ -1,9 +1,11 @@
 import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox } from '@patternfly/chatbot';
 import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
 import React, { useEffect, useMemo } from 'react';
-import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages } from '@redhat-cloud-services/ai-react-state';
+import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
+
+import { WelcomeConfig } from '../../aiClients/types';
 
 import UniversalBanner from './UniversalBanner';
 import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
@@ -41,6 +43,7 @@ const UniversalMessages = ({
   scrollToBottomRef,
   MessageEntryComponent = MessageEntry,
   isCompact,
+  welcome,
 }: {
   username?: string;
   avatar: string;
@@ -49,18 +52,36 @@ const UniversalMessages = ({
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
   MessageEntryComponent?: React.ComponentType<any>;
   isCompact?: boolean;
+  welcome?: WelcomeConfig;
 }) => {
   const activeConversation = useActiveConversation();
   const initLimitations = useInitLimitation();
   const messages = useMessages<IFDAdditionalAttributes>();
   const initializingMessages = useIsInitializing();
+  const sendMessage = useSendMessage();
+  
   const welcomeMessageConfig = useMemo(() => {
+    const defaultContent = `Hello Hallo Hola Bonjour こんにちは Olá مرحباً Ahoj Ciao 안녕하세요 Hallo 你好\n\nGet answers from our library of support resources.`;
     return {
       title: `Hello${username ? `, ${username}` : ''}`,
       description: 'How may I help you today?',
-      content: `Hello Hallo Hola Bonjour こんにちは Olá مرحباً Ahoj Ciao 안녕하세요 Hallo 你好\n\nGet answers from our library of support resources.`,
+      content: welcome?.content || defaultContent,
     };
-  }, [username]);
+  }, [username, welcome?.content]);
+
+  const welcomePrompts = useMemo(() => {
+    if (!welcome?.buttons || welcome?.buttons.length === 0) {
+      return undefined;
+    }
+
+    return welcome?.buttons.map((button) => ({
+      title: button.title,
+      message: button.message,
+      onClick: () => {
+        sendMessage(button.value, { stream: true });
+      },
+    }));
+  }, [welcome?.buttons, sendMessage]);
   const bannerVariant = useMemo(() => {
     if (initLimitations?.reason === 'quota-breached') {
       return 'conversationLimit';
@@ -88,7 +109,7 @@ const UniversalMessages = ({
         <UniversalBanner variant={bannerVariant} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
         {messages.length === 0 && (
           <>
-            <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" isCompact={isCompact} />
+            <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" isCompact={isCompact} prompts={welcomePrompts} />
             <Message
               timestamp={`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`}
               id="welcome-message"
