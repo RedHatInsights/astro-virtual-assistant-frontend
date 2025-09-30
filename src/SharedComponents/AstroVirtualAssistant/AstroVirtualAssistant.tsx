@@ -132,8 +132,8 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean; className?: stri
     );
   }, [stateManager, props.showAssistant, isOpen, chatbotProps, model]);
   return createPortal(
-    <div className={`virtualAssistant ${props.className || ''}`}>
-      <Stack className="astro-wrapper-stack">{nodes}</Stack>
+    <div className="virtualAssistant">
+      <Stack className={`astro-wrapper-stack ${props.className || ''}`}>{nodes}</Stack>
     </div>,
     document.body
   );
