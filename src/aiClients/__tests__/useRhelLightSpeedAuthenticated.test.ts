@@ -27,7 +27,7 @@ jest.mock('@redhat-cloud-services/ai-client-state', () => ({
   createClientStateManager: jest.fn(() => ({})),
 }));
 
-// Mock RHEL LightSpeed client
+// Mock RHEL Lightspeed client
 jest.mock('@redhat-cloud-services/rhel-lightspeed-client', () => ({
   RHELLightspeedClient: jest.fn().mockImplementation(() => ({})),
 }));
@@ -83,7 +83,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
     // Initial loading state
     expect(result.current.loading).toBe(true);
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.model).toBe('RHEL LightSpeed');
+    expect(result.current.model).toBe('RHEL Lightspeed');
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

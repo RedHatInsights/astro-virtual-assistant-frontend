@@ -26,8 +26,8 @@ describe('UniversalAssistantSelection Component', () => {
       },
       {
         model: Models.RHEL_LIGHTSPEED,
-        modelName: 'RHEL LightSpeed',
-        selectionTitle: 'RHEL LightSpeed',
+        modelName: 'RHEL Lightspeed',
+        selectionTitle: 'RHEL Lightspeed',
         selectionDescription: 'RHEL-specific assistance',
         stateManager: {} as any,
         historyManagement: false,
@@ -59,7 +59,7 @@ describe('UniversalAssistantSelection Component', () => {
     cy.get('.universal-model-selection__toggle').should('exist');
     
     // Should display current model name
-    cy.contains('Assistant:').should('be.visible');
+    cy.contains('AI Assistant:').should('be.visible');
     cy.contains('General Red Hat (Default)').should('be.visible');
     
     // Should have AI label
@@ -101,7 +101,7 @@ describe('UniversalAssistantSelection Component', () => {
     cy.contains('[role="option"]', 'Ask Red Hat').should('exist');
     
     // Should show RHEL_LIGHTSPEED option  
-    cy.contains('[role="option"]', 'RHEL LightSpeed').should('exist');
+    cy.contains('[role="option"]', 'RHEL Lightspeed').should('exist');
     cy.contains('[role="option"]', 'RHEL-specific assistance').should('exist');
   });
 
@@ -129,8 +129,8 @@ describe('UniversalAssistantSelection Component', () => {
     // Open the dropdown
     cy.get('.universal-model-selection__toggle').click();
 
-    // Click on RHEL LightSpeed option
-    cy.contains('[role="option"]', 'RHEL LightSpeed').click();
+    // Click on RHEL Lightspeed option
+    cy.contains('[role="option"]', 'RHEL Lightspeed').click();
 
     // Should call setCurrentModel with RHEL_LIGHTSPEED
     cy.wrap(mockSetCurrentModel).should('have.been.calledWith', Models.RHEL_LIGHTSPEED);
@@ -148,7 +148,7 @@ describe('UniversalAssistantSelection Component', () => {
     cy.get('[role="listbox"]').should('be.visible');
 
     // Select an option
-    cy.contains('[role="option"]', 'RHEL LightSpeed').click();
+    cy.contains('[role="option"]', 'RHEL Lightspeed').click();
 
     // The component may keep the dropdown open after selection - this is valid behavior
     // The important thing is that the selection worked (tested in other tests)
@@ -217,10 +217,10 @@ describe('UniversalAssistantSelection Component', () => {
     );
 
     // Should display the new selected model
-    cy.contains('RHEL LightSpeed').should('be.visible');
+    cy.contains('RHEL Lightspeed').should('be.visible');
     
     // Open dropdown to verify selection
     cy.get('.universal-model-selection__toggle').click();
-    cy.get('[role="option"][aria-selected="true"]').should('contain.text', 'RHEL LightSpeed');
+    cy.get('[role="option"][aria-selected="true"]').should('contain.text', 'RHEL Lightspeed');
   });
 });

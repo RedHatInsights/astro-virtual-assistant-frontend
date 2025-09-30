@@ -3,7 +3,7 @@ import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 
 export enum Models {
   ASK_RED_HAT = 'Ask Red Hat',
-  RHEL_LIGHTSPEED = 'RHEL LightSpeed',
+  RHEL_LIGHTSPEED = 'RHEL Lightspeed',
   VA = 'Virtual Assistant',
   OAI = 'OpenShift assisted Installer',
 }

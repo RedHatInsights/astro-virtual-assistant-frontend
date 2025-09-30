@@ -102,7 +102,7 @@ export const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistan
   );
 };
 
-const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
+const AstroVirtualAssistant = (props: { showAssistant: boolean; className?: string }) => {
   const { stateManager, model, chatbotProps, isOpen, setOpen } = useStateManager();
   const nodes = useMemo(() => {
     if (model && stateManager && props.showAssistant) {
@@ -132,7 +132,7 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean }) => {
     );
   }, [stateManager, props.showAssistant, isOpen, chatbotProps, model]);
   return createPortal(
-    <div className="virtualAssistant">
+    <div className={`virtualAssistant ${props.className || ''}`}>
       <Stack className="astro-wrapper-stack">{nodes}</Stack>
     </div>,
     document.body

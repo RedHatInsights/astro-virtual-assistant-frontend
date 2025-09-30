@@ -182,7 +182,7 @@ Add your new model to the `Models` enum in `src/aiClients/types.ts`:
 ```typescript
 export enum Models {
   ASK_RED_HAT = 'Ask Red Hat',
-  RHEL_LIGHTSPEED = 'RHEL LightSpeed',
+  RHEL_LIGHTSPEED = 'RHEL Lightspeed',
   VA = 'Virtual Assistant',
   YOUR_SERVICE = 'Your Service Name',
 }
