@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { Stack, StackItem } from '@patternfly/react-core';
 import { useFlag } from '@unleash/proxy-client-react';
+import { useMatch } from 'react-router-dom';
 
 import { Status, useAstro } from '../../Components/AstroChat/useAstro';
 import './astro-virtual-assistant.scss';
@@ -104,6 +105,7 @@ export const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistan
 
 const AstroVirtualAssistant = (props: { showAssistant: boolean; className?: string }) => {
   const { stateManager, model, chatbotProps, isOpen, setOpen } = useStateManager();
+  const isAssistedInstallerRoute = useMatch('/openshift/assisted-installer/*');
   const nodes = useMemo(() => {
     if (model && stateManager && props.showAssistant) {
       return (
@@ -118,6 +120,10 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean; className?: stri
           </StackItem>
         </AIStateProvider>
       );
+    }
+
+    if (isAssistedInstallerRoute) {
+      return null;
     }
 
     return (

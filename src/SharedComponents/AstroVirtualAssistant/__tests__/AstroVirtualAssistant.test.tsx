@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import AstroVirtualAssistant from '../AstroVirtualAssistant';
 import { ChromeUser } from '@redhat-cloud-services/types';
+import { MemoryRouter } from 'react-router-dom';
 
 // Mock fetch to test the actual checkARHAuth function
 global.fetch = jest.fn();
@@ -105,9 +106,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     } as Response);
 
     const { queryByTestId } = render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -134,9 +137,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     } as Response);
 
     const { queryByTestId } = render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -152,9 +157,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     } as Response);
 
     const { queryByTestId } = render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -173,9 +180,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     } as Response);
 
     render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -191,9 +200,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     } as Response);
 
     render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -208,9 +219,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     mockChrome.auth.getUser.mockResolvedValue(undefined);
 
     render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -228,9 +241,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     } as Response);
 
     const { queryByTestId } = render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -274,9 +289,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     } as Response);
 
     render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
@@ -292,14 +309,32 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     mockUseFlag.mockReturnValue(false); // Disable ARH feature flag
 
     const { queryByTestId } = render(
-      <Provider store={mockStore}>
-        <AstroVirtualAssistant showAssistant={true} />
-      </Provider>
+      <MemoryRouter>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
       // No badge should be visible when feature flag is disabled
       expect(queryByTestId('arh-badge')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should not render legacy if path is /openshift/assisted-installer', async () => {
+    mockUseFlag.mockReturnValue(false); // Disable ARH feature flag
+
+    render(
+      <MemoryRouter initialEntries={['/openshift/assisted-installer/foo']}>
+        <Provider store={mockStore}>
+          <AstroVirtualAssistant showAssistant={true} />
+        </Provider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByAltText('Launch virtual assistant')).not.toBeInTheDocument();
     });
   });
 });
