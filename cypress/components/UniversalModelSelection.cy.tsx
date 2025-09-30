@@ -59,7 +59,7 @@ describe('UniversalAssistantSelection Component', () => {
     cy.get('.universal-model-selection__toggle').should('exist');
     
     // Should display current model name
-    cy.contains('Assistant:').should('be.visible');
+    cy.contains('AI Assistant:').should('be.visible');
     cy.contains('General Red Hat (Default)').should('be.visible');
     
     // Should have AI label

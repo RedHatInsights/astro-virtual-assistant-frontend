@@ -19,7 +19,7 @@ function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject
 
   const toggle = (toggleRef: Ref<HTMLButtonElement>) => (
     <MenuToggle className="universal-model-selection__toggle" ref={toggleRef} onClick={() => setIsOpen((prev) => !prev)} isExpanded={isOpen}>
-      <b>Assistant:</b>
+      <b>AI Assistant:</b>
       &nbsp;{modelName}
       <Label className="pf-v6-u-ml-md" isCompact>
         AI
