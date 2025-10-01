@@ -59,8 +59,8 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#virtual-assistant_getting-started',
     streamMessages: false,
-    modelName: 'Virtual Assistant',
-    selectionTitle: 'Hybrid Cloud Core console',
+    modelName: 'Hybrid Cloud Console - Virtual Assistant',
+    selectionTitle: 'Hybrid Cloud Console',
     selectionDescription:
       'Learn about the Hybrid Cloud Console and configure settings like your personal information, request access from your admin, show critical vulnerabilities, and more.',
     MessageEntryComponent: VAMessageEntry,
