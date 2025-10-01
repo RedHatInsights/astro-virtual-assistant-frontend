@@ -1,13 +1,17 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import AstroVirtualAssistant from '../AstroVirtualAssistant';
+import { ChromeUser } from '@redhat-cloud-services/types';
+
+// Mock fetch to test the actual checkARHAuth function
+global.fetch = jest.fn();
 
 // Mock the useChrome hook - provides auth context
 const mockChrome = {
-  getEnvironment: jest.fn(() => 'stage'),
+  getEnvironment: jest.fn(),
   isBeta: jest.fn(() => false),
   auth: {
     getUser: jest.fn(),
@@ -22,10 +26,11 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 }));
 
 // Mock feature flag hook - requires Unleash context
-jest.mock('@unleash/proxy-client-react', () => ({
-  useFlag: jest.fn(() => false), // Default to disabled
-  useFlags: jest.fn(() => []),
-}));
+jest.mock('@unleash/proxy-client-react');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { useFlag: mockUseFlag, useFlags: mockUseFlags } = require('@unleash/proxy-client-react');
+mockUseFlag.mockReturnValue(true);
+mockUseFlags.mockReturnValue([]);
 
 // Mock navigation hook - requires router context
 jest.mock('@redhat-cloud-services/frontend-components-utilities/useInsightsNavigate', () => ({
@@ -50,81 +55,15 @@ jest.mock('@patternfly/chatbot', () => ({
   },
 }));
 
-// Mock AI client state completely
-jest.mock('@redhat-cloud-services/ai-client-state', () => ({
-  createClientStateManager: jest.fn(() => ({
-    isInitialized: jest.fn(() => false),
-    isInitializing: jest.fn(() => false),
-    init: jest.fn(),
-    getClient: jest.fn(() => ({
-      isInitialized: jest.fn(() => false),
-      isInitializing: jest.fn(() => false),
-      getWelcomeContent: jest.fn(() => ''),
-    })),
-    subscribe: jest.fn(() => () => {}), // return unsubscribe function
-  })),
-  Events: {
-    INITIALIZING_MESSAGES: 'INITIALIZING_MESSAGES',
-    ACTIVE_CONVERSATION: 'ACTIVE_CONVERSATION',
-  },
-}));
-
-// Mock ARH client
-jest.mock('@redhat-cloud-services/arh-client', () => ({
-  IFDClient: jest.fn().mockImplementation(() => ({})),
-}));
-
-// Mock AI client react state
-jest.mock('@redhat-cloud-services/ai-react-state', () => ({
-  useIsInitializing: jest.fn(() => false),
-  AIStateProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="ai-state-provider">{children}</div>
-  ),
-}));
-
-// Mock all the AI client hooks to return basic configurations
-jest.mock('../../../aiClients/useArhClient', () => ({
+jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({
   __esModule: true,
-  default: jest.fn(() => ({
-    model: 'Ask Red Hat',
-    stateManager: {
-      isInitialized: jest.fn(() => false),
-      isInitializing: jest.fn(() => false),
-      init: jest.fn(),
-    },
-    historyManagement: true,
-    streamMessages: true,
-  })),
-  useArhAuthenticated: jest.fn(() => ({
-    loading: false,
-    isAuthenticated: false,
-    model: 'Ask Red Hat',
-  })),
-}));
-
-jest.mock('../../../aiClients/useRhelLightSpeedManager', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    model: 'RHEL Lightspeed',
-    stateManager: {
-      isInitialized: jest.fn(() => false),
-      isInitializing: jest.fn(() => false),
-      init: jest.fn(),
-    },
-    historyManagement: false,
-    streamMessages: false,
-  })),
-  useRhelLightSpeedAuthenticated: jest.fn(() => ({
-    loading: false,
-    isAuthenticated: false,
-    model: 'RHEL Lightspeed',
-  })),
+  default: () => <div data-testid="arh-badge">ARH Badge</div>,
 }));
 
 jest.mock('../../../aiClients/useVaManager', () => ({
   __esModule: true,
   default: jest.fn(() => ({
-    model: 'VA',
+    model: 'Virtual Assistant',
     stateManager: {
       isInitialized: jest.fn(() => false),
       isInitializing: jest.fn(() => false),
@@ -132,24 +71,24 @@ jest.mock('../../../aiClients/useVaManager', () => ({
       getClient: jest.fn(() => ({
         isInitialized: jest.fn(() => false),
         isInitializing: jest.fn(() => false),
-        getWelcomeContent: jest.fn(() => ''),
+        getWelcomeConfig: jest.fn(() => ({
+          content: 'Welcome to Virtual Assistant',
+          buttons: []
+        })),
       })),
       subscribe: jest.fn(() => () => {}),
     },
-    historyManagement: false,
-    streamMessages: false,
-    welcome: '',
+    initializing: false,
+    isOpen: false,
+    setOpen: jest.fn(),
+    historyManagement: true,
+    streamMessages: true,
   })),
   useVaAuthenticated: jest.fn(() => ({
     loading: false,
-    isAuthenticated: false,
-    model: 'VA',
+    isAuthenticated: true,
+    model: 'Virtual Assistant',
   })),
-}));
-
-jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({
-  __esModule: true,
-  default: () => <div data-testid="arh-badge">ARH Badge</div>,
 }));
 
 // Create a minimal Redux store for testing
