@@ -5,7 +5,7 @@ import { UniversalChatbotContext } from './UniversalChatbotProvider';
 import { isModels } from '../../aiClients/types';
 
 import './UniversalAssistantSelection.scss';
-import { HelpIcon } from '@patternfly/react-icons';
+import { HelpIcon, InfoCircleIcon } from '@patternfly/react-icons';
 
 function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject<HTMLDivElement> }) {
   const { model, setCurrentModel, availableManagers } = useContext(UniversalChatbotContext);
@@ -71,6 +71,11 @@ function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject
                   ]}
                 >
                   {manager.selectionTitle}
+                  {manager.isPreview && (
+                    <Label icon={<InfoCircleIcon />} color="orange" className="pf-v6-u-ml-sm" isCompact>
+                      Preview
+                    </Label>
+                  )}
                 </SelectOption>
               ))}
             </SelectList>
