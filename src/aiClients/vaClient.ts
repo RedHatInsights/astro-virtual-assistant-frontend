@@ -81,29 +81,22 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
     }
   }
 
-  getWelcomeConfig(): WelcomeConfig {
-    console.log('VA Client - getWelcomeConfig called, initialized:', this._isInitialized, 'has response:', !!this.initialApiResponse);
-    
+  getWelcomeConfig(): WelcomeConfig {    
     if (!this._isInitialized || !this.initialApiResponse) {
       // Return empty config to let useVaManager handle the default content
       return {
         buttons: []
       };
     }
-    
-    console.log('VA Client - processing responses:', this.initialApiResponse.response);
-    
+        
     let content = '';
     let buttons: WelcomeButton[] = [];
     
     // Process all responses to extract content and buttons
-    for (const response of this.initialApiResponse.response) {
-      console.log('VA Client - processing response type:', response.type);
-      
+    for (const response of this.initialApiResponse.response) {      
       if (isResponseText(response)) {
         // Accumulate text content
         content = content ? `${content}\n\n${response.text}` : response.text;
-        console.log('VA Client - added text content:', response.text);
       } else if (isResponseOptions(response)) {
         // Add options text if present
         if (response.text) {
@@ -116,7 +109,6 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
           value: option.option_id ? `OPTION_ID:${option.option_id}` : option.value, // Prefix option_id to distinguish it
           message: option.text !== option.value ? option.value : undefined // Show value as subtitle if different from text
         }));
-        console.log('VA Client - added buttons:', buttons);
       }
     }
     
@@ -125,7 +117,6 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
       buttons
     };
     
-    console.log('VA Client - final welcome config:', result);
     return result;
   }
 

@@ -61,11 +61,10 @@ const UniversalMessages = ({
   const sendMessage = useSendMessage();
   
   const welcomeMessageConfig = useMemo(() => {
-    const defaultContent = `Hello Hallo Hola Bonjour こんにちは Olá مرحباً Ahoj Ciao 안녕하세요 Hallo 你好\n\nGet answers from our library of support resources.`;
     return {
       title: `Hello${username ? `, ${username}` : ''}`,
       description: 'How may I help you today?',
-      content: welcome?.content || defaultContent,
+      content: welcome?.content,
     };
   }, [username, welcome?.content]);
 
@@ -106,14 +105,16 @@ const UniversalMessages = ({
         {messages.length === 0 && (
           <>
             <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" isCompact={isCompact} prompts={welcomePrompts} />
-            <Message
-              timestamp={`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`}
-              id="welcome-message"
-              role="bot"
-              avatar={ARH_BOT_ICON}
-              content={welcomeMessageConfig.content}
-              isCompact={isCompact}
-            />
+            {welcomeMessageConfig.content && (
+              <Message
+                timestamp={`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`}
+                id="welcome-message"
+                role="bot"
+                avatar={ARH_BOT_ICON}
+                content={welcomeMessageConfig.content}
+                isCompact={isCompact}
+              />
+            )}
           </>
         )}
         {messages.map((message, index) => (

@@ -7,6 +7,7 @@ import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import checkARHAuth from '../Components/ARHClient/checkARHAuth';
 import ARHMessageEntry from '../Components/ARHClient/ARHMessageEntry';
 import ARHFooter from '../Components/ARHClient/ARHFooter';
+import { DEFAULT_WELCOME_CONTENT } from '../Components/UniversalChatbot/types';
 
 function useArhBaseUrl() {
   const chrome = useChrome();
@@ -104,6 +105,9 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
     isPreview: true,
+    welcome: {
+      content: DEFAULT_WELCOME_CONTENT
+    }
   };
   return configuration;
 }

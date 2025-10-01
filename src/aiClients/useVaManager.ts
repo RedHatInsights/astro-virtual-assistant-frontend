@@ -4,7 +4,6 @@ import VAClient from './vaClient';
 import { createClientStateManager, Events } from '@redhat-cloud-services/ai-client-state';
 import VAMessageEntry from '../Components/VAClient/VAMessageEntry';
 
-const DEFAULT_WELCOME_CONTENT = 'Welcome to the Virtual Assistant! I can help you navigate the Hybrid Cloud Console, update your personal information, request access from your admin, show critical vulnerabilities, get Advisor recommendations, and more.';
 export function useVaAuthenticated(): ClientAuthStatus {
   // VA does not have restrictions
   return {
@@ -28,23 +27,15 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
     const client = stateManager.getClient();
     
     const updateContent = () => {
-      console.log('VA Manager - updateContent called, client initialized:', client.isInitialized(), 'initializing:', client.isInitializing());
-      
       if (client.isInitialized()) {
         const dynamicContent = client.getWelcomeConfig();
-        console.log('VA Manager - dynamic content:', dynamicContent);
         
         if (dynamicContent && dynamicContent.content) {
           setWelcomeConfig(dynamicContent);
-        } else {
-          // Fallback to default content if dynamic content is empty
-          const defaultContent = {content: 'Welcome to the Virtual Assistant! I can help you navigate the Hybrid Cloud Console, update your personal information, request access from your admin, show critical vulnerabilities, get Advisor recommendations, and more.'};
-          setWelcomeConfig(defaultContent);
         }
       } else if (!client.isInitializing()) {
-        // Not initialized and not initializing - show default content
-        const defaultContent = {content: 'Welcome to the Virtual Assistant! I can help you navigate the Hybrid Cloud Console, update your personal information, request access from your admin, show critical vulnerabilities, get Advisor recommendations, and more.'};
-        setWelcomeConfig(defaultContent);
+        // TODO: have a special error state
+        setWelcomeConfig({content: "Sorry, something went wrong while talking to the Virtual Assistant."})
       }
     };
     
@@ -73,6 +64,9 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
     selectionDescription:
       'Learn about the Hybrid Cloud Console and configure settings like your personal information, request access from your admin, show critical vulnerabilities, and more.',
     MessageEntryComponent: VAMessageEntry,
-    welcome: welcomeConfig
+    // Ignoring content/message from watson
+    welcome: {
+      buttons: welcomeConfig?.buttons,
+    }
   };
 }
