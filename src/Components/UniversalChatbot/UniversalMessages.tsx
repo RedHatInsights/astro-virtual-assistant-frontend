@@ -102,20 +102,16 @@ const UniversalMessages = ({
     <ChatbotContent>
       <MessageBox>
         <UniversalBanner variant={bannerVariant} isOpen={isBannerOpen} setOpen={setIsBannerOpen} />
-        {messages.length === 0 && (
-          <>
-            <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" isCompact={isCompact} prompts={welcomePrompts} />
-            {welcomeMessageConfig.content && (
-              <Message
-                timestamp={`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`}
-                id="welcome-message"
-                role="bot"
-                avatar={ARH_BOT_ICON}
-                content={welcomeMessageConfig.content}
-                isCompact={isCompact}
-              />
-            )}
-          </>
+        <ChatbotWelcomePrompt {...welcomeMessageConfig} className="pf-v6-u-mt-auto" isCompact={isCompact} prompts={welcomePrompts} />
+        {welcomeMessageConfig.content && (
+          <Message
+            timestamp={`${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`}
+            id="welcome-message"
+            role="bot"
+            avatar={ARH_BOT_ICON}
+            content={welcomeMessageConfig.content}
+            isCompact={isCompact}
+          />
         )}
         {messages.map((message, index) => (
           <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} />
