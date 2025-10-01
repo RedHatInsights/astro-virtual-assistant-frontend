@@ -72,12 +72,7 @@ function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject
                 >
                   {manager.selectionTitle}
                   {manager.isPreview && (
-                    <Label 
-                      icon={<InfoCircleIcon />} 
-                      color="orange"
-                      className="pf-v6-u-ml-sm"
-                      isCompact
-                    >
+                    <Label icon={<InfoCircleIcon />} color="orange" className="pf-v6-u-ml-sm" isCompact>
                       Preview
                     </Label>
                   )}
