@@ -2,19 +2,23 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import UniversalMessages from '../UniversalMessages';
-import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages } from '@redhat-cloud-services/ai-react-state';
+import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages, useSendMessage } from '@redhat-cloud-services/ai-react-state';
+import useArhMessageQuota from '../../ARHClient/useArhMessageQuota';
 
 // Mock hooks used by UniversalMessages
 const mockUseMessages = useMessages as jest.MockedFunction<typeof useMessages>;
 const mockUseInitLimitation = useInitLimitation as jest.MockedFunction<typeof useInitLimitation>;
 const mockUseActiveConversation = useActiveConversation as jest.MockedFunction<typeof useActiveConversation>;
 const mockUseIsInitializing = useIsInitializing as jest.MockedFunction<typeof useIsInitializing>;
+const mockUseSendMessage = useSendMessage as jest.MockedFunction<typeof useSendMessage>;
+const mockUseArhMessageQuota = useArhMessageQuota as jest.MockedFunction<typeof useArhMessageQuota>;
 
 jest.mock('@redhat-cloud-services/ai-react-state', () => ({
   useMessages: jest.fn(),
   useInitLimitation: jest.fn(),
   useActiveConversation: jest.fn(),
   useIsInitializing: jest.fn(),
+  useSendMessage: jest.fn(),
   useCreateNewConversation: jest.fn(() => jest.fn()),
 }));
 
@@ -35,6 +39,22 @@ jest.mock('@patternfly/chatbot', () => ({
 jest.mock('@patternfly/react-core', () => ({
   Bullseye: ({ children }: { children: React.ReactNode }) => <div data-testid="bullseye">{children}</div>,
   Spinner: () => <div data-testid="spinner">Loading...</div>,
+  Alert: ({ children, ...props }: any) => (
+    <div data-testid="alert" {...props}>
+      {children}
+    </div>
+  ),
+}));
+
+// Mock ARH hooks
+jest.mock('../../ARHClient/useArhMessageQuota', () => jest.fn());
+
+// Mock UniversalBanner component
+jest.mock('../UniversalBanner', () => ({
+  __esModule: true,
+  default: function MockUniversalBanner(props: any) {
+    return <div data-testid="universal-banner" {...props} />;
+  },
 }));
 
 describe('UniversalMessages', () => {
@@ -59,6 +79,8 @@ describe('UniversalMessages', () => {
       createdAt: new Date(),
     } as any);
     mockUseIsInitializing.mockReturnValue(false);
+    mockUseSendMessage.mockReturnValue(jest.fn());
+    mockUseArhMessageQuota.mockReturnValue(undefined);
   });
 
   it('should render without crashing', () => {
