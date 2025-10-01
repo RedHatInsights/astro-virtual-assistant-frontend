@@ -18,21 +18,10 @@ const UniversalHeaderPreviewBadge: React.FC = () => {
       position="left"
       withFocusTrap={false}
       bodyContent={
-        <>
-          <p>
-            Preview refers to early access features or functionalities that are under active development and not yet fully supported for production
-            environments.
-          </p>
-          <p>
-            This feature is made available to allow users to test new functionalities, provide feedback, and help shape the future development of the
-            feature.
-          </p>
-          <p>
-            Preview features have limitations on support compared to fully released features. They are not intended for production workloads and are
-            not covered by standard Red Hat Customer Portal case management.
-          </p>
-          <p>This Preview feature is still in development and may undergo changes, or even be removed, before or during their official release.</p>
-        </>
+        <p>
+          This tool is a preview, and while we strive for accuracy, there&apos;s always a possibility of errors. We recommend that you review AI
+          generated content prior to use.
+        </p>
       }
     >
       <Button variant="plain" aria-label="More info" ref={popoverRef} className="pf-v6-u-p-0">

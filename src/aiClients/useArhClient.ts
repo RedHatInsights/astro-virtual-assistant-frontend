@@ -7,6 +7,7 @@ import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
 import checkARHAuth from '../Components/ARHClient/checkARHAuth';
 import ARHMessageEntry from '../Components/ARHClient/ARHMessageEntry';
 import ARHFooter from '../Components/ARHClient/ARHFooter';
+import { DEFAULT_WELCOME_CONTENT } from '../Components/UniversalChatbot/types';
 
 function useArhBaseUrl() {
   const chrome = useChrome();
@@ -95,7 +96,7 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
     historyManagement: true,
     streamMessages: true,
     modelName: 'Ask Red Hat',
-    selectionTitle: 'General Red Hat (Default)',
+    selectionTitle: 'Ask Red Hat',
     selectionDescription:
       'Find answers about Red Hat products, error messages, security vulnerabilities, general usage, and other content from product documentation and our knowledge base.',
     MessageEntryComponent: ARHMessageEntry,
@@ -104,6 +105,19 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
     isPreview: true,
+    welcome: {
+      content: DEFAULT_WELCOME_CONTENT,
+      buttons: [
+        {
+          title: 'Tell me about Ask Red Hat.',
+          value: 'Tell me about Ask Red Hat.',
+        },
+        {
+          title: 'What technologies are used in Ask Red Hat?',
+          value: 'What technologies are used in Ask Red Hat?',
+        },
+      ],
+    },
   };
   return configuration;
 }

@@ -27,6 +27,7 @@ function UniversalChatbot({
   setCurrentModel,
   availableManagers,
   handleNewChat,
+  welcome,
 }: PropsWithChildren<ChatbotProps>) {
   const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [username, setUsername] = useState('');
@@ -85,6 +86,7 @@ function UniversalChatbot({
         setIsBannerOpen={setIsBannerOpen}
         MessageEntryComponent={MessageEntryComponent}
         isCompact={isCompact}
+        welcome={welcome}
       />
       <FooterComponent streamMessages={streamMessages} isCompact={isCompact} />
     </>

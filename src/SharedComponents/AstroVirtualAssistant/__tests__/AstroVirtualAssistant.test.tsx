@@ -60,8 +60,6 @@ jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({
   default: () => <div data-testid="arh-badge">ARH Badge</div>,
 }));
 
-// AstroVirtualAssistantLegacy is exported from the same file, so we don't need to mock it
-
 // Create a minimal Redux store for testing
 const mockStore = createStore(() => ({}));
 
@@ -89,6 +87,26 @@ const mockUser: ChromeUser = {
     },
   },
 };
+
+jest.mock('@redhat-cloud-services/ai-client-state', () => ({
+  createClientStateManager: jest.fn(() => ({
+    isInitialized: jest.fn(() => false),
+    isInitializing: jest.fn(() => false),
+    init: jest.fn(),
+    subscribe: jest.fn(() => jest.fn()), // Returns unsubscribe function
+    getClient: jest.fn(() => ({
+      isInitialized: jest.fn(() => false),
+      isInitializing: jest.fn(() => false),
+      getWelcomeConfig: jest.fn(() => ({
+        content: 'Test welcome content',
+      })),
+    })),
+  })),
+  Events: {
+    INITIALIZING_MESSAGES: 'INITIALIZING_MESSAGES',
+    ACTIVE_CONVERSATION: 'ACTIVE_CONVERSATION',
+  },
+}));
 
 describe('AstroVirtualAssistant ARH Show Condition', () => {
   beforeEach(() => {

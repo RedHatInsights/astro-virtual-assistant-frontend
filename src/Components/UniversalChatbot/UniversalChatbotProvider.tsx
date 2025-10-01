@@ -5,7 +5,7 @@ import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ChromeUser } from '@redhat-cloud-services/types';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 
-import { Models, StateManagerConfiguration } from '../../aiClients/types';
+import { Models, StateManagerConfiguration, WelcomeConfig } from '../../aiClients/types';
 
 export type ModelToClient = {
   [Models.ASK_RED_HAT]: IFDClient;
@@ -33,6 +33,7 @@ export type ChatbotProps = {
   handleNewChat?: (toggleDrawer: (isOpen: boolean) => void) => void;
   MessageEntryComponent?: React.ComponentType<any>;
   FooterComponent?: React.ComponentType<any>;
+  welcome?: WelcomeConfig;
 } & UniversalChatbotContextType;
 
 export const UniversalChatbotContext = React.createContext<UniversalChatbotContextType>({

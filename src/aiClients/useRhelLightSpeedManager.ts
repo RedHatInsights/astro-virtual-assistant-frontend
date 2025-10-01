@@ -74,6 +74,22 @@ function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedCli
     stateManager,
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/introducing-rhel-lightspeed-for-rhel-systems',
+    welcome: {
+      buttons: [
+        {
+          title: 'How do I troubleshoot a RHEL system that is slow to boot?',
+          value: 'How do I troubleshoot a RHEL system that is slow to boot?',
+        },
+        {
+          title: 'Teach me tips on how to be more effective on the RHEL command line',
+          value: 'Teach me tips on how to be more effective on the RHEL command line',
+        },
+        {
+          title: 'What is an immutable file?',
+          value: 'What is an immutable file?',
+        },
+      ],
+    },
   };
 
   return configuration;

@@ -177,9 +177,13 @@ function useStateManager() {
     const manager = stateManagers.find((m) => m.model === currentModel);
 
     if (isOpen && manager && !manager.stateManager.isInitialized() && !manager.stateManager.isInitializing()) {
-      manager.stateManager.init();
+      // Only initialize when chatbot is opened and manager is selected
+      try {
+        manager.stateManager.init();
+      } catch (e) {
+        console.error('Failed to initialize state manager:', e);
+      }
     }
-
     return manager;
   }, [isOpen, currentModel, stateManagers]);
 
@@ -201,6 +205,7 @@ function useStateManager() {
     handleNewChat: currentManager?.handleNewChat,
     FooterComponent: currentManager?.FooterComponent,
     MessageEntryComponent: currentManager?.MessageEntryComponent,
+    welcome: currentManager?.welcome,
   };
 
   return {

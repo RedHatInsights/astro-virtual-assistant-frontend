@@ -79,7 +79,7 @@ describe('Chatbot Initialization Tests', () => {
       // Verify ARH manager configuration
       cy.get('[data-testid="model"]').should('contain', Models.ASK_RED_HAT);
       cy.get('[data-testid="model-name"]').should('contain', 'Ask Red Hat');
-      cy.get('[data-testid="selection-title"]').should('contain', 'General Red Hat (Default)');
+      cy.get('[data-testid="selection-title"]').should('contain', 'Ask Red Hat');
       cy.get('[data-testid="history-management"]').should('contain', 'true');
       cy.get('[data-testid="stream-messages"]').should('contain', 'true');
     });

@@ -8,6 +8,22 @@ export enum Models {
   OAI = 'OpenShift assisted Installer',
 }
 
+export interface WelcomeButton {
+  /** Title for the welcome button */
+  title: string;
+  /** Optional message to display below the title */
+  message?: string;
+  /** Message to send when the button is clicked */
+  value: string;
+}
+
+export interface WelcomeConfig {
+  /** Welcome message content to display */
+  content?: string;
+  /** Optional array of interactive buttons */
+  buttons?: WelcomeButton[];
+}
+
 export type ModelsSelection = {
   activeModel: Models;
   setActiveModel: (model: Models) => void;
@@ -29,6 +45,7 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   docsUrl: string;
   selectionTitle: string;
   selectionDescription: string;
+  welcome?: WelcomeConfig;
   stateManager: StateManager<Record<string, unknown>, S>;
   isPreview?: boolean;
   handleNewChat?: (toggleDrawer: (isOpen: boolean) => void) => void;
