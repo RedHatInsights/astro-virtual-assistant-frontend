@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import UniversalMessages from '../UniversalMessages';
-import { useMessages, useInitLimitation, useActiveConversation, useIsInitializing } from '@redhat-cloud-services/ai-react-state';
+import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages } from '@redhat-cloud-services/ai-react-state';
 
 // Mock hooks used by UniversalMessages
 const mockUseMessages = useMessages as jest.MockedFunction<typeof useMessages>;
@@ -29,9 +29,7 @@ jest.mock('@patternfly/chatbot', () => ({
       <div data-testid="welcome-content">{content}</div>
     </div>
   ),
-  Message: ({ content, role }: any) => (
-    <div data-testid={`message-${role}`}>{content}</div>
-  ),
+  Message: ({ content, role }: any) => <div data-testid={`message-${role}`}>{content}</div>,
 }));
 
 jest.mock('@patternfly/react-core', () => ({
@@ -65,7 +63,7 @@ describe('UniversalMessages', () => {
 
   it('should render without crashing', () => {
     render(<UniversalMessages {...defaultProps} />);
-    
+
     expect(screen.getByTestId('chatbot-content')).toBeInTheDocument();
   });
 

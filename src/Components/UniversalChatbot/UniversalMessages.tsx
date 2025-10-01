@@ -59,7 +59,7 @@ const UniversalMessages = ({
   const messages = useMessages<IFDAdditionalAttributes>();
   const initializingMessages = useIsInitializing();
   const sendMessage = useSendMessage();
-  
+
   const welcomeMessageConfig = useMemo(() => {
     return {
       title: `Hello${username ? `, ${username}` : ''}`,

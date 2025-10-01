@@ -1,7 +1,7 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ClientAuthStatus, Models, StateManagerConfiguration, WelcomeConfig } from './types';
 import VAClient from './vaClient';
-import { createClientStateManager, Events } from '@redhat-cloud-services/ai-client-state';
+import { Events, createClientStateManager } from '@redhat-cloud-services/ai-client-state';
 import VAMessageEntry from '../Components/VAClient/VAMessageEntry';
 
 export function useVaAuthenticated(): ClientAuthStatus {
@@ -25,27 +25,27 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
   // Watch for client initialization to update welcome content using state manager events
   useEffect(() => {
     const client = stateManager.getClient();
-    
+
     const updateContent = () => {
       if (client.isInitialized()) {
         const dynamicContent = client.getWelcomeConfig();
-        
+
         if (dynamicContent && dynamicContent.content) {
           setWelcomeConfig(dynamicContent);
         }
       } else if (!client.isInitializing()) {
         // TODO: have a special error state
-        setWelcomeConfig({content: "Sorry, something went wrong while talking to the Virtual Assistant."})
+        setWelcomeConfig({ content: 'Sorry, something went wrong while talking to the Virtual Assistant.' });
       }
     };
-    
+
     // Check immediately
     updateContent();
-    
+
     // Subscribe to state manager events for updates
     const unsubscribeInit = stateManager.subscribe(Events.INITIALIZING_MESSAGES, updateContent);
     const unsubscribeConversation = stateManager.subscribe(Events.ACTIVE_CONVERSATION, updateContent);
-    
+
     return () => {
       unsubscribeInit();
       unsubscribeConversation();
@@ -67,6 +67,6 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
     // Ignoring content/message from watson
     welcome: {
       buttons: welcomeConfig?.buttons,
-    }
+    },
   };
 }

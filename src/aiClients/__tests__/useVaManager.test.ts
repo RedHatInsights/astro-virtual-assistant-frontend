@@ -35,7 +35,7 @@ describe('useVaManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Create mock client instance
     mockClient = {
       isInitialized: jest.fn(() => false),
@@ -59,6 +59,8 @@ describe('useVaManager', () => {
     expect(result.current.historyManagement).toBe(false);
     expect(result.current.streamMessages).toBe(false);
     expect(result.current.welcome).toBeDefined();
-    expect(result.current.welcome?.content).toBe('Welcome to the Virtual Assistant! I can help you navigate the Hybrid Cloud Console, update your personal information, request access from your admin, show critical vulnerabilities, get Advisor recommendations, and more.');
+    expect(result.current.welcome?.content).toBe(
+      'Welcome to the Virtual Assistant! I can help you navigate the Hybrid Cloud Console, update your personal information, request access from your admin, show critical vulnerabilities, get Advisor recommendations, and more.'
+    );
   });
 });

@@ -73,7 +73,7 @@ jest.mock('../../../aiClients/useVaManager', () => ({
         isInitializing: jest.fn(() => false),
         getWelcomeConfig: jest.fn(() => ({
           content: 'Welcome to Virtual Assistant',
-          buttons: []
+          buttons: [],
         })),
       })),
       subscribe: jest.fn(() => () => {}),
