@@ -70,7 +70,7 @@ function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedCli
     modelName: 'RHEL Lightspeed',
     selectionTitle: 'RHEL Lightspeed',
     selectionDescription:
-      'Gen answers to RHEL-related questions, support with troubleshooting, help understanding log files, ask for recommendations, and more.',
+      'Get answers to RHEL-related questions, support with troubleshooting, help understanding log files, ask for recommendations, and more.',
     stateManager,
     docsUrl:
       'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/introducing-rhel-lightspeed-for-rhel-systems',
