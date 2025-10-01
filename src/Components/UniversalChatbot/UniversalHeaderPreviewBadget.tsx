@@ -18,12 +18,10 @@ const UniversalHeaderPreviewBadge: React.FC = () => {
       position="left"
       withFocusTrap={false}
       bodyContent={
-        <>
-          <p>
-            This tool is a preview, and while we strive for accuracy, there&apos;s always a possibility of errors. We recommend that you review AI
-            generated content prior to use.
-          </p>
-        </>
+        <p>
+          This tool is a preview, and while we strive for accuracy, there&apos;s always a possibility of errors. We recommend that you review AI
+          generated content prior to use.
+        </p>
       }
     >
       <Button variant="plain" aria-label="More info" ref={popoverRef} className="pf-v6-u-p-0">

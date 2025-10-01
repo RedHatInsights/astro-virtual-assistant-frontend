@@ -58,7 +58,19 @@ jest.mock('@redhat-cloud-services/ai-client-state', () => ({
     isInitialized: jest.fn(() => false),
     isInitializing: jest.fn(() => false),
     init: jest.fn(),
+    subscribe: jest.fn(() => jest.fn()), // Returns unsubscribe function
+    getClient: jest.fn(() => ({
+      isInitialized: jest.fn(() => false),
+      isInitializing: jest.fn(() => false),
+      getWelcomeConfig: jest.fn(() => ({
+        content: 'Test welcome content',
+      })),
+    })),
   })),
+  Events: {
+    INITIALIZING_MESSAGES: 'INITIALIZING_MESSAGES',
+    ACTIVE_CONVERSATION: 'ACTIVE_CONVERSATION',
+  },
 }));
 
 // Mock ARH client
@@ -105,32 +117,34 @@ jest.mock('../useRhelLightSpeedManager', () => ({
   })),
 }));
 
-jest.mock('../useVaManager', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    model: 'VA',
-    stateManager: {
-      isInitialized: jest.fn(() => false),
-      isInitializing: jest.fn(() => false),
-      init: jest.fn(),
-      getClient: jest.fn(() => ({
-        isInitialized: jest.fn(() => false),
-        isInitializing: jest.fn(() => false),
-        getWelcomeContent: jest.fn(() => ''),
-      })),
-    },
-    historyManagement: false,
-    streamMessages: false,
-    welcome: {
-      content: '',
-    },
-  })),
-  useVaAuthenticated: jest.fn(() => ({
-    loading: false,
-    isAuthenticated: false,
-    model: 'VA',
-  })),
-}));
+// jest.mock('../useVaManager', () => ({
+//   __esModule: true,
+//   default: jest.fn(() => ({
+//     model: 'VA',
+//     stateManager: {
+//       isInitialized: jest.fn(() => false),
+//       isInitializing: jest.fn(() => false),
+//       init: jest.fn(),
+//       getClient: jest.fn(() => ({
+//         isInitialized: jest.fn(() => false),
+//         isInitializing: jest.fn(() => false),
+//         getWelcomeContent: jest.fn(() => ''),
+//       })),
+//     },
+//     historyManagement: false,
+//     streamMessages: false,
+//     welcome: {
+//       content: '',
+//     },
+//   })),
+//   useVaAuthenticated: jest.fn(() => ({
+//     loading: false,
+//     isAuthenticated: false,
+//     model: 'VA',
+//   })),
+// }));
+
+// mock the stateManager's getClient method to return a mock client
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const checkARHAuth = require('../../Components/ARHClient/checkARHAuth').default;

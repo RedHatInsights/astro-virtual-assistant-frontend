@@ -60,37 +60,6 @@ jest.mock('../../../Components/UniversalChatbot/UniversalBadge', () => ({
   default: () => <div data-testid="arh-badge">ARH Badge</div>,
 }));
 
-jest.mock('../../../aiClients/useVaManager', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    model: 'Virtual Assistant',
-    stateManager: {
-      isInitialized: jest.fn(() => false),
-      isInitializing: jest.fn(() => false),
-      init: jest.fn(),
-      getClient: jest.fn(() => ({
-        isInitialized: jest.fn(() => false),
-        isInitializing: jest.fn(() => false),
-        getWelcomeConfig: jest.fn(() => ({
-          content: 'Welcome to Virtual Assistant',
-          buttons: [],
-        })),
-      })),
-      subscribe: jest.fn(() => () => {}),
-    },
-    initializing: false,
-    isOpen: false,
-    setOpen: jest.fn(),
-    historyManagement: true,
-    streamMessages: true,
-  })),
-  useVaAuthenticated: jest.fn(() => ({
-    loading: false,
-    isAuthenticated: true,
-    model: 'Virtual Assistant',
-  })),
-}));
-
 // Create a minimal Redux store for testing
 const mockStore = createStore(() => ({}));
 
@@ -118,6 +87,26 @@ const mockUser: ChromeUser = {
     },
   },
 };
+
+jest.mock('@redhat-cloud-services/ai-client-state', () => ({
+  createClientStateManager: jest.fn(() => ({
+    isInitialized: jest.fn(() => false),
+    isInitializing: jest.fn(() => false),
+    init: jest.fn(),
+    subscribe: jest.fn(() => jest.fn()), // Returns unsubscribe function
+    getClient: jest.fn(() => ({
+      isInitialized: jest.fn(() => false),
+      isInitializing: jest.fn(() => false),
+      getWelcomeConfig: jest.fn(() => ({
+        content: 'Test welcome content',
+      })),
+    })),
+  })),
+  Events: {
+    INITIALIZING_MESSAGES: 'INITIALIZING_MESSAGES',
+    ACTIVE_CONVERSATION: 'ACTIVE_CONVERSATION',
+  },
+}));
 
 describe('AstroVirtualAssistant ARH Show Condition', () => {
   beforeEach(() => {
