@@ -74,7 +74,7 @@ const emptyEnabledMap: { [key in Models]: ClientAuthStatus } = {
 
 function useInitialModel(asyncManagers: AsyncManagers) {
   // Use ARH used as a generic "show chatbot" flag
-  const useChatBots = useFlag('platform.arh.enabled');
+  const useChatBots = useFlag('platform.va.chameleon.enabled');
   const arhEnabled = useArhAuthenticated();
   const rhelLightspeedEnabled = useRhelLightSpeedAuthenticated();
   const vaEnabled = useVaAuthenticated();
