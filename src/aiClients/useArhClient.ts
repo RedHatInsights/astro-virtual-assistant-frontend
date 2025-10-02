@@ -8,6 +8,7 @@ import checkARHAuth from '../Components/ARHClient/checkARHAuth';
 import ARHMessageEntry from '../Components/ARHClient/ARHMessageEntry';
 import ARHFooter from '../Components/ARHClient/ARHFooter';
 import { DEFAULT_WELCOME_CONTENT } from '../Components/UniversalChatbot/types';
+import { useFlag } from '@unleash/proxy-client-react';
 
 function useArhBaseUrl() {
   const chrome = useChrome();
@@ -24,6 +25,7 @@ function useArhBaseUrl() {
 }
 
 export function useArhAuthenticated(): ClientAuthStatus {
+  const flagEnabled = useFlag('platform.arh.enabled');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -56,6 +58,15 @@ export function useArhAuthenticated(): ClientAuthStatus {
   useEffect(() => {
     handleArhSetup();
   }, [chrome.auth.token]);
+
+  if (!flagEnabled) {
+    return {
+      loading: false,
+      isAuthenticated: false,
+      error: undefined,
+      model: Models.ASK_RED_HAT,
+    };
+  }
 
   return {
     loading,

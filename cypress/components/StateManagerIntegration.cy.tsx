@@ -27,13 +27,20 @@ describe('State Manager Integration Tests', () => {
       body: {
         toggles: [
           {
-            name: 'platform.arh.enabled',
+            name: 'platform.va.chameleon.enabled',
             enabled: true,
             variant: {
               name: 'disabled',
               enabled: false
             }
           }, {
+            name: 'platform.arh.enabled',
+            enabled: true,
+            variant: {
+              name: 'disabled',
+              enabled: false
+            }
+          },{
             name: 'platform.chatbot.rhel-lightspeed.enabled',
             enabled: true,
             variant: {

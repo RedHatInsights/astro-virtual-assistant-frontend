@@ -39,6 +39,13 @@ jest.mock('@redhat-cloud-services/arh-client', () => ({
   IFDClient: jest.fn().mockImplementation(() => ({})),
 }));
 
+// mock the useFlag hook
+jest.mock('@unleash/proxy-client-react', () => ({
+  __esModule: true,
+  useFlag: jest.fn((flag) => true), // Default to true for all flags
+  useFlags: jest.fn(() => []),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const checkARHAuth = require('../../Components/ARHClient/checkARHAuth').default;
 

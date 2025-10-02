@@ -65,7 +65,7 @@ describe('VAMessageEntry Component - Message Types', () => {
       body: {
         toggles: [
           {
-            name: 'platform.arh.enabled',
+            name: 'platform.va.chameleon.enabled',
             enabled: true,
             variant: {
               name: 'disabled',
