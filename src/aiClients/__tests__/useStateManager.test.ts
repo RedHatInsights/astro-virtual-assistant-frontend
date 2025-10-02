@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import useStateManager from '../useStateManager';
 import { ChromeUser } from '@redhat-cloud-services/types';
+import * as ScalprumCore from '@scalprum/core';
 
 // Mock the useFlag hook for feature flags
 const mockUseFlag = jest.fn();
@@ -254,5 +255,34 @@ describe('useStateManager', () => {
 
     // Model should be set when useChatBots is true and authentication succeeds
     expect(result.current.model).toBe('Ask Red Hat');
+  });
+
+  it('handles failed getModule by logging an error and not blocking initialization', async () => {
+    const getModuleSpy = jest.spyOn(ScalprumCore, 'getModule').mockRejectedValue(new Error('Mock getModule failure'));
+
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((..._args: unknown[]) => undefined);
+
+    // Enable chatbot so the hook proceeds to compute a model
+    mockUseFlag.mockReturnValue(true);
+
+    const { result } = renderHook(() => useStateManager());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    // Ensure we specifically logged the failed module message
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to load module',
+      expect.objectContaining({ scope: 'assistedInstallerApp', module: './AsyncChatbot' }),
+      expect.anything()
+    );
+
+    // Even though getModule failed, the hook should still select the ARH model
+    expect(result.current.model).toBe('Ask Red Hat');
+
+    consoleErrorSpy.mockRestore();
+    getModuleSpy.mockRestore();
   });
 });
