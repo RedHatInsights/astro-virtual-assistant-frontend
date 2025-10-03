@@ -1,9 +1,8 @@
 import React from 'react';
-import { ChatbotDisplayMode } from '@patternfly/chatbot';
 import { ScalprumProvider } from '@scalprum/react-core';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 
-import UniversalChatbotProvider, { UniversalChatbotContext } from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
+import UniversalChatbotProvider from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
 import { Models } from '../../src/aiClients/types';
 import UniversalChatbot from '../../src/Components/UniversalChatbot/UniversalChatbot';
 import useArhClient from '../../src/aiClients/useArhClient';
@@ -57,7 +56,7 @@ describe('Chatbot Initialization Tests', () => {
   describe('ARH State Manager Initialization', () => {
     it('should create ARH state manager with proper configuration', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient({ baseUrl: 'https://access.stage.redhat.com' });
+        const arhManager = useArhClient();
         
         return (
           <div data-testid="arh-manager">
@@ -86,7 +85,7 @@ describe('Chatbot Initialization Tests', () => {
 
     it('should initialize ARH state manager methods', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient({ baseUrl: 'https://access.stage.redhat.com' });
+        const arhManager = useArhClient();
         
         // Test that state manager has required methods
         const hasInit = typeof arhManager.stateManager.init === 'function';
@@ -185,42 +184,17 @@ describe('Chatbot Initialization Tests', () => {
   describe('Real Chatbot Components with State Managers', () => {
     it('should render ARH chatbot with real state manager', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient({ baseUrl: 'https://access.stage.redhat.com' });
+        const arhManager = useArhClient();
         
         const mockChatbotProps = {
-          user: {
-            identity: {
-              user: {
-                username: 'testuser',
-                email: 'test@test.com',
-                first_name: 'Test',
-                last_name: 'User',
-                is_internal: false,
-                is_active: true,
-                is_org_admin: true,
-                locale: 'en-US'
-              },
-              account_number: '123456',
-              internal: {
-                account_id: '123456'
-              },
-              org_id: 'test-org',
-              type: 'User'
-            },
-            entitlements: {}
-          },
-          displayMode: ChatbotDisplayMode.default,
-          setDisplayMode: () => {},
-          model: Models.ASK_RED_HAT,
+          currentModel: Models.ASK_RED_HAT,
           setCurrentModel: () => {},
-          historyManagement: arhManager.historyManagement,
-          streamMessages: arhManager.streamMessages,
           rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
           setConversationsDrawerOpened: () => {},
           setShowNewConversationWarning: () => {},
           showNewConversationWarning: false,
           setOpen: () => {},
-          availableManagers: [arhManager],
+          managers: [arhManager],
         };
 
         return (
@@ -249,39 +223,14 @@ describe('Chatbot Initialization Tests', () => {
         const rhelManager = useRhelLightSpeedManager();
         
         const mockChatbotProps = {
-          user: {
-            identity: {
-              user: {
-                username: 'testuser',
-                email: 'test@test.com',
-                first_name: 'Test',
-                last_name: 'User',
-                is_internal: false,
-                is_active: true,
-                is_org_admin: true,
-                locale: 'en-US'
-              },
-              account_number: '123456',
-              internal: {
-                account_id: '123456'
-              },
-              org_id: 'test-org',
-              type: 'User'
-            },
-            entitlements: {}
-          },
-          displayMode: ChatbotDisplayMode.default,
-          setDisplayMode: () => {},
-          model: Models.RHEL_LIGHTSPEED,
+          currentModel: Models.RHEL_LIGHTSPEED,
           setCurrentModel: () => {},
-          historyManagement: rhelManager.historyManagement,
-          streamMessages: rhelManager.streamMessages,
           rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
           setConversationsDrawerOpened: () => {},
           setShowNewConversationWarning: () => {},
           showNewConversationWarning: false,
           setOpen: () => {},
-          availableManagers: [rhelManager],
+          managers: [rhelManager],
         };
 
         return (
@@ -307,48 +256,23 @@ describe('Chatbot Initialization Tests', () => {
 
     it('should handle both managers in a multi-model setup', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient({ baseUrl: 'https://access.stage.redhat.com' });
+        const arhManager = useArhClient();
         const rhelManager = useRhelLightSpeedManager();
         
         const mockChatbotProps = {
-          user: {
-            identity: {
-              user: {
-                username: 'testuser',
-                email: 'test@test.com',
-                first_name: 'Test',
-                last_name: 'User',
-                is_internal: false,
-                is_active: true,
-                is_org_admin: true,
-                locale: 'en-US'
-              },
-              account_number: '123456',
-              internal: {
-                account_id: '123456'
-              },
-              org_id: 'test-org',
-              type: 'User'
-            },
-            entitlements: {}
-          },
-          displayMode: ChatbotDisplayMode.default,
-          setDisplayMode: () => {},
-          model: Models.ASK_RED_HAT,
+          currentModel: Models.ASK_RED_HAT,
           setCurrentModel: () => {},
-          historyManagement: arhManager.historyManagement,
-          streamMessages: arhManager.streamMessages,
           rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
           setConversationsDrawerOpened: () => {},
           setShowNewConversationWarning: () => {},
           showNewConversationWarning: false,
           setOpen: () => {},
-          availableManagers: [arhManager, rhelManager],
+          managers: [arhManager, rhelManager],
         };
 
         return (
           <div>
-            <div data-testid="managers-count">{mockChatbotProps.availableManagers.length}</div>
+            <div data-testid="managers-count">{mockChatbotProps.managers.length}</div>
             <div data-testid="arh-model">{arhManager.model}</div>
             <div data-testid="rhel-model">{rhelManager.model}</div>
             <AIStateProvider stateManager={arhManager.stateManager}>
@@ -380,7 +304,7 @@ describe('Chatbot Initialization Tests', () => {
   describe('State Manager Initialization Behavior', () => {
     it('should verify state manager initialization status', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient({ baseUrl: 'https://access.stage.redhat.com' });
+        const arhManager = useArhClient();
         const rhelManager = useRhelLightSpeedManager();
         
         const arhInitialized = arhManager.stateManager.isInitialized();

@@ -1,17 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
-import { ChromeUser } from '@redhat-cloud-services/types';
 import useArhClient, { useArhAuthenticated } from './useArhClient';
 import useRhelLightSpeedManager, { useRhelLightSpeedAuthenticated } from './useRhelLightSpeedManager';
-import { IToggle, useFlag, useFlags } from '@unleash/proxy-client-react';
-import { ChatbotDisplayMode } from '@patternfly/chatbot';
-import { ChatbotProps } from '../Components/UniversalChatbot/UniversalChatbotProvider';
+import { IToggle, useFlags } from '@unleash/proxy-client-react';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import useVaManager, { useVaAuthenticated } from './useVaManager';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 
 import { getModule } from '@scalprum/core';
 import { AsyncStateManager } from '../asyncClientInit/types';
+import { matchPath, useLocation } from 'react-router-dom';
 
 // unleash does not expose the function to check if a flag is enabled outside of a React component
 // so we need to implement a simple version here
@@ -23,16 +21,16 @@ function flagEnabled(flag: string | undefined, flags: IToggle[]): boolean {
   return toggle ? toggle.enabled : false;
 }
 
-function useAsyncManagers() {
+type ModelManager = {
+  manager: StateManagerConfiguration<IAIClient>;
+  auth: ClientAuthStatus;
+};
+
+function useAsyncManagers(): [ModelManager[], boolean] {
   const chrome = useChrome();
   const flags = useFlags();
-  const [managers, setManagers] = useState<{
-    loading: boolean;
-    managers: {
-      manager: StateManagerConfiguration<IAIClient<Record<string, unknown>>>;
-      auth: ClientAuthStatus;
-    }[];
-  }>({ managers: [], loading: true });
+  const [managers, setManagers] = useState<ModelManager[]>([]);
+  const [loading, setIsLoading] = useState(true);
   const meta: { scope: string; module: string; flag?: string }[] = [
     { scope: 'assistedInstallerApp', module: './AsyncChatbot', flag: 'platform.chatbot.openshift-assisted-installer.enabled' },
   ];
@@ -46,7 +44,7 @@ function useAsyncManagers() {
       }
       acc.push(curr.value);
       return acc;
-    }, [] as AsyncStateManager<IAIClient<Record<string, unknown>>>[]);
+    }, [] as AsyncStateManager<IAIClient>[]);
 
     const managers = await Promise.all(
       modules.map((asyncManager, index) => {
@@ -63,167 +61,94 @@ function useAsyncManagers() {
         });
       })
     );
-    setManagers({ managers: managers.filter((m) => m !== null), loading: false });
+    setManagers(managers.filter((m) => m !== null));
+    setIsLoading(false);
   }
   useEffect(() => {
     handleInitManagers();
   }, [flags]);
 
-  return managers;
+  return [managers, loading];
 }
 
-type AsyncManagers = ReturnType<typeof useAsyncManagers>;
-
-const emptyEnabledMap: { [key in Models]: ClientAuthStatus } = {
-  [Models.ASK_RED_HAT]: { model: Models.ASK_RED_HAT, loading: false, isAuthenticated: false },
-  [Models.RHEL_LIGHTSPEED]: { model: Models.RHEL_LIGHTSPEED, loading: false, isAuthenticated: false },
-  [Models.VA]: { model: Models.VA, loading: false, isAuthenticated: false },
-  [Models.OAI]: { model: Models.OAI, loading: false, isAuthenticated: false },
-};
-
-function useInitialModel(asyncManagers: AsyncManagers) {
-  // Use ARH used as a generic "show chatbot" flag
-  const useChatBots = useFlag('platform.va.chameleon.enabled');
+function useStaticManagers(): ModelManager[] {
+  const arhManager = useArhClient();
   const arhEnabled = useArhAuthenticated();
+  const rhelLightspeedManager = useRhelLightSpeedManager();
   const rhelLightspeedEnabled = useRhelLightSpeedAuthenticated();
+  const vaManager = useVaManager();
   const vaEnabled = useVaAuthenticated();
-  const chrome = useChrome();
-  const [auth, setAuth] = useState<{ user: ChromeUser | undefined }>({ user: undefined });
 
-  const enabledList = useMemo(
-    () => [arhEnabled, rhelLightspeedEnabled, vaEnabled, ...asyncManagers.managers.map(({ auth }) => auth)],
-    [asyncManagers, arhEnabled, rhelLightspeedEnabled, vaEnabled]
+  return useMemo(
+    () => [
+      {
+        manager: arhManager,
+        auth: arhEnabled,
+      },
+      {
+        manager: rhelLightspeedManager,
+        auth: rhelLightspeedEnabled,
+      },
+      {
+        manager: vaManager,
+        auth: vaEnabled,
+      },
+    ],
+    [arhManager, arhEnabled, rhelLightspeedManager, rhelLightspeedEnabled, vaManager, vaEnabled]
   );
-  // for convenient access
-  const enabledMap = useMemo<Partial<{ [key in Models]: ClientAuthStatus }>>(() => {
-    const enabledMap: { [key in Models]?: ClientAuthStatus } = {
-      [arhEnabled.model]: arhEnabled,
-      [rhelLightspeedEnabled.model]: rhelLightspeedEnabled,
-      [vaEnabled.model]: vaEnabled,
-    };
-    asyncManagers.managers.forEach(({ manager, auth }) => {
-      enabledMap[manager.model] = auth;
-    });
-    return enabledMap;
-  }, [asyncManagers, arhEnabled, rhelLightspeedEnabled, vaEnabled]);
+}
 
-  const initializing = enabledList.some((e) => e.loading);
-  const model = useMemo<Models | undefined>(() => {
-    if (initializing) {
+function useManagers() {
+  const [asyncManagers, loading] = useAsyncManagers();
+  const staticManagers = useStaticManagers();
+
+  return useMemo(() => {
+    const allManagers = [...staticManagers, ...asyncManagers];
+    if (loading || allManagers.some((m) => m.auth.loading)) {
       return undefined;
     }
 
-    // models are ordered in priority order, pick the first one that is authenticated
-    return enabledList.find((e) => e.isAuthenticated)?.model;
-  }, [initializing, enabledList]);
-
-  useEffect(() => {
-    async function getUser() {
-      try {
-        const user = await chrome.auth.getUser();
-        if (user) {
-          setAuth({ user });
-        }
-      } catch {
-        setAuth({ user: undefined });
-      }
-    }
-    getUser();
-  }, [chrome.auth.token]);
-  if (!useChatBots) {
-    return {
-      initialModel: undefined,
-      auth,
-      initializing: false,
-      enabledMap: emptyEnabledMap,
-    };
-  }
-
-  if (arhEnabled.loading || rhelLightspeedEnabled.loading || !auth) {
-    return {
-      initialModel: undefined,
-      auth,
-      initializing: true,
-      enabledMap: emptyEnabledMap,
-    };
-  }
-
-  return { initialModel: model, auth, initializing, enabledMap };
+    return allManagers.filter((m) => m.auth.isAuthenticated).map((m) => m.manager);
+  }, [loading, asyncManagers, staticManagers]);
 }
 
-function useStateManager() {
-  const asyncManagers = useAsyncManagers();
-  const [isOpen, setOpen] = useState<boolean>(false);
-  const { initialModel, auth, initializing, enabledMap } = useInitialModel(asyncManagers);
-  const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
-  const arhManager = useArhClient();
-  const rhelLightspeedManager = useRhelLightSpeedManager();
-  const vaManager = useVaManager();
-  const stateManagers = useMemo(() => {
-    const managers = [arhManager, rhelLightspeedManager, vaManager, ...asyncManagers.managers.map(({ manager }) => manager)].filter(
-      (m) => enabledMap[m.model]?.isAuthenticated
-    );
-    return managers;
-  }, [initializing, asyncManagers, enabledMap]);
-  const [currentModel, setCurrentModel] = useState<Models | undefined>(initialModel);
-  const isCompact = true;
+function useStateManager(isOpen: boolean) {
+  const wasOpenRef = useRef(isOpen);
+  const managers = useManagers();
+  const [currentModel, setCurrentModel] = useState<Models>();
+
+  const location = useLocation();
 
   useEffect(() => {
-    if (!initialModel) {
-      setCurrentModel(undefined);
+    if (!managers || (currentModel && wasOpenRef.current)) {
       return;
     }
-    const manager = stateManagers.find((m) => m.model === initialModel);
-    if (manager) {
-      setCurrentModel(initialModel);
+    if (!wasOpenRef.current && isOpen) {
+      wasOpenRef.current = true;
     }
-  }, [initialModel, initializing]);
 
-  const currentManager = useMemo(() => {
-    if (!currentModel) {
-      return undefined;
-    }
-    const manager = stateManagers.find((m) => m.model === currentModel);
+    const matchingManager = managers.find((manager) => manager.routes?.some((r) => matchPath({ path: r, end: true }, location.pathname)));
+    const model = (matchingManager || managers[0]).model;
+    setCurrentModel(model);
+  }, [isOpen, currentModel, managers, location.pathname]);
 
-    if (isOpen && manager && !manager.stateManager.isInitialized() && !manager.stateManager.isInitializing()) {
+  const currentManager = currentModel && managers ? managers.find((m) => m.model === currentModel) : undefined;
+
+  useEffect(() => {
+    if (isOpen && currentManager && !currentManager.stateManager.isInitialized() && !currentManager.stateManager.isInitializing()) {
       // Only initialize when chatbot is opened and manager is selected
       try {
-        manager.stateManager.init();
+        currentManager.stateManager.init();
       } catch (e) {
         console.error('Failed to initialize state manager:', e);
       }
     }
-    return manager;
-  }, [isOpen, currentModel, stateManagers]);
-
-  const chatbotProps: ChatbotProps = {
-    user: auth.user,
-    displayMode,
-    setDisplayMode,
-    setCurrentModel,
-    model: currentModel,
-    historyManagement: !!currentManager?.historyManagement,
-    streamMessages: !!currentManager?.streamMessages,
-    rootElementRef: { current: null },
-    setConversationsDrawerOpened: () => undefined,
-    setShowNewConversationWarning: () => undefined,
-    showNewConversationWarning: false,
-    setOpen,
-    availableManagers: stateManagers,
-    isCompact,
-    handleNewChat: currentManager?.handleNewChat,
-    FooterComponent: currentManager?.FooterComponent,
-    MessageEntryComponent: currentManager?.MessageEntryComponent,
-    welcome: currentManager?.welcome,
-  };
+  }, [currentManager]);
 
   return {
-    chatbotProps,
-    isOpen,
-    setOpen,
-    stateManager: currentManager,
-    initializing,
-    model: currentModel,
+    managers,
+    currentModel,
+    setCurrentModel,
   };
 }
 

@@ -8,11 +8,11 @@ import './UniversalAssistantSelection.scss';
 import { HelpIcon, InfoCircleIcon } from '@patternfly/react-icons';
 
 function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject<HTMLDivElement> }) {
-  const { model, setCurrentModel, availableManagers } = useContext(UniversalChatbotContext);
+  const { currentModel, setCurrentModel, managers } = useContext(UniversalChatbotContext);
   const [isOpen, setIsOpen] = useState(false);
 
-  const modelName = availableManagers.find((m) => m.model === model)?.selectionTitle || model;
-  if (availableManagers.length <= 1) {
+  const modelName = managers?.find((m) => m.model === currentModel)?.selectionTitle || currentModel;
+  if (managers && managers.length <= 1) {
     // no need for switcher if there is only one option
     return null;
   }
@@ -43,7 +43,7 @@ function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject
             onOpenChange={(isOpen) => setIsOpen(isOpen)}
             onOpenChangeKeys={['Escape']}
             id="ai-model-select"
-            selected={model}
+            selected={currentModel}
             onSelect={(_e, value) => {
               if (isModels(value)) {
                 setCurrentModel(value);
@@ -52,12 +52,12 @@ function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject
             }}
           >
             <SelectList aria-label="AI Model selection">
-              {availableManagers.map((manager) => (
+              {managers?.map((manager) => (
                 <SelectOption
                   description={manager.selectionDescription}
                   value={manager.model}
                   key={manager.model}
-                  isSelected={model === manager.model}
+                  isSelected={currentModel === manager.model}
                   actions={[
                     <MenuItemAction
                       aria-label={`Documentation for ${manager.model}`}
