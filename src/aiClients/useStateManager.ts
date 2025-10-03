@@ -28,17 +28,26 @@ function useAsyncManagers() {
   const flags = useFlags();
   const [managers, setManagers] = useState<{
     loading: boolean;
-    error: Error | null;
     managers: {
       manager: StateManagerConfiguration<IAIClient<Record<string, unknown>>>;
       auth: ClientAuthStatus;
     }[];
-  }>({ managers: [], loading: true, error: null });
+  }>({ managers: [], loading: true });
   const meta: { scope: string; module: string; flag?: string }[] = [
     { scope: 'assistedInstallerApp', module: './AsyncChatbot', flag: 'platform.chatbot.openshift-assisted-installer.enabled' },
   ];
   async function handleInitManagers() {
-    const modules = await Promise.all(meta.map((m) => getModule<AsyncStateManager<IAIClient>>(m.scope, m.module)));
+    const moduleResults = await Promise.allSettled(meta.map((m) => getModule<AsyncStateManager<IAIClient>>(m.scope, m.module)));
+    const modules = moduleResults.reduce((acc, curr, idx) => {
+      if (curr.status === 'rejected') {
+        // Do not block the whole chatbot, log the error and continue
+        console.error('Failed to load module', meta[idx], curr.reason);
+        return acc;
+      }
+      acc.push(curr.value);
+      return acc;
+    }, [] as AsyncStateManager<IAIClient<Record<string, unknown>>>[]);
+
     const managers = await Promise.all(
       modules.map((asyncManager, index) => {
         const manager = asyncManager.getStateManager(chrome);
@@ -54,7 +63,7 @@ function useAsyncManagers() {
         });
       })
     );
-    setManagers({ managers: managers.filter((m) => m !== null), loading: false, error: null });
+    setManagers({ managers: managers.filter((m) => m !== null), loading: false });
   }
   useEffect(() => {
     handleInitManagers();
