@@ -33,19 +33,19 @@ function UniversalHeader({
   historyManagement: boolean;
   isCompact?: boolean;
 }) {
-  const { setConversationsDrawerOpened, availableManagers, model } = useContext(UniversalChatbotContext);
-  const currentManager = availableManagers.find((m) => m.model === model);
+  const { setConversationsDrawerOpened, managers, currentModel } = useContext(UniversalChatbotContext);
+  const currentManager = managers?.find((m) => m.model === currentModel);
   const modelName = currentManager?.modelName ?? '';
   return (
     <ChatbotHeader className={isCompact ? 'arh__header pf-v6-u-p-sm' : 'arh__header'}>
       <ChatbotHeaderMain>
-        {historyManagement ? (
+        {historyManagement && (
           <ChatbotHeaderMenu
             isCompact={isCompact}
             aria-expanded={conversationsDrawerOpened}
             onMenuToggle={() => setConversationsDrawerOpened((prev) => !prev)}
           />
-        ) : null}
+        )}
 
         <ChatbotHeaderTitle>
           <div className="pf-v6-u-mr-md">

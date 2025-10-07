@@ -1,6 +1,7 @@
-import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useConversations, useInitLimitation, useSetActiveConversation } from '@redhat-cloud-services/ai-react-state';
 import { Chatbot, ChatbotConversationHistoryNav, ChatbotDisplayMode } from '@patternfly/chatbot';
+import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
 import UniversalChatbotProvider, { ChatbotProps } from './UniversalChatbotProvider';
 import emptyAvatar from '../../assets/img_avatar.svg';
@@ -8,27 +9,12 @@ import useScrollToBottom from './useScrollToBottom';
 import UniversalHeader from './UniversalHeader';
 import UniversalFooter from './UniversalFooter';
 import UniversalMessages from './UniversalMessages';
-
-import '@patternfly/chatbot/dist/css/main.css';
 import UniversalAssistantSelection from './UniversalAssistantSelection';
 
-function UniversalChatbot({
-  user,
-  setOpen,
-  historyManagement,
-  streamMessages,
-  displayMode,
-  isCompact,
-  setDisplayMode,
-  MessageEntryComponent,
-  FooterComponent = UniversalFooter,
-  children,
-  model,
-  setCurrentModel,
-  availableManagers,
-  handleNewChat,
-  welcome,
-}: PropsWithChildren<ChatbotProps>) {
+import '@patternfly/chatbot/dist/css/main.css';
+
+function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: ChatbotProps) {
+  const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
   const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState(emptyAvatar);
@@ -40,7 +26,15 @@ function UniversalChatbot({
   const initLimitations = useInitLimitation();
   const [conversationsDrawerOpened, setConversationsDrawerOpened] = useState(false);
   const [showNewConversationWarning, setShowNewConversationWarning] = useState(false);
-  function handleUserSetup() {
+  const chrome = useChrome();
+
+  async function handleUserSetup() {
+    let user;
+    try {
+      user = await chrome.auth.getUser();
+    } catch (e) {
+      console.error('Failed to get user', e);
+    }
     if (user) {
       const url = `https://access.redhat.com/api/users/avatar/${user.identity.user?.username ?? ''}/`;
       // check if the image loads before setting state
@@ -56,26 +50,29 @@ function UniversalChatbot({
   }
   useEffect(() => {
     handleUserSetup();
-  }, [user]);
+  }, [chrome.auth.token]);
+
+  const manager = managers?.find((m) => m.model === currentModel);
 
   useEffect(() => {
-    const manager = availableManagers.find((m) => m.model === model);
     if (manager) {
       // notify any subscribed components that the manager has changed and they should re-render
       manager.stateManager.notifyAll();
     }
-  }, [model]);
+  }, [manager]);
+
+  const FooterComponent = manager?.FooterComponent ?? UniversalFooter;
 
   const drawerContent = (
     <>
       <UniversalHeader
-        historyManagement={historyManagement}
+        historyManagement={!!manager?.historyManagement}
         conversationsDrawerOpened={conversationsDrawerOpened}
         scrollToBottomRef={scrollToBottomRef}
         setOpen={setOpen}
         setDisplayMode={setDisplayMode}
         displayMode={displayMode}
-        isCompact={isCompact}
+        isCompact
       />
       <UniversalAssistantSelection containerRef={rootElementRef} />
       <UniversalMessages
@@ -84,28 +81,27 @@ function UniversalChatbot({
         username={username}
         scrollToBottomRef={scrollToBottomRef}
         setIsBannerOpen={setIsBannerOpen}
-        MessageEntryComponent={MessageEntryComponent}
-        isCompact={isCompact}
-        welcome={welcome}
+        MessageEntryComponent={manager?.MessageEntryComponent}
+        isCompact
+        welcome={manager?.welcome}
       />
-      <FooterComponent streamMessages={streamMessages} isCompact={isCompact} />
+      <FooterComponent streamMessages={!!manager?.streamMessages} isCompact />
     </>
   );
 
-  if (!historyManagement) {
+  if (!manager?.historyManagement) {
     return (
       <UniversalChatbotProvider
-        model={model}
+        currentModel={currentModel}
         setCurrentModel={setCurrentModel}
         setConversationsDrawerOpened={setConversationsDrawerOpened}
         rootElementRef={rootElementRef}
         setShowNewConversationWarning={setShowNewConversationWarning}
         showNewConversationWarning={showNewConversationWarning}
-        availableManagers={availableManagers}
+        managers={managers}
       >
         <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot">
           <Chatbot displayMode={displayMode}>{drawerContent}</Chatbot>
-          {children}
         </div>
       </UniversalChatbotProvider>
     );
@@ -113,16 +109,16 @@ function UniversalChatbot({
 
   return (
     <UniversalChatbotProvider
-      model={model}
+      currentModel={currentModel}
       setCurrentModel={setCurrentModel}
       setConversationsDrawerOpened={setConversationsDrawerOpened}
       rootElementRef={rootElementRef}
       setShowNewConversationWarning={setShowNewConversationWarning}
       showNewConversationWarning={showNewConversationWarning}
-      availableManagers={availableManagers}
+      managers={managers}
     >
       <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot">
-        <Chatbot displayMode={displayMode} isCompact={isCompact}>
+        <Chatbot displayMode={displayMode} isCompact>
           <ChatbotConversationHistoryNav
             displayMode={displayMode}
             isDrawerOpen={conversationsDrawerOpened}
@@ -141,9 +137,7 @@ function UniversalChatbot({
                 : () => {
                     // TODO: figure out nice way to handle custom conversation creation flow
                     setShowNewConversationWarning(true);
-                    if (handleNewChat) {
-                      handleNewChat(setConversationsDrawerOpened);
-                    }
+                    manager?.handleNewChat?.(setConversationsDrawerOpened);
                   }
             }
             conversations={conversations.map((conversation) => ({
@@ -151,10 +145,9 @@ function UniversalChatbot({
               text: conversation.title,
             }))}
             drawerContent={drawerContent}
-            isCompact={isCompact}
+            isCompact
           />
         </Chatbot>
-        {children}
       </div>
     </UniversalChatbotProvider>
   );

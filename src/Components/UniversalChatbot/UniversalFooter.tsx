@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { ChatbotFooter, ChatbotFootnote, MessageBar } from '@patternfly/chatbot';
 import { useActiveConversation, useInProgress, useInitLimitation, useSendMessage } from '@redhat-cloud-services/ai-react-state';
+import { FooterComponentProps } from '../../aiClients/types';
 
-const UniversalFooter = ({ streamMessages, isCompact }: { streamMessages: boolean; isCompact?: boolean }) => {
+const UniversalFooter = ({ streamMessages, isCompact }: FooterComponentProps) => {
   const sendMessage = useSendMessage();
   const inProgress = useInProgress();
   const activeConversation = useActiveConversation();

@@ -2,6 +2,13 @@ import { act, renderHook } from '@testing-library/react';
 import useStateManager from '../useStateManager';
 import { ChromeUser } from '@redhat-cloud-services/types';
 import * as ScalprumCore from '@scalprum/core';
+import { useLocation } from 'react-router-dom';
+import { useRhelLightSpeedAuthenticated } from '../useRhelLightSpeedManager';
+
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useLocation: jest.fn(),
+}));
 
 // Mock the useFlag hook for feature flags
 const mockUseFlag = jest.fn();
@@ -91,6 +98,7 @@ jest.mock('../useArhClient', () => ({
     },
     historyManagement: true,
     streamMessages: true,
+    routes: ['/baz/*'],
   })),
   useArhAuthenticated: jest.fn(() => ({
     loading: false,
@@ -110,10 +118,11 @@ jest.mock('../useRhelLightSpeedManager', () => ({
     },
     historyManagement: false,
     streamMessages: false,
+    routes: ['/foo/bar/*'],
   })),
   useRhelLightSpeedAuthenticated: jest.fn(() => ({
     loading: false,
-    isAuthenticated: false,
+    isAuthenticated: true,
     model: 'RHEL Lightspeed',
   })),
 }));
@@ -179,6 +188,7 @@ describe('useStateManager', () => {
     mockChrome.auth.getUser.mockResolvedValue(mockUser);
     checkARHAuth.mockResolvedValue(true);
     mockUseFlags.mockReturnValue([]);
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/' });
 
     // Mock fetch to prevent network calls and silence warnings
     global.fetch = jest.fn(() =>
@@ -189,83 +199,27 @@ describe('useStateManager', () => {
     ) as jest.Mock;
   });
 
-  it('should reset currentModel to undefined when useChatBots changes from false -> true -> false', async () => {
-    // Start with useChatBots = false
+  it('sets currentModel from available static managers', async () => {
     mockUseFlag.mockReturnValue(false);
 
-    const { result, rerender } = renderHook(() => useStateManager());
+    const { result } = renderHook(() => useStateManager(true));
 
-    // Wait for initial render to complete
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    // Initially, model should be undefined when useChatBots is false
-    expect(result.current.model).toBeUndefined();
-
-    // Change useChatBots to true
-    await act(async () => {
-      mockUseFlag.mockReturnValue(true);
-      rerender();
-      // Wait for useEffect to process the change
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    // Model should now be set (assuming ARH authentication succeeds)
-    expect(result.current.model).toBe('Ask Red Hat');
-
-    // Change useChatBots back to false
-    await act(async () => {
-      mockUseFlag.mockReturnValue(false);
-      rerender();
-      // Wait for useEffect to process the change
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    // Model should be reset to undefined when useChatBots becomes false
-    // This tests the bug fix where setCurrentModel(undefined) is called in useEffect
-    expect(result.current.model).toBeUndefined();
-  });
-
-  it('should keep currentModel undefined when useChatBots is consistently false', async () => {
-    // Start with useChatBots = false
-    mockUseFlag.mockReturnValue(false);
-
-    const { result } = renderHook(() => useStateManager());
-
-    // Wait for initial render to complete
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    // Model should remain undefined
-    expect(result.current.model).toBeUndefined();
-  });
-
-  it('should set currentModel when useChatBots is true and authentication succeeds', async () => {
-    // Start with useChatBots = true
-    mockUseFlag.mockReturnValue(true);
-
-    const { result } = renderHook(() => useStateManager());
-
-    // Wait for async operations to complete
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    // Model should be set when useChatBots is true and authentication succeeds
-    expect(result.current.model).toBe('Ask Red Hat');
+    expect(result.current.currentModel).toBe('Ask Red Hat');
   });
 
   it('handles failed getModule by logging an error and not blocking initialization', async () => {
     const getModuleSpy = jest.spyOn(ScalprumCore, 'getModule').mockRejectedValue(new Error('Mock getModule failure'));
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((..._args: unknown[]) => undefined);
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
     // Enable chatbot so the hook proceeds to compute a model
     mockUseFlag.mockReturnValue(true);
 
-    const { result } = renderHook(() => useStateManager());
+    const { result } = renderHook(() => useStateManager(true));
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -280,9 +234,59 @@ describe('useStateManager', () => {
     );
 
     // Even though getModule failed, the hook should still select the ARH model
-    expect(result.current.model).toBe('Ask Red Hat');
+    expect(result.current.currentModel).toBe('Ask Red Hat');
 
     consoleErrorSpy.mockRestore();
     getModuleSpy.mockRestore();
+  });
+
+  it('sets currentModel to matching route', async () => {
+    mockUseFlag.mockReturnValue(false);
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/baz/foo' });
+
+    const { result, rerender } = renderHook((isOpen: boolean) => useStateManager(isOpen));
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(result.current.currentModel).toBe('Ask Red Hat');
+
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/foo/bar/baz' });
+    rerender(true);
+    expect(result.current.currentModel).toBe('RHEL Lightspeed');
+
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/' });
+    // the model won't change with route change after first render
+    rerender(false);
+    expect(result.current.currentModel).toBe('RHEL Lightspeed');
+    rerender(true);
+    expect(result.current.currentModel).toBe('RHEL Lightspeed');
+
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/baz/foo' });
+    // the model won't change with route change after first render
+    rerender(false);
+    expect(result.current.currentModel).toBe('RHEL Lightspeed');
+    rerender(true);
+    expect(result.current.currentModel).toBe('RHEL Lightspeed');
+  });
+
+  it('does not show non-authenticated models', async () => {
+    mockUseFlag.mockReturnValue(false);
+    (useRhelLightSpeedAuthenticated as jest.Mock).mockReturnValue({
+      loading: false,
+      isAuthenticated: false,
+      model: 'RHEL Lightspeed',
+    });
+
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/foo/bar/baz' });
+
+    const { result } = renderHook(() => useStateManager(true));
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(result.current.currentModel).toBe('Ask Red Hat');
   });
 });

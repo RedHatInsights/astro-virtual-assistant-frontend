@@ -37,6 +37,11 @@ export function isModels(value?: string | number): value is Models {
   return Object.values(Models).includes(value as Models);
 }
 
+export type FooterComponentProps = {
+  streamMessages: boolean;
+  isCompact?: boolean | undefined;
+};
+
 export type StateManagerConfiguration<S extends IAIClient> = {
   model: Models;
   historyManagement: boolean;
@@ -50,7 +55,8 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   isPreview?: boolean;
   handleNewChat?: (toggleDrawer: (isOpen: boolean) => void) => void;
   MessageEntryComponent?: React.ComponentType<any>;
-  FooterComponent?: React.ComponentType<any>;
+  FooterComponent?: React.ComponentType<FooterComponentProps>;
+  routes?: string[];
 };
 
 export type ClientAuthStatus = {

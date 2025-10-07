@@ -5,18 +5,22 @@ import * as checkARHAuthModule from '../../src/Components/ARHClient/checkARHAuth
 
 import useStateManager from '../../src/aiClients/useStateManager';
 import { Models } from '../../src/aiClients/types';
-
+import { MemoryRouter } from 'react-router-dom';
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <ScalprumProvider config={{}} api={{}}>
-    <FlagProvider config={{
-      url: 'http://localhost:4242/api/frontend',
-      clientKey: 'test-key',
-      appName: 'test-app',
-    }}>
-      {children}
-    </FlagProvider>
-  </ScalprumProvider>
+  <MemoryRouter>
+    <ScalprumProvider config={{}} api={{}}>
+      <FlagProvider
+        config={{
+          url: 'http://localhost:4242/api/frontend',
+          clientKey: 'test-key',
+          appName: 'test-app',
+        }}
+      >
+        {children}
+      </FlagProvider>
+    </ScalprumProvider>
+  </MemoryRouter>
 );
 
 describe('State Manager Integration Tests', () => {
@@ -31,87 +35,77 @@ describe('State Manager Integration Tests', () => {
             enabled: true,
             variant: {
               name: 'disabled',
-              enabled: false
-            }
-          }, {
+              enabled: false,
+            },
+          },
+          {
             name: 'platform.arh.enabled',
             enabled: true,
             variant: {
               name: 'disabled',
-              enabled: false
-            }
-          },{
+              enabled: false,
+            },
+          },
+          {
             name: 'platform.chatbot.rhel-lightspeed.enabled',
             enabled: true,
             variant: {
               name: 'disabled',
-              enabled: false
-            }
-          }
-        ]
-      }
+              enabled: false,
+            },
+          },
+        ],
+      },
     }).as('unleashAPI');
-    
+
     // Mock Unleash metrics endpoint
     cy.intercept('POST', '**/api/frontend/client/metrics', {
       statusCode: 200,
-      body: {}
+      body: {},
     }).as('unleashMetrics');
-    
+
     // Mock checkARHAuth to return true (user is authorized)
     cy.stub(checkARHAuthModule, 'default').resolves(true);
-    
+
     // Mock fetch requests
     cy.intercept('GET', '**/api/lightspeed/v1/**', { fixture: 'rhel-response.json' }).as('rhelAPI');
     cy.intercept('POST', '**/api/lightspeed/v1/**', { fixture: 'rhel-response.json' }).as('rhelPost');
-    
+
     // Fallback for other ARH requests (define first)
     cy.intercept('GET', 'https://access.stage.redhat.com/**', { fixture: 'arh-response.json' }).as('arhAPI');
     cy.intercept('POST', 'https://access.stage.redhat.com/**', { fixture: 'arh-response.json' }).as('arhPost');
-    
+
     // More specific ARH auth check endpoint (define last to take precedence)
     cy.intercept('GET', 'https://access.stage.redhat.com/hydra/rest/contacts/sso/current**', {
       statusCode: 200,
       body: {
         isEntitled: true,
-        isInternal: false
-      }
+        isInternal: false,
+      },
     }).as('arhAuthCheck');
-    
+
     // ARH user history endpoint - return empty array for history.map()
     cy.intercept('GET', '**/api/ask/v1/user/current/history**', {
       statusCode: 200,
-      body: []
+      body: [],
     }).as('arhUserHistory');
-    
+
     // Scalprum getModule is now handled by webpack alias in cypress config
   });
 
   describe('useStateManager Hook Integration', () => {
     it('should initialize with proper state managers and models', () => {
       const TestComponent = () => {
-        const { 
-          stateManager, 
-          model, 
-          initializing, 
-          chatbotProps,
-        } = useStateManager();        
-        
+        const { currentModel, managers } = useStateManager(false);
+
         return (
           <div data-testid="state-manager">
-            <div data-testid="model">{model || 'undefined'}</div>
-            <div data-testid="initializing">{initializing.toString()}</div>
-            <div data-testid="has-state-manager">{(!!stateManager).toString()}</div>
-            <div data-testid="available-managers-count">{chatbotProps.availableManagers.length}</div>
-            <div data-testid="arh-manager-available">{
-              chatbotProps.availableManagers.some(m => m.model === Models.ASK_RED_HAT).toString()
-            }</div>
-            <div data-testid="rhel-manager-available">{
-              chatbotProps.availableManagers.some(m => m.model === Models.RHEL_LIGHTSPEED).toString()
-            }</div>
-            <div data-testid="va-manager-available">{
-              chatbotProps.availableManagers.some(m => m.model === Models.VA).toString()
-            }</div>
+            <div data-testid="model">{currentModel || 'undefined'}</div>
+            <div data-testid="initializing">{`${!managers}`}</div>
+            <div data-testid="available-managers-count">{managers?.length}</div>
+            <div data-testid="arh-manager-available">{managers?.some((m) => m.model === Models.ASK_RED_HAT).toString()}</div>
+            <div data-testid="rhel-manager-available">{managers?.some((m) => m.model === Models.RHEL_LIGHTSPEED).toString()}</div>
+            <div data-testid="va-manager-available">{managers?.some((m) => m.model === Models.VA).toString()}</div>
           </div>
         );
       };
@@ -127,28 +121,28 @@ describe('State Manager Integration Tests', () => {
       cy.get('[data-testid="arh-manager-available"]').should('contain', 'true');
       cy.get('[data-testid="rhel-manager-available"]').should('contain', 'true');
       cy.get('[data-testid="va-manager-available"]').should('contain', 'true');
-      
+
       // Should have a model selected (either ARH or RHEL based on auth)
       cy.get('[data-testid="model"]').should('not.contain', 'undefined');
-      
+
       // Eventually should not be initializing
       cy.get('[data-testid="initializing"]', { timeout: 10000 }).should('contain', 'false');
     });
 
     it('should verify state manager properties and capabilities', () => {
       const TestComponent = () => {
-        const { chatbotProps } = useStateManager();
-        
-        const arhManager = chatbotProps.availableManagers.find(m => m.model === Models.ASK_RED_HAT);
-        const rhelManager = chatbotProps.availableManagers.find(m => m.model === Models.RHEL_LIGHTSPEED);
-        
+        const { managers } = useStateManager(false);
+
+        const arhManager = managers?.find((m) => m.model === Models.ASK_RED_HAT);
+        const rhelManager = managers?.find((m) => m.model === Models.RHEL_LIGHTSPEED);
+
         return (
           <div data-testid="manager-properties">
             {/* ARH Manager Properties */}
             <div data-testid="arh-history-management">{arhManager?.historyManagement.toString()}</div>
             <div data-testid="arh-stream-messages">{arhManager?.streamMessages.toString()}</div>
             <div data-testid="arh-model-name">{arhManager?.modelName}</div>
-            
+
             {/* RHEL Manager Properties */}
             <div data-testid="rhel-history-management">{rhelManager?.historyManagement.toString()}</div>
             <div data-testid="rhel-stream-messages">{rhelManager?.streamMessages.toString()}</div>
@@ -167,7 +161,7 @@ describe('State Manager Integration Tests', () => {
       cy.get('[data-testid="arh-history-management"]').should('contain', 'true');
       cy.get('[data-testid="arh-stream-messages"]').should('contain', 'true');
       cy.get('[data-testid="arh-model-name"]').should('contain', 'Ask Red Hat');
-      
+
       // Verify RHEL manager properties (different capabilities)
       cy.get('[data-testid="rhel-history-management"]').should('contain', 'false');
       cy.get('[data-testid="rhel-stream-messages"]').should('contain', 'false');
@@ -176,25 +170,16 @@ describe('State Manager Integration Tests', () => {
 
     it('should handle model switching', () => {
       const TestComponent = () => {
-        const { model, chatbotProps } = useStateManager();
-        
-        const [currentModel, setCurrentModel] = React.useState(model);
-        
-        // Sync local state when model changes
-        React.useEffect(() => {
-          setCurrentModel(model);
-        }, [model]);
-        
+        const { currentModel, setCurrentModel } = useStateManager(false);
+
         const switchToRHEL = () => {
-          chatbotProps.setCurrentModel(Models.RHEL_LIGHTSPEED);
           setCurrentModel(Models.RHEL_LIGHTSPEED);
         };
-        
+
         const switchToARH = () => {
-          chatbotProps.setCurrentModel(Models.ASK_RED_HAT);
           setCurrentModel(Models.ASK_RED_HAT);
         };
-        
+
         return (
           <div data-testid="model-switching">
             <div data-testid="current-model">{currentModel || 'undefined'}</div>
@@ -216,26 +201,26 @@ describe('State Manager Integration Tests', () => {
 
       // Should have a default model
       cy.get('[data-testid="current-model"]').should('not.contain', 'undefined');
-      
+
       // Test switching to RHEL
       cy.get('[data-testid="switch-to-rhel"]').click();
       // Note: The actual model change in useStateManager is controlled by internal logic
       // This test verifies the switching mechanism is available
-      
+
       // Test switching to ARH
       cy.get('[data-testid="switch-to-arh"]').click();
     });
 
     it('should handle initialization without errors', () => {
       const TestComponent = () => {
-        const { stateManager, initializing } = useStateManager();
-        
-        const stateManagerType = stateManager ? 'available' : 'unavailable';
-        
+        const { managers } = useStateManager(false);
+
+        const stateManagerType = managers ? 'available' : 'unavailable';
+
         return (
           <div data-testid="initialization-test">
             <div data-testid="state-manager-status">{stateManagerType}</div>
-            <div data-testid="initializing-status">{initializing.toString()}</div>
+            <div data-testid="initializing-status">{`${!managers}`}</div>
           </div>
         );
       };
@@ -248,7 +233,7 @@ describe('State Manager Integration Tests', () => {
 
       // Should eventually have a state manager available
       cy.get('[data-testid="state-manager-status"]', { timeout: 10000 }).should('not.contain', 'unavailable');
-      
+
       // Should complete initialization
       cy.get('[data-testid="initializing-status"]', { timeout: 10000 }).should('contain', 'false');
     });
@@ -260,12 +245,12 @@ describe('State Manager Integration Tests', () => {
       cy.stub(checkARHAuthModule, 'default').resolves(false);
 
       const TestComponent = () => {
-        const { model, chatbotProps } = useStateManager();
-        
+        const { currentModel, managers } = useStateManager(false);
+
         return (
           <div data-testid="fallback-test">
-            <div data-testid="model">{model || 'undefined'}</div>
-            <div data-testid="managers-count">{chatbotProps.availableManagers.length}</div>
+            <div data-testid="model">{currentModel || 'undefined'}</div>
+            <div data-testid="managers-count">{managers?.length}</div>
           </div>
         );
       };
@@ -278,7 +263,7 @@ describe('State Manager Integration Tests', () => {
 
       // Should still have all managers available (ARH, RHEL, VA)
       cy.get('[data-testid="managers-count"]').should('contain', '3');
-      
+
       // Should have a model (either ARH or RHEL fallback)
       cy.get('[data-testid="model"]', { timeout: 10000 }).should('not.contain', 'undefined');
     });
@@ -287,25 +272,25 @@ describe('State Manager Integration Tests', () => {
   describe('State Manager Method Availability', () => {
     it('should verify all required state manager methods are available', () => {
       const TestComponent = () => {
-        const { chatbotProps } = useStateManager();
-        
-        const arhManager = chatbotProps.availableManagers.find(m => m.model === Models.ASK_RED_HAT);
-        const rhelManager = chatbotProps.availableManagers.find(m => m.model === Models.RHEL_LIGHTSPEED);
-        
+        const { managers } = useStateManager(false);
+
+        const arhManager = managers?.find((m) => m.model === Models.ASK_RED_HAT);
+        const rhelManager = managers?.find((m) => m.model === Models.RHEL_LIGHTSPEED);
+
         const arhMethods = {
           hasInit: typeof arhManager?.stateManager.init === 'function',
           hasIsInitialized: typeof arhManager?.stateManager.isInitialized === 'function',
           hasIsInitializing: typeof arhManager?.stateManager.isInitializing === 'function',
           hasGetState: typeof arhManager?.stateManager.getState === 'function',
         };
-        
+
         const rhelMethods = {
           hasInit: typeof rhelManager?.stateManager.init === 'function',
           hasIsInitialized: typeof rhelManager?.stateManager.isInitialized === 'function',
           hasIsInitializing: typeof rhelManager?.stateManager.isInitializing === 'function',
           hasGetState: typeof rhelManager?.stateManager.getState === 'function',
         };
-        
+
         return (
           <div data-testid="methods-test">
             <div data-testid="arh-methods">{JSON.stringify(arhMethods)}</div>
@@ -325,7 +310,7 @@ describe('State Manager Integration Tests', () => {
       cy.get('[data-testid="arh-methods"]').should('contain', '"hasIsInitialized":true');
       cy.get('[data-testid="arh-methods"]').should('contain', '"hasIsInitializing":true');
       cy.get('[data-testid="arh-methods"]').should('contain', '"hasGetState":true');
-      
+
       // Verify RHEL state manager has all required methods
       cy.get('[data-testid="rhel-methods"]').should('contain', '"hasInit":true');
       cy.get('[data-testid="rhel-methods"]').should('contain', '"hasIsInitialized":true');

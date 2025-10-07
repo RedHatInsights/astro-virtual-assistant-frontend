@@ -15,13 +15,13 @@ describe('UniversalHeader Component', () => {
   };
 
   const mockContextValue = {
-    model: Models.ASK_RED_HAT,
+    currentModel: Models.ASK_RED_HAT,
     setCurrentModel: () => {},
     showNewConversationWarning: false,
     setConversationsDrawerOpened: () => {},
     setShowNewConversationWarning: () => {},
     rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
-    availableManagers: [
+    managers: [
       {
         model: Models.ASK_RED_HAT,
         modelName: 'Ask Red Hat',
@@ -31,6 +31,7 @@ describe('UniversalHeader Component', () => {
         Component: () => null,
         selectionTitle: 'Ask Red Hat',
         selectionDescription: 'General Red Hat support',
+        docsUrl: '',
       }
     ],
   };

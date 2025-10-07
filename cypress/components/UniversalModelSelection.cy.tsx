@@ -7,13 +7,13 @@ describe('UniversalAssistantSelection Component', () => {
   let mockSetCurrentModel: any;
 
   const mockContextValue = {
-    model: Models.ASK_RED_HAT,
+    currentModel: Models.ASK_RED_HAT,
     get setCurrentModel() { return mockSetCurrentModel; },
     showNewConversationWarning: false,
     setConversationsDrawerOpened: () => {},
     setShowNewConversationWarning: () => {},
     rootElementRef: { current: null } as React.RefObject<HTMLDivElement>,
-    availableManagers: [
+    managers: [
       {
         model: Models.ASK_RED_HAT,
         modelName: 'Ask Red Hat',
@@ -23,6 +23,7 @@ describe('UniversalAssistantSelection Component', () => {
         historyManagement: true,
         streamMessages: true,
         Component: () => null,
+        docsUrl: '',
       },
       {
         model: Models.RHEL_LIGHTSPEED,
@@ -33,6 +34,7 @@ describe('UniversalAssistantSelection Component', () => {
         historyManagement: false,
         streamMessages: false,
         Component: () => null,
+        docsUrl: '',
       }
     ],
   };
@@ -201,7 +203,7 @@ describe('UniversalAssistantSelection Component', () => {
   it('should update display when model prop changes', () => {
     const updatedContextValue = {
       ...mockContextValue,
-      model: Models.RHEL_LIGHTSPEED,
+      currentModel: Models.RHEL_LIGHTSPEED,
     };
 
     const UpdatedTestWrapper = ({ children }: { children: React.ReactNode }) => (
