@@ -83,7 +83,6 @@ describe('useRhelLightSpeedAuthenticated', () => {
     // Initial loading state
     expect(result.current.loading).toBe(true);
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.model).toBe('RHEL Lightspeed');
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

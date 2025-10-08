@@ -49,50 +49,48 @@ export function useRhelLightSpeedAuthenticated(): ClientAuthStatus {
     loading,
     isAuthenticated,
     error,
-    model: Models.RHEL_LIGHTSPEED,
   };
 }
 
 function useRhelLightSpeedManager(): StateManagerConfiguration<RHELLightspeedClient> {
-  const stateManager = useMemo(() => {
+  return useMemo(() => {
     const client = new RHELLightspeedClient({
       baseUrl: window.location.origin + '/api/lightspeed/v1',
       fetchFunction: (...args) => fetch(...args),
     });
     const stateManager = createClientStateManager(client);
-    return stateManager;
+
+    const configuration: StateManagerConfiguration<RHELLightspeedClient> = {
+      model: Models.RHEL_LIGHTSPEED,
+      historyManagement: false,
+      streamMessages: false,
+      modelName: 'RHEL Lightspeed',
+      selectionTitle: 'RHEL Lightspeed',
+      selectionDescription:
+        'Get answers to RHEL-related questions, support with troubleshooting, help understanding log files, ask for recommendations, and more.',
+      stateManager,
+      docsUrl:
+        'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/introducing-rhel-lightspeed-for-rhel-systems',
+      welcome: {
+        buttons: [
+          {
+            title: 'How do I troubleshoot a RHEL system that is slow to boot?',
+            value: 'How do I troubleshoot a RHEL system that is slow to boot?',
+          },
+          {
+            title: 'Teach me tips on how to be more effective on the RHEL command line',
+            value: 'Teach me tips on how to be more effective on the RHEL command line',
+          },
+          {
+            title: 'What is an immutable file?',
+            value: 'What is an immutable file?',
+          },
+        ],
+      },
+    };
+
+    return configuration;
   }, []);
-
-  const configuration: StateManagerConfiguration<RHELLightspeedClient> = {
-    model: Models.RHEL_LIGHTSPEED,
-    historyManagement: false,
-    streamMessages: false,
-    modelName: 'RHEL Lightspeed',
-    selectionTitle: 'RHEL Lightspeed',
-    selectionDescription:
-      'Get answers to RHEL-related questions, support with troubleshooting, help understanding log files, ask for recommendations, and more.',
-    stateManager,
-    docsUrl:
-      'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interacting_with_the_command-line_assistant_powered_by_rhel_lightspeed/introducing-rhel-lightspeed-for-rhel-systems',
-    welcome: {
-      buttons: [
-        {
-          title: 'How do I troubleshoot a RHEL system that is slow to boot?',
-          value: 'How do I troubleshoot a RHEL system that is slow to boot?',
-        },
-        {
-          title: 'Teach me tips on how to be more effective on the RHEL command line',
-          value: 'Teach me tips on how to be more effective on the RHEL command line',
-        },
-        {
-          title: 'What is an immutable file?',
-          value: 'What is an immutable file?',
-        },
-      ],
-    },
-  };
-
-  return configuration;
 }
 
 export default useRhelLightSpeedManager;

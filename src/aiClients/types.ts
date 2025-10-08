@@ -63,5 +63,4 @@ export type ClientAuthStatus = {
   loading: boolean;
   isAuthenticated: boolean;
   error?: Error;
-  model: Models;
 };
