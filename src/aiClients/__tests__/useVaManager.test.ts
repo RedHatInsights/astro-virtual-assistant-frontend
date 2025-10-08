@@ -55,9 +55,9 @@ describe('useVaManager', () => {
   it('should initialize with default configuration', () => {
     const { result } = renderHook(() => useVaManager());
 
-    expect(result.current.model).toBe(Models.VA);
-    expect(result.current.historyManagement).toBe(false);
-    expect(result.current.streamMessages).toBe(false);
-    expect(result.current.welcome).toBeDefined();
+    expect(result.current.manager?.model).toBe(Models.VA);
+    expect(result.current.manager?.historyManagement).toBe(false);
+    expect(result.current.manager?.streamMessages).toBe(false);
+    expect(result.current.manager?.welcome).toBeDefined();
   });
 });

@@ -3,7 +3,7 @@ import { IFDClient } from '@redhat-cloud-services/arh-client';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ClientAuthStatus, Models, StateManagerConfiguration } from './types';
+import { Models, StateManagerConfiguration, UseManagerHook } from './types';
 import checkARHAuth from '../Components/ARHClient/checkARHAuth';
 import ARHMessageEntry from '../Components/ARHClient/ARHMessageEntry';
 import ARHFooter from '../Components/ARHClient/ARHFooter';
@@ -24,11 +24,10 @@ function useArhBaseUrl() {
   return ARHBaseUrl;
 }
 
-export function useArhAuthenticated(): ClientAuthStatus {
+export function useArhAuthenticated() {
   const flagEnabled = useFlag('platform.arh.enabled');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | undefined>(undefined);
   const chrome = useChrome();
   const ARHBaseUrl = useArhBaseUrl();
 
@@ -43,13 +42,7 @@ export function useArhAuthenticated(): ClientAuthStatus {
       }
     } catch (error) {
       setIsAuthenticated(false);
-      if (error instanceof Error) {
-        setError(error);
-      } else if (typeof error === 'string') {
-        setError(new Error(error));
-      } else {
-        setError(new Error('An unknown error occurred'));
-      }
+      console.error('Failed to check ARH chatbot auth', error);
     } finally {
       setLoading(false);
     }
@@ -63,23 +56,20 @@ export function useArhAuthenticated(): ClientAuthStatus {
     return {
       loading: false,
       isAuthenticated: false,
-      error: undefined,
-      model: Models.ASK_RED_HAT,
     };
   }
 
   return {
     loading,
     isAuthenticated,
-    error,
-    model: Models.ASK_RED_HAT,
   };
 }
 
-function useArhClient(): StateManagerConfiguration<IFDClient> {
+function useArhClient(): UseManagerHook {
+  const { loading, isAuthenticated } = useArhAuthenticated();
   const baseUrl = useArhBaseUrl();
   const chrome = useChrome();
-  const stateManager = useMemo(() => {
+  const manager = useMemo(() => {
     const client = new IFDClient({
       // Will change to ARH
       baseUrl,
@@ -99,38 +89,47 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
       },
     });
     const stateManager = createClientStateManager(client);
-    return stateManager;
+
+    const configuration: StateManagerConfiguration<IFDClient> = {
+      model: Models.ASK_RED_HAT,
+      historyManagement: true,
+      streamMessages: true,
+      modelName: 'Ask Red Hat',
+      selectionTitle: 'Ask Red Hat',
+      selectionDescription:
+        'Find answers about Red Hat products, error messages, security vulnerabilities, general usage, and other content from product documentation and our knowledge base.',
+      MessageEntryComponent: ARHMessageEntry,
+      FooterComponent: ARHFooter,
+      stateManager,
+      docsUrl:
+        'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
+      isPreview: true,
+      welcome: {
+        content: DEFAULT_WELCOME_CONTENT,
+        buttons: [
+          {
+            title: 'Tell me about Ask Red Hat.',
+            value: 'Tell me about Ask Red Hat.',
+          },
+          {
+            title: 'What technologies are used in Ask Red Hat?',
+            value: 'What technologies are used in Ask Red Hat?',
+          },
+        ],
+      },
+    };
+    return configuration;
   }, [baseUrl]);
 
-  const configuration: StateManagerConfiguration<IFDClient> = {
-    model: Models.ASK_RED_HAT,
-    historyManagement: true,
-    streamMessages: true,
-    modelName: 'Ask Red Hat',
-    selectionTitle: 'Ask Red Hat',
-    selectionDescription:
-      'Find answers about Red Hat products, error messages, security vulnerabilities, general usage, and other content from product documentation and our knowledge base.',
-    MessageEntryComponent: ARHMessageEntry,
-    FooterComponent: ARHFooter,
-    stateManager,
-    docsUrl:
-      'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
-    isPreview: true,
-    welcome: {
-      content: DEFAULT_WELCOME_CONTENT,
-      buttons: [
-        {
-          title: 'Tell me about Ask Red Hat.',
-          value: 'Tell me about Ask Red Hat.',
-        },
-        {
-          title: 'What technologies are used in Ask Red Hat?',
-          value: 'What technologies are used in Ask Red Hat?',
-        },
-      ],
-    },
-  };
-  return configuration;
+  if (loading) {
+    return { manager: null, loading };
+  }
+
+  if (!isAuthenticated) {
+    return { manager: null, loading: false };
+  }
+
+  return { manager, loading: false };
 }
 
 export default useArhClient;
