@@ -64,7 +64,6 @@ export function useArhAuthenticated(): ClientAuthStatus {
       loading: false,
       isAuthenticated: false,
       error: undefined,
-      model: Models.ASK_RED_HAT,
     };
   }
 
@@ -72,14 +71,13 @@ export function useArhAuthenticated(): ClientAuthStatus {
     loading,
     isAuthenticated,
     error,
-    model: Models.ASK_RED_HAT,
   };
 }
 
 function useArhClient(): StateManagerConfiguration<IFDClient> {
   const baseUrl = useArhBaseUrl();
   const chrome = useChrome();
-  const stateManager = useMemo(() => {
+  return useMemo(() => {
     const client = new IFDClient({
       // Will change to ARH
       baseUrl,
@@ -99,38 +97,37 @@ function useArhClient(): StateManagerConfiguration<IFDClient> {
       },
     });
     const stateManager = createClientStateManager(client);
-    return stateManager;
-  }, [baseUrl]);
 
-  const configuration: StateManagerConfiguration<IFDClient> = {
-    model: Models.ASK_RED_HAT,
-    historyManagement: true,
-    streamMessages: true,
-    modelName: 'Ask Red Hat',
-    selectionTitle: 'Ask Red Hat',
-    selectionDescription:
-      'Find answers about Red Hat products, error messages, security vulnerabilities, general usage, and other content from product documentation and our knowledge base.',
-    MessageEntryComponent: ARHMessageEntry,
-    FooterComponent: ARHFooter,
-    stateManager,
-    docsUrl:
-      'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
-    isPreview: true,
-    welcome: {
-      content: DEFAULT_WELCOME_CONTENT,
-      buttons: [
-        {
-          title: 'Tell me about Ask Red Hat.',
-          value: 'Tell me about Ask Red Hat.',
-        },
-        {
-          title: 'What technologies are used in Ask Red Hat?',
-          value: 'What technologies are used in Ask Red Hat?',
-        },
-      ],
-    },
-  };
-  return configuration;
+    const configuration: StateManagerConfiguration<IFDClient> = {
+      model: Models.ASK_RED_HAT,
+      historyManagement: true,
+      streamMessages: true,
+      modelName: 'Ask Red Hat',
+      selectionTitle: 'Ask Red Hat',
+      selectionDescription:
+        'Find answers about Red Hat products, error messages, security vulnerabilities, general usage, and other content from product documentation and our knowledge base.',
+      MessageEntryComponent: ARHMessageEntry,
+      FooterComponent: ARHFooter,
+      stateManager,
+      docsUrl:
+        'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#ask-red-hat_getting-started',
+      isPreview: true,
+      welcome: {
+        content: DEFAULT_WELCOME_CONTENT,
+        buttons: [
+          {
+            title: 'Tell me about Ask Red Hat.',
+            value: 'Tell me about Ask Red Hat.',
+          },
+          {
+            title: 'What technologies are used in Ask Red Hat?',
+            value: 'What technologies are used in Ask Red Hat?',
+          },
+        ],
+      },
+    };
+    return configuration;
+  }, [baseUrl]);
 }
 
 export default useArhClient;

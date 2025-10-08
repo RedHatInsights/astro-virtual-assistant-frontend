@@ -1,9 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import useStateManager from '../useStateManager';
-import { ChromeUser } from '@redhat-cloud-services/types';
-import * as ScalprumCore from '@scalprum/core';
 import { useLocation } from 'react-router-dom';
-import { useRhelLightSpeedAuthenticated } from '../useRhelLightSpeedManager';
+import { useRemoteHook } from '@scalprum/react-core';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -12,52 +10,84 @@ jest.mock('react-router-dom', () => ({
 
 // Mock the useFlag hook for feature flags
 const mockUseFlag = jest.fn();
-const mockUseFlags = jest.fn();
 jest.mock('@unleash/proxy-client-react', () => ({
   useFlag: (flag: string) => mockUseFlag(flag),
-  useFlags: () => mockUseFlags([]),
 }));
 
-// Mock the useChrome hook
-const mockChrome = {
-  getEnvironment: jest.fn().mockReturnValue('stage'),
-  auth: {
-    getUser: jest.fn(),
-    getToken: jest.fn(() => Promise.resolve('mock-token')),
-    token: 'mock-token',
-  },
-};
-
-jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
-  __esModule: true,
-  default: jest.fn(() => mockChrome),
-}));
-
-// Mock checkARHAuth function
-jest.mock('../../Components/ARHClient/checkARHAuth', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
-
-// Mock PatternFly chatbot module
-jest.mock('@patternfly/chatbot', () => ({
-  ChatbotDisplayMode: {
-    default: 'default',
-    docked: 'docked',
-    fullscreen: 'fullscreen',
-    embedded: 'embedded',
-  },
-}));
-
-// Mock UniversalChatbot components
-jest.mock('../../Components/UniversalChatbot/UniversalChatbot', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
-jest.mock('../../Components/UniversalChatbot/UniversalChatbotProvider', () => ({
-  __esModule: true,
-  default: () => null,
+jest.mock('@scalprum/react-core', () => ({
+  useRemoteHook: jest.fn(({ module, importName }) => {
+    if (module === './useArhChatbot' && importName === undefined) {
+      return {
+        id: 'arh',
+        loading: false,
+        error: null,
+        hookResult: {
+          model: 'Ask Red Hat',
+          stateManager: {
+            isInitialized: jest.fn(() => false),
+            isInitializing: jest.fn(() => false),
+            init: jest.fn(),
+          },
+          historyManagement: true,
+          streamMessages: true,
+          routes: ['/baz/*'],
+        },
+      };
+    }
+    if (module === './useRhelChatbot' && importName === undefined) {
+      return {
+        id: 'arh',
+        loading: false,
+        error: null,
+        hookResult: {
+          model: 'RHEL Lightspeed',
+          stateManager: {
+            isInitialized: jest.fn(() => false),
+            isInitializing: jest.fn(() => false),
+            init: jest.fn(),
+          },
+          historyManagement: false,
+          streamMessages: false,
+          routes: ['/foo/bar/*'],
+        },
+      };
+    }
+    if (module === './useAsyncChatbot' && importName === undefined) {
+      return {
+        id: 'ai',
+        loading: false,
+        error: 'An error occured',
+        hookResult: {
+          model: 'AI Chatbot',
+          stateManager: {
+            isInitialized: jest.fn(() => false),
+            isInitializing: jest.fn(() => false),
+            init: jest.fn(),
+          },
+          historyManagement: false,
+          streamMessages: false,
+          routes: ['/ai/*'],
+        },
+      };
+    }
+    if (importName !== undefined) {
+      return {
+        id: importName,
+        loading: false,
+        error: null,
+        hookResult: {
+          loading: false,
+          isAuthenticated: true,
+        },
+      };
+    }
+    return {
+      id: '',
+      loading: false,
+      error: null,
+      hookResult: undefined,
+    };
+  }),
 }));
 
 // Mock AI client state
@@ -81,113 +111,9 @@ jest.mock('@redhat-cloud-services/ai-client-state', () => ({
   },
 }));
 
-// Mock ARH client
-jest.mock('@redhat-cloud-services/arh-client', () => ({
-  IFDClient: jest.fn().mockImplementation(() => ({})),
-}));
-
-// Mock the entire useArhClient and useRhelLightSpeedManager hooks
-jest.mock('../useArhClient', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    model: 'Ask Red Hat',
-    stateManager: {
-      isInitialized: jest.fn(() => false),
-      isInitializing: jest.fn(() => false),
-      init: jest.fn(),
-    },
-    historyManagement: true,
-    streamMessages: true,
-    routes: ['/baz/*'],
-  })),
-  useArhAuthenticated: jest.fn(() => ({
-    loading: false,
-    isAuthenticated: true,
-    model: 'Ask Red Hat',
-  })),
-}));
-
-jest.mock('../useRhelLightSpeedManager', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    model: 'RHEL Lightspeed',
-    stateManager: {
-      isInitialized: jest.fn(() => false),
-      isInitializing: jest.fn(() => false),
-      init: jest.fn(),
-    },
-    historyManagement: false,
-    streamMessages: false,
-    routes: ['/foo/bar/*'],
-  })),
-  useRhelLightSpeedAuthenticated: jest.fn(() => ({
-    loading: false,
-    isAuthenticated: true,
-    model: 'RHEL Lightspeed',
-  })),
-}));
-
-// jest.mock('../useVaManager', () => ({
-//   __esModule: true,
-//   default: jest.fn(() => ({
-//     model: 'VA',
-//     stateManager: {
-//       isInitialized: jest.fn(() => false),
-//       isInitializing: jest.fn(() => false),
-//       init: jest.fn(),
-//       getClient: jest.fn(() => ({
-//         isInitialized: jest.fn(() => false),
-//         isInitializing: jest.fn(() => false),
-//         getWelcomeContent: jest.fn(() => ''),
-//       })),
-//     },
-//     historyManagement: false,
-//     streamMessages: false,
-//     welcome: {
-//       content: '',
-//     },
-//   })),
-//   useVaAuthenticated: jest.fn(() => ({
-//     loading: false,
-//     isAuthenticated: false,
-//     model: 'VA',
-//   })),
-// }));
-
-// mock the stateManager's getClient method to return a mock client
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const checkARHAuth = require('../../Components/ARHClient/checkARHAuth').default;
-
 describe('useStateManager', () => {
-  const mockUser: ChromeUser = {
-    entitlements: {},
-    identity: {
-      org_id: 'org-123',
-      account_number: '123456',
-      internal: {
-        org_id: 'org-123',
-        account_id: 'account-123',
-      },
-      type: 'User',
-      user: {
-        is_internal: false,
-        is_org_admin: false,
-        locale: 'en-US',
-        username: 'testuser',
-        email: 'test@example.com',
-        first_name: 'Test',
-        last_name: 'User',
-        is_active: true,
-      },
-    },
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
-    mockChrome.auth.getUser.mockResolvedValue(mockUser);
-    checkARHAuth.mockResolvedValue(true);
-    mockUseFlags.mockReturnValue([]);
     (useLocation as jest.Mock).mockReturnValue({ pathname: '/' });
 
     // Mock fetch to prevent network calls and silence warnings
@@ -199,7 +125,7 @@ describe('useStateManager', () => {
     ) as jest.Mock;
   });
 
-  it('sets currentModel from available static managers', async () => {
+  it('sets currentModel to the first available', async () => {
     mockUseFlag.mockReturnValue(false);
 
     const { result } = renderHook(() => useStateManager(true));
@@ -212,8 +138,6 @@ describe('useStateManager', () => {
   });
 
   it('handles failed getModule by logging an error and not blocking initialization', async () => {
-    const getModuleSpy = jest.spyOn(ScalprumCore, 'getModule').mockRejectedValue(new Error('Mock getModule failure'));
-
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
     // Enable chatbot so the hook proceeds to compute a model
@@ -227,17 +151,17 @@ describe('useStateManager', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalled();
     // Ensure we specifically logged the failed module message
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to load module',
-      expect.objectContaining({ scope: 'assistedInstallerApp', module: './AsyncChatbot' }),
-      expect.anything()
-    );
+    expect(consoleErrorSpy.mock.calls[0]).toEqual([
+      expect.stringContaining('Failed to load chatbot'),
+      expect.objectContaining({ scope: 'assistedInstallerApp', module: './useAsyncChatbot' }),
+      expect.anything(),
+      expect.anything(),
+    ]);
 
     // Even though getModule failed, the hook should still select the ARH model
     expect(result.current.currentModel).toBe('Ask Red Hat');
 
     consoleErrorSpy.mockRestore();
-    getModuleSpy.mockRestore();
   });
 
   it('sets currentModel to matching route', async () => {
@@ -273,12 +197,90 @@ describe('useStateManager', () => {
 
   it('does not show non-authenticated models', async () => {
     mockUseFlag.mockReturnValue(false);
-    (useRhelLightSpeedAuthenticated as jest.Mock).mockReturnValue({
-      loading: false,
-      isAuthenticated: false,
-      model: 'RHEL Lightspeed',
+    (useRemoteHook as jest.Mock).mockImplementation(({ module, importName }) => {
+      if (module === './useArhChatbot' && importName === undefined) {
+        return {
+          id: 'arh',
+          loading: false,
+          error: null,
+          hookResult: {
+            model: 'Ask Red Hat',
+            stateManager: {
+              isInitialized: jest.fn(() => false),
+              isInitializing: jest.fn(() => false),
+              init: jest.fn(),
+            },
+            historyManagement: true,
+            streamMessages: true,
+            routes: ['/baz/*'],
+          },
+        };
+      }
+      if (module === './useRhelChatbot' && importName === undefined) {
+        return {
+          id: 'arh',
+          loading: false,
+          error: null,
+          hookResult: {
+            model: 'RHEL Lightspeed',
+            stateManager: {
+              isInitialized: jest.fn(() => false),
+              isInitializing: jest.fn(() => false),
+              init: jest.fn(),
+            },
+            historyManagement: false,
+            streamMessages: false,
+            routes: ['/foo/bar/*'],
+          },
+        };
+      }
+      if (module === './useRhelChatbot' && importName !== undefined) {
+        return {
+          id: importName,
+          loading: false,
+          error: null,
+          hookResult: {
+            loading: false,
+            isAuthenticated: false,
+          },
+        };
+      }
+      if (module === './useAsyncChatbot' && importName === undefined) {
+        return {
+          id: 'ai',
+          loading: false,
+          error: 'An error occured',
+          hookResult: {
+            model: 'AI Chatbot',
+            stateManager: {
+              isInitialized: jest.fn(() => false),
+              isInitializing: jest.fn(() => false),
+              init: jest.fn(),
+            },
+            historyManagement: false,
+            streamMessages: false,
+            routes: ['/ai/*'],
+          },
+        };
+      }
+      if (importName !== undefined) {
+        return {
+          id: importName,
+          loading: false,
+          error: null,
+          hookResult: {
+            loading: false,
+            isAuthenticated: true,
+          },
+        };
+      }
+      return {
+        id: '',
+        loading: false,
+        error: null,
+        hookResult: undefined,
+      };
     });
-
     (useLocation as jest.Mock).mockReturnValue({ pathname: '/foo/bar/baz' });
 
     const { result } = renderHook(() => useStateManager(true));

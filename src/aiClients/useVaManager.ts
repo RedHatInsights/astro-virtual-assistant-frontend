@@ -9,7 +9,6 @@ export function useVaAuthenticated(): ClientAuthStatus {
   return {
     loading: false,
     isAuthenticated: true,
-    model: Models.VA,
   };
 }
 
@@ -52,21 +51,24 @@ export default function useVaManager(): StateManagerConfiguration<VAClient> {
     };
   }, [stateManager]);
 
-  return {
-    stateManager,
-    model: Models.VA,
-    historyManagement: false,
-    docsUrl:
-      'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#virtual-assistant_getting-started',
-    streamMessages: false,
-    modelName: 'Hybrid Cloud Console - Virtual Assistant',
-    selectionTitle: 'Hybrid Cloud Console',
-    selectionDescription:
-      'Learn about the Hybrid Cloud Console and configure settings like your personal information, request access from your admin, show critical vulnerabilities, and more.',
-    MessageEntryComponent: VAMessageEntry,
-    // Ignoring content/message from watson
-    welcome: {
-      buttons: welcomeConfig?.buttons,
-    },
-  };
+  return useMemo(
+    () => ({
+      stateManager,
+      model: Models.VA,
+      historyManagement: false,
+      docsUrl:
+        'https://docs.redhat.com/en/documentation/red_hat_hybrid_cloud_console/1-latest/html/getting_started_with_the_red_hat_hybrid_cloud_console/hcc-help-options_getting-started#virtual-assistant_getting-started',
+      streamMessages: false,
+      modelName: 'Hybrid Cloud Console - Virtual Assistant',
+      selectionTitle: 'Hybrid Cloud Console',
+      selectionDescription:
+        'Learn about the Hybrid Cloud Console and configure settings like your personal information, request access from your admin, show critical vulnerabilities, and more.',
+      MessageEntryComponent: VAMessageEntry,
+      // Ignoring content/message from watson
+      welcome: {
+        buttons: welcomeConfig?.buttons,
+      },
+    }),
+    [stateManager, welcomeConfig]
+  );
 }
