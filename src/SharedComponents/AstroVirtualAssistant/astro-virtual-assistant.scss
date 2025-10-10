@@ -117,8 +117,8 @@
 /* Override PatternFly chatbot positioning - must be here to load after vendors CSS */
 .pf-chatbot.pf-chatbot--default.pf-m-compact,
 .universal-chatbot-relative .pf-chatbot.pf-chatbot--default.pf-m-compact,
-#ai-chatbot.universal-chatbot-relative .pf-chatbot.pf-chatbot--default.pf-m-compact,
 .virtualAssistant .universal-chatbot-relative .pf-chatbot.pf-chatbot--default.pf-m-compact,
+#ai-chatbot.universal-chatbot-relative .pf-chatbot.pf-chatbot--default.pf-m-compact,
 .virtualAssistant #ai-chatbot.universal-chatbot-relative .pf-chatbot.pf-chatbot--default.pf-m-compact,
 html body .virtualAssistant #ai-chatbot.universal-chatbot-relative .pf-chatbot.pf-chatbot--default.pf-m-compact {
   position: relative !important;
