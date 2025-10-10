@@ -62,6 +62,7 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
   }, [manager]);
 
   const FooterComponent = manager?.FooterComponent ?? UniversalFooter;
+  const chatbotClassName = displayMode !== ChatbotDisplayMode.fullscreen ? 'universal-chatbot-relative' : '';
 
   const drawerContent = (
     <>
@@ -100,7 +101,7 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
         showNewConversationWarning={showNewConversationWarning}
         managers={managers}
       >
-        <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot">
+        <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot" className={chatbotClassName}>
           <Chatbot displayMode={displayMode}>{drawerContent}</Chatbot>
         </div>
       </UniversalChatbotProvider>
@@ -117,7 +118,7 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
       showNewConversationWarning={showNewConversationWarning}
       managers={managers}
     >
-      <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot">
+      <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot" className={chatbotClassName}>
         <Chatbot displayMode={displayMode} isCompact>
           <ChatbotConversationHistoryNav
             displayMode={displayMode}
