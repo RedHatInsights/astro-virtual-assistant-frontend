@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useConversations, useInitLimitation, useSetActiveConversation } from '@redhat-cloud-services/ai-react-state';
 import { Chatbot, ChatbotConversationHistoryNav, ChatbotDisplayMode } from '@patternfly/chatbot';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
+import classnames from 'classnames';
 
 import UniversalChatbotProvider, { ChatbotProps } from './UniversalChatbotProvider';
 import emptyAvatar from '../../assets/img_avatar.svg';
@@ -62,7 +63,9 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
   }, [manager]);
 
   const FooterComponent = manager?.FooterComponent ?? UniversalFooter;
-  const chatbotClassName = displayMode !== ChatbotDisplayMode.fullscreen ? 'universal-chatbot-relative' : '';
+  const chatbotClassName = classnames({
+    'universal-chatbot-relative': displayMode !== ChatbotDisplayMode.fullscreen,
+  });
 
   const drawerContent = (
     <>
