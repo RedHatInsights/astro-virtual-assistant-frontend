@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import classnames from 'classnames';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { Stack, StackItem } from '@patternfly/react-core';
@@ -23,6 +24,7 @@ interface AstroVirtualAssistantProps {
   isOpen: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   startInput?: string;
+  className?: string;
 }
 
 const useAstroConfig = (props: AstroVirtualAssistantProps) => {
@@ -131,14 +133,14 @@ const AstroVirtualAssistantUnified = ({
   );
 };
 
-const AstroVirtualAssistant = (props: { showAssistant: boolean; startInput?: string }) => {
+const AstroVirtualAssistant = (props: { showAssistant: boolean; startInput?: string; className?: string }) => {
   const useChatBots = useFlag('platform.va.chameleon.enabled');
   const [isOpen, setOpen] = useState<boolean>(false);
 
   const ChatbotComponent = useChatBots ? AstroVirtualAssistantUnified : AstroVirtualAssistantLegacy;
 
   return createPortal(
-    <div className="virtualAssistant">
+    <div className={classnames('virtualAssistant', props.className)}>
       <ChatbotComponent {...props} isOpen={isOpen} setOpen={setOpen} />
     </div>,
     document.body

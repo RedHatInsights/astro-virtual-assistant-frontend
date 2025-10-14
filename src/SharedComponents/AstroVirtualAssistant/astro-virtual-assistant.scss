@@ -113,3 +113,12 @@
   padding-top: 4px;
   text-align: center;
 }
+
+.universal-chatbot-relative {
+  .pf-chatbot.pf-chatbot--default {
+    position: relative !important;
+    bottom: -30px !important;
+    inset-block-end: 0px;
+    inset-inline-end: 0px;
+  }
+}
