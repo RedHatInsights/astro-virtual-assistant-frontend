@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import classnames from 'classnames';
 
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 import { Stack, StackItem } from '@patternfly/react-core';
@@ -139,7 +140,7 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean; startInput?: str
   const ChatbotComponent = useChatBots ? AstroVirtualAssistantUnified : AstroVirtualAssistantLegacy;
 
   return createPortal(
-    <div className={`virtualAssistant${props.className ? ` ${props.className}` : ''}`}>
+    <div className={classnames('virtualAssistant', props.className)}>
       <ChatbotComponent {...props} isOpen={isOpen} setOpen={setOpen} />
     </div>,
     document.body
