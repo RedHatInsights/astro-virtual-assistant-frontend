@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScalprumProvider } from '@scalprum/react-core';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
+import { FlagProvider } from '@unleash/proxy-client-react';
 
 import UniversalChatbotProvider from '../../src/Components/UniversalChatbot/UniversalChatbotProvider';
 import { Models } from '../../src/aiClients/types';
@@ -30,15 +31,26 @@ const mockChromeApi = {
         org_id: 'test-org',
         type: 'User'
       },
-      entitlements: {}
+      entitlements: {
+        rhel: {
+          is_entitled: true,
+        },
+      }
     }),
   },
   getEnvironment: () => 'stage',
+  isBeta: () => false
 };
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <ScalprumProvider config={{}} api={{ chrome: mockChromeApi }}>
-    {children}
+    <FlagProvider config={{
+      url: 'http://localhost:4242/api/frontend',
+      clientKey: 'test-key',
+      appName: 'test-app',
+    }}>
+      {children}
+    </FlagProvider>
   </ScalprumProvider>
 );
 
@@ -48,23 +60,47 @@ describe('Chatbot Initialization Tests', () => {
     cy.intercept('GET', '**/api/lightspeed/v1/**', { fixture: 'rhel-response.json' }).as('rhelAPI');
     cy.intercept('POST', '**/api/lightspeed/v1/**', { fixture: 'rhel-response.json' }).as('rhelPost');
     
-    // Mock ARH API requests
+    // Mock ARH API requests (generic handlers first)
     cy.intercept('GET', 'https://access.stage.redhat.com/**', { fixture: 'arh-response.json' }).as('arhAPI');
     cy.intercept('POST', 'https://access.stage.redhat.com/**', { fixture: 'arh-response.json' }).as('arhPost');
+    // Also mock prod domain in case environment changes
+    cy.intercept('GET', 'https://access.redhat.com/**', { fixture: 'arh-response.json' }).as('arhAPIProd');
+    cy.intercept('POST', 'https://access.redhat.com/**', { fixture: 'arh-response.json' }).as('arhPostProd');
+    // Specific entitlement check (defined last to take priority)
+    cy.intercept('GET', '**/hydra/rest/contacts/sso/current*', {
+      statusCode: 200,
+      body: { isEntitled: true, isInternal: false },
+    }).as('arhAuth');
+
+    // Mock Unleash flags and metrics
+    cy.intercept('GET', '**/api/frontend**', {
+      statusCode: 200,
+      body: {
+        toggles: [
+          { name: 'platform.arh.enabled', enabled: true },
+          { name: 'platform.chatbot.rhel-lightspeed.enabled', enabled: true },
+          { name: 'platform.chrome.feedback', enabled: false },
+        ],
+      },
+    }).as('unleashAPI');
+    cy.intercept('POST', '**/api/frontend/client/metrics', {
+      statusCode: 200,
+      body: {},
+    }).as('unleashMetrics');
   });
 
   describe('ARH State Manager Initialization', () => {
     it('should create ARH state manager with proper configuration', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient();
+        const { manager: arhManager } = useArhClient();
         
         return (
           <div data-testid="arh-manager">
-            <div data-testid="model">{arhManager.model}</div>
-            <div data-testid="model-name">{arhManager.modelName}</div>
-            <div data-testid="selection-title">{arhManager.selectionTitle}</div>
-            <div data-testid="history-management">{arhManager.historyManagement.toString()}</div>
-            <div data-testid="stream-messages">{arhManager.streamMessages.toString()}</div>
+            <div data-testid="model">{arhManager?.model}</div>
+            <div data-testid="model-name">{arhManager?.modelName}</div>
+            <div data-testid="selection-title">{arhManager?.selectionTitle}</div>
+            <div data-testid="history-management">{arhManager?.historyManagement.toString()}</div>
+            <div data-testid="stream-messages">{arhManager?.streamMessages.toString()}</div>
           </div>
         );
       };
@@ -85,13 +121,13 @@ describe('Chatbot Initialization Tests', () => {
 
     it('should initialize ARH state manager methods', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient();
+        const { manager: arhManager } = useArhClient();
         
         // Test that state manager has required methods
-        const hasInit = typeof arhManager.stateManager.init === 'function';
-        const hasIsInitialized = typeof arhManager.stateManager.isInitialized === 'function';
-        const hasIsInitializing = typeof arhManager.stateManager.isInitializing === 'function';
-        const hasGetState = typeof arhManager.stateManager.getState === 'function';
+        const hasInit = typeof arhManager?.stateManager.init === 'function';
+        const hasIsInitialized = typeof arhManager?.stateManager.isInitialized === 'function';
+        const hasIsInitializing = typeof arhManager?.stateManager.isInitializing === 'function';
+        const hasGetState = typeof arhManager?.stateManager.getState === 'function';
         
         return (
           <div data-testid="arh-methods">
@@ -120,15 +156,15 @@ describe('Chatbot Initialization Tests', () => {
   describe('RHEL Lightspeed State Manager Initialization', () => {
     it('should create RHEL state manager with proper configuration', () => {
       const TestComponent = () => {
-        const rhelManager = useRhelLightSpeedManager();
+        const { manager: rhelManager } = useRhelLightSpeedManager();
         
         return (
           <div data-testid="rhel-manager">
-            <div data-testid="model">{rhelManager.model}</div>
-            <div data-testid="model-name">{rhelManager.modelName}</div>
-            <div data-testid="selection-title">{rhelManager.selectionTitle}</div>
-            <div data-testid="history-management">{rhelManager.historyManagement.toString()}</div>
-            <div data-testid="stream-messages">{rhelManager.streamMessages.toString()}</div>
+            <div data-testid="model">{rhelManager?.model}</div>
+            <div data-testid="model-name">{rhelManager?.modelName}</div>
+            <div data-testid="selection-title">{rhelManager?.selectionTitle}</div>
+            <div data-testid="history-management">{rhelManager?.historyManagement.toString()}</div>
+            <div data-testid="stream-messages">{rhelManager?.streamMessages.toString()}</div>
           </div>
         );
       };
@@ -149,13 +185,13 @@ describe('Chatbot Initialization Tests', () => {
 
     it('should initialize RHEL state manager methods', () => {
       const TestComponent = () => {
-        const rhelManager = useRhelLightSpeedManager();
+        const { manager: rhelManager } = useRhelLightSpeedManager();
         
         // Test that state manager has required methods
-        const hasInit = typeof rhelManager.stateManager.init === 'function';
-        const hasIsInitialized = typeof rhelManager.stateManager.isInitialized === 'function';
-        const hasIsInitializing = typeof rhelManager.stateManager.isInitializing === 'function';
-        const hasGetState = typeof rhelManager.stateManager.getState === 'function';
+        const hasInit = typeof rhelManager?.stateManager.init === 'function';
+        const hasIsInitialized = typeof rhelManager?.stateManager.isInitialized === 'function';
+        const hasIsInitializing = typeof rhelManager?.stateManager.isInitializing === 'function';
+        const hasGetState = typeof rhelManager?.stateManager.getState === 'function';
         
         return (
           <div data-testid="rhel-methods">
@@ -184,7 +220,11 @@ describe('Chatbot Initialization Tests', () => {
   describe('Real Chatbot Components with State Managers', () => {
     it('should render ARH chatbot with real state manager', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient();
+        const { manager: arhManager } = useArhClient();
+
+        if (!arhManager) {
+          return false;
+        }
         
         const mockChatbotProps = {
           currentModel: Models.ASK_RED_HAT,
@@ -197,7 +237,7 @@ describe('Chatbot Initialization Tests', () => {
           managers: [arhManager],
         };
 
-        return (
+        return arhManager && (
           <AIStateProvider stateManager={arhManager.stateManager}>
             <UniversalChatbotProvider {...mockChatbotProps}>
               <UniversalChatbot {...mockChatbotProps} />
@@ -220,8 +260,12 @@ describe('Chatbot Initialization Tests', () => {
 
     it('should render RHEL chatbot with real state manager', () => {
       const TestComponent = () => {
-        const rhelManager = useRhelLightSpeedManager();
+        const { manager: rhelManager } = useRhelLightSpeedManager();
         
+        if (!rhelManager) {
+          return false;
+        }
+
         const mockChatbotProps = {
           currentModel: Models.RHEL_LIGHTSPEED,
           setCurrentModel: () => {},
@@ -256,8 +300,12 @@ describe('Chatbot Initialization Tests', () => {
 
     it('should handle both managers in a multi-model setup', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient();
-        const rhelManager = useRhelLightSpeedManager();
+        const {manager: arhManager} = useArhClient();
+        const {manager: rhelManager} = useRhelLightSpeedManager();
+
+        if (!arhManager || !rhelManager) {
+          return false;
+        }
         
         const mockChatbotProps = {
           currentModel: Models.ASK_RED_HAT,
@@ -304,20 +352,20 @@ describe('Chatbot Initialization Tests', () => {
   describe('State Manager Initialization Behavior', () => {
     it('should verify state manager initialization status', () => {
       const TestComponent = () => {
-        const arhManager = useArhClient();
-        const rhelManager = useRhelLightSpeedManager();
+        const {manager: arhManager }= useArhClient();
+        const {manager: rhelManager } = useRhelLightSpeedManager();
         
-        const arhInitialized = arhManager.stateManager.isInitialized();
-        const arhInitializing = arhManager.stateManager.isInitializing();
-        const rhelInitialized = rhelManager.stateManager.isInitialized();
-        const rhelInitializing = rhelManager.stateManager.isInitializing();
+        const arhInitialized = arhManager?.stateManager.isInitialized();
+        const arhInitializing = arhManager?.stateManager.isInitializing();
+        const rhelInitialized = rhelManager?.stateManager.isInitialized();
+        const rhelInitializing = rhelManager?.stateManager.isInitializing();
         
         return (
           <div data-testid="initialization-status">
-            <div data-testid="arh-initialized">{arhInitialized.toString()}</div>
-            <div data-testid="arh-initializing">{arhInitializing.toString()}</div>
-            <div data-testid="rhel-initialized">{rhelInitialized.toString()}</div>
-            <div data-testid="rhel-initializing">{rhelInitializing.toString()}</div>
+            <div data-testid="arh-initialized">{arhInitialized?.toString()}</div>
+            <div data-testid="arh-initializing">{arhInitializing?.toString()}</div>
+            <div data-testid="rhel-initialized">{rhelInitialized?.toString()}</div>
+            <div data-testid="rhel-initializing">{rhelInitializing?.toString()}</div>
           </div>
         );
       };

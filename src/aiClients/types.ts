@@ -59,9 +59,4 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   routes?: string[];
 };
 
-export type ClientAuthStatus = {
-  loading: boolean;
-  isAuthenticated: boolean;
-  error?: Error;
-  model: Models;
-};
+export type UseManagerHook = { manager: StateManagerConfiguration<IAIClient> | null; loading: boolean };

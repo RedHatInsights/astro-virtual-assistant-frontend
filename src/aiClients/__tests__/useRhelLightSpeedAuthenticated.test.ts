@@ -83,7 +83,6 @@ describe('useRhelLightSpeedAuthenticated', () => {
     // Initial loading state
     expect(result.current.loading).toBe(true);
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.model).toBe('RHEL Lightspeed');
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -91,7 +90,6 @@ describe('useRhelLightSpeedAuthenticated', () => {
 
     // Final authenticated state
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.error).toBeUndefined();
   });
 
   it('should handle user without RHEL entitlement', async () => {
@@ -110,7 +108,6 @@ describe('useRhelLightSpeedAuthenticated', () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.error).toBeUndefined();
   });
 
   it('should handle missing user', async () => {
@@ -123,7 +120,6 @@ describe('useRhelLightSpeedAuthenticated', () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.error).toBeUndefined();
   });
 
   it('should handle getUser errors', async () => {
@@ -137,7 +133,6 @@ describe('useRhelLightSpeedAuthenticated', () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.error).toEqual(error);
   });
 
   it('should handle different error types', async () => {
@@ -148,7 +143,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
     await waitFor(() => {
       expect(result1.current.loading).toBe(false);
     });
-    expect(result1.current.error).toEqual(new Error('String error'));
+    expect(result1.current.isAuthenticated).toEqual(false);
 
     // Test unknown error type
     mockChrome.auth.getUser.mockRejectedValue({ unexpected: 'error' });
@@ -157,7 +152,7 @@ describe('useRhelLightSpeedAuthenticated', () => {
     await waitFor(() => {
       expect(result2.current.loading).toBe(false);
     });
-    expect(result2.current.error).toEqual(new Error('An unknown error occurred'));
+    expect(result2.current.isAuthenticated).toEqual(false);
   });
 
   it('should re-run authentication when token changes', async () => {

@@ -87,7 +87,6 @@ describe('useArhAuthenticated', () => {
     // Initial loading state
     expect(result.current.loading).toBe(true);
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.model).toBe('Ask Red Hat');
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -95,7 +94,6 @@ describe('useArhAuthenticated', () => {
 
     // Final authenticated state
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.error).toBeUndefined();
     expect(checkARHAuth).toHaveBeenCalledWith('https://access.stage.redhat.com', mockUser, 'mock-token');
   });
 
@@ -110,7 +108,6 @@ describe('useArhAuthenticated', () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.error).toBeUndefined();
   });
 
   it('should handle missing user', async () => {
@@ -123,7 +120,6 @@ describe('useArhAuthenticated', () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.error).toBeUndefined();
     expect(checkARHAuth).not.toHaveBeenCalled();
   });
 
@@ -139,7 +135,6 @@ describe('useArhAuthenticated', () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.error).toEqual(error);
   });
 
   it('should use correct base URL for different environments', async () => {
