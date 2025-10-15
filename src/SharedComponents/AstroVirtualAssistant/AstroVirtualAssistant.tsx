@@ -47,7 +47,7 @@ const useAstroConfig = (props: AstroVirtualAssistantProps) => {
   };
 };
 
-const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps> = ({ showAssistant, isOpen, setOpen, startInput }) => {
+const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps> = ({ showAssistant, isOpen, setOpen, startInput, className }) => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, error, loadingResponse } = useAstro(messageProcessors, {
     isPreview: chrome.isBeta(),
@@ -75,7 +75,7 @@ const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps>
   }
 
   return (
-    <Stack className="astro-wrapper-stack">
+    <Stack className={classnames('astro-wrapper-stack', className)}>
       <StackItem>
         {(status === Status.STARTED || status === Status.LOADING) && config.isOpen && (
           <AstroChat
@@ -105,10 +105,12 @@ const AstroVirtualAssistantUnified = ({
   showAssistant,
   isOpen,
   setOpen,
+  className,
 }: {
   showAssistant: boolean;
   isOpen: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  className?: string;
 }) => {
   const { currentModel, managers, setCurrentModel } = useStateManager(isOpen);
   const stateManager = managers && currentModel ? managers.find((m) => m.model === currentModel)?.stateManager : undefined;
@@ -116,7 +118,7 @@ const AstroVirtualAssistantUnified = ({
     !!stateManager &&
     !!showAssistant && (
       <AIStateProvider stateManager={stateManager}>
-        <Stack className="astro-wrapper-stack">
+        <Stack className={classnames('astro-wrapper-stack', className)}>
           <StackItem>
             {isOpen ? <UniversalChatbot managers={managers} currentModel={currentModel} setCurrentModel={setCurrentModel} setOpen={setOpen} /> : null}
           </StackItem>
@@ -140,8 +142,8 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean; startInput?: str
   const ChatbotComponent = useChatBots ? AstroVirtualAssistantUnified : AstroVirtualAssistantLegacy;
 
   return createPortal(
-    <div className={classnames('virtualAssistant', props.className)}>
-      <ChatbotComponent {...props} isOpen={isOpen} setOpen={setOpen} />
+    <div className="virtualAssistant">
+      <ChatbotComponent {...props} isOpen={isOpen} setOpen={setOpen} className={props.className} />
     </div>,
     document.body
   );
