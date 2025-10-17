@@ -42,6 +42,98 @@ You still need to complete once the `Initial etc/hosts setup` as detailed in the
 After that, you can run `npm run start:standalone`.
 
 
+## Virtual Assistant State Management
+
+The Virtual Assistant uses a singleton pattern for global state management, allowing control from anywhere in the application - inside or outside of React. This is particularly useful for:
+
+- Opening/closing the assistant from external events
+- Setting the current model programmatically
+- Passing messages to the assistant
+- Integration with federated modules via remote hooks
+
+### Available State
+
+- `isOpen` - Boolean indicating if the assistant is open
+- `message` - Optional string message to pass to the assistant
+- `currentModel` - Currently selected AI model (enum: `Models`)
+
+### Usage via Remote Hooks (Scalprum)
+
+For federated modules that want to integrate with the Virtual Assistant, use the [Scalprum remote hook pattern](https://github.com/scalprum/scaffolding/blob/main/packages/react-core/docs/use-remote-hook.md):
+
+```typescript
+import React, { useEffect } from 'react';
+import { useRemoteHook } from '@scalprum/react-core';
+import { getModule } from '@scalprum/core';
+
+function RemoteComponent() {
+  // Access the isOpen state
+  const { hookResult: [isOpen, setIsOpen], loading, error } = useRemoteHook({
+    scope: 'virtualAssistant',
+    module: './VirtualAssistantStateSingleton',
+    importName: 'useIsOpen',
+  });
+
+  // Access the current model
+  const { hookResult: [currentModel, setCurrentModel], loading: modelLoading } = useRemoteHook({
+    scope: 'virtualAssistant',
+    module: './VirtualAssistantStateSingleton',
+    importName: 'useCurrentModel',
+  });
+
+  // Access the message state
+  const { hookResult: [message, setMessage], loading: messageLoading } = useRemoteHook({
+    scope: 'virtualAssistant',
+    module: './VirtualAssistantStateSingleton',
+    importName: 'useMessage',
+  });
+
+  if (loading || modelLoading || messageLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading hook</div>;
+
+  // Example: Load ModelValues and set default model on mount
+  useEffect(() => {
+    const setDefaultModel = async () => {
+      const models = await getModule('virtualAssistant', 'VirtualAssistantStateSingleton', 'ModelValues');
+      setCurrentModel(models.RHEL_LIGHTSPEED);
+    }
+  }, []);
+
+  return (
+    <button onClick={() => {
+      setMessage('Help me with RHEL configuration');
+      setIsOpen(true);
+    }}>
+      Ask Virtual Assistant
+    </button>
+  );
+}
+```
+
+### Available Hooks
+
+- `useIsOpen()` - Returns `[boolean, Dispatch<SetStateAction<boolean>>]`
+- `useCurrentModel()` - Returns `[Models | undefined, Dispatch<SetStateAction<Models | undefined>>]`
+- `useMessage()` - Returns `[string | undefined, Dispatch<SetStateAction<string | undefined>>]`
+
+### Available Models
+
+```typescript
+import { Models, ModelValues } from './utils/VirtualAssistantStateSingleton';
+
+// TypeScript enum
+Models.ASK_RED_HAT
+Models.RHEL_LIGHTSPEED
+Models.VA
+Models.OAI
+
+// Plain object (JavaScript-friendly)
+ModelValues.ASK_RED_HAT      // "Ask Red Hat"
+ModelValues.RHEL_LIGHTSPEED  // "RHEL Lightspeed"
+ModelValues.VA               // "Virtual Assistant"
+ModelValues.OAI              // "OpenShift assisted Installer"
+```
+
 ### Testing
 
 `npm run verify` will run `npm run lint` (eslint) and `npm test` (Jest)

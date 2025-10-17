@@ -35,6 +35,7 @@ module.exports = {
       './useArhChatbot': path.resolve(__dirname, './src/aiClients/useArhClient.ts'),
       './useRhelChatbot': path.resolve(__dirname, './src/aiClients/useRhelLightSpeedManager.ts'),
       './useVaChatbot': path.resolve(__dirname, './src/aiClients/useVaManager.ts'),
+      './VirtualAssistantStateSingleton': path.resolve(__dirname, './src/utils/VirtualAssistantStateSingleton.ts'),
       ...extraExposes,
     },
   },
