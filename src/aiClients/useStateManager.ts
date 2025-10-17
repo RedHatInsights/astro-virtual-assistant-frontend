@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 import { useRemoteHookManager } from '@scalprum/react-core';
 import { matchPath, useLocation } from 'react-router-dom';
 
-import { Models, StateManagerConfiguration, UseManagerHook } from './types';
+import { StateManagerConfiguration, UseManagerHook } from './types';
+import { useCurrentModel } from '../utils/VirtualAssistantStateSingleton';
 
 function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined {
   const { addHook, hookResults, cleanup } = useRemoteHookManager<UseManagerHook>();
@@ -46,7 +47,7 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
 function useStateManager(isOpen: boolean) {
   const wasOpenRef = useRef(isOpen);
   const managers = useAsyncManagers();
-  const [currentModel, setCurrentModel] = useState<Models>();
+  const [currentModel, setCurrentModel] = useCurrentModel();
 
   const location = useLocation();
 

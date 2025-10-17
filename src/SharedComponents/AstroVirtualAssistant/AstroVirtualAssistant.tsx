@@ -14,6 +14,7 @@ import { commandMessageProcessor } from './CommandMessageProcessor';
 import UniversalBadge from '../../Components/UniversalChatbot/UniversalBadge';
 import useStateManager from '../../aiClients/useStateManager';
 import UniversalChatbot from '../../Components/UniversalChatbot/UniversalChatbot';
+import { useIsOpen } from '../../utils/VirtualAssistantStateSingleton';
 
 import './astro-virtual-assistant.scss';
 
@@ -137,7 +138,7 @@ const AstroVirtualAssistantUnified = ({
 
 const AstroVirtualAssistant = (props: { showAssistant: boolean; startInput?: string; className?: string }) => {
   const useChatBots = useFlag('platform.va.chameleon.enabled');
-  const [isOpen, setOpen] = useState<boolean>(false);
+  const [isOpen, setOpen] = useIsOpen();
 
   const ChatbotComponent = useChatBots ? AstroVirtualAssistantUnified : AstroVirtualAssistantLegacy;
 
