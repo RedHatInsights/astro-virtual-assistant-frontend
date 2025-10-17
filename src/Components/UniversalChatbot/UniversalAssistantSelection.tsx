@@ -6,10 +6,12 @@ import { isModels } from '../../aiClients/types';
 
 import './UniversalAssistantSelection.scss';
 import { HelpIcon, InfoCircleIcon } from '@patternfly/react-icons';
+import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
 
 function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject<HTMLDivElement> }) {
   const { currentModel, setCurrentModel, managers } = useContext(UniversalChatbotContext);
   const [isOpen, setIsOpen] = useState(false);
+  const chrome = useChrome();
 
   const modelName = managers?.find((m) => m.model === currentModel)?.selectionTitle || currentModel;
   if (managers && managers.length <= 1) {
@@ -46,6 +48,7 @@ function UniversalAssistantSelection({ containerRef }: { containerRef: RefObject
             selected={currentModel}
             onSelect={(_e, value) => {
               if (isModels(value)) {
+                chrome.analytics?.track('chameleon_assistant_selection', { assistant: value });
                 setCurrentModel(value);
                 setIsOpen(false);
               }
