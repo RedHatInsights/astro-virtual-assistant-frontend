@@ -62,43 +62,33 @@ The Virtual Assistant uses a singleton pattern for global state management, allo
 For federated modules that want to integrate with the Virtual Assistant, use the [Scalprum remote hook pattern](https://github.com/scalprum/scaffolding/blob/main/packages/react-core/docs/use-remote-hook.md):
 
 ```typescript
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useRemoteHook } from '@scalprum/react-core';
-import { getModule } from '@scalprum/core';
 
 function RemoteComponent() {
-  // Use the unified Virtual Assistant state hook
-  const { hookResult: [state, setState], loading, error } = useRemoteHook({
+  // Import the entire module to access both the hook and ModelValues
+  const { hookResult: module, loading, error } = useRemoteHook({
     scope: 'virtualAssistant',
     module: './state/globalState',
-    importName: 'useVirtualAssistant',
+    // Omit importName to get the entire module namespace
+    //importName: 'useIsOpen' // to import just the hook to control open state
   });
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error loading hook</div>;
 
-  // Example: Load ModelValues and set default model on mount
-  useEffect(() => {
-    const setDefaultModel = async () => {
-      try {
-        const ModelValues = await getModule({
-          scope: 'virtualAssistant',
-          module: './state/globalState',
-          importName: 'ModelValues'
-        });
-        setState({ currentModel: ModelValues.RHEL_LIGHTSPEED });
-      } catch (err) {
-        console.error('Failed to load ModelValues:', err);
-      }
-    };
-    setDefaultModel();
-  }, [setCurrentModel]);
+  // Destructure what we need from the module
+  const { useVirtualAssistant, ModelValues } = module;
+  
+  // Now call the hook
+  const [state, setState] = useVirtualAssistant();
 
   return (
     <button onClick={() => {
       // Open VA with a specific model and message using a single setState call
       setState({
         isOpen: true,
+        currentModel: ModelValues.RHEL_LIGHTSPEED,
         message: 'Help me with RHEL configuration'
       });
     }}>
