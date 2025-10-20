@@ -146,3 +146,48 @@ export const useIsOpen = (): [boolean, Dispatch<SetStateAction<boolean>>] => {
 
   return [isOpen, setIsOpen];
 };
+
+/**
+ * Unified hook for managing all Virtual Assistant state (isOpen, message, currentModel)
+ *
+ * @returns tupple containing state and setState
+ *
+ * @example
+ * const [state, setState] = useVirtualAssistant();
+ *
+ * // Open VA with a specific model and message
+ * setState({
+ *   isOpen: true,
+ *   currentModel: Models.RHEL_LIGHTSPEED,
+ *   message: 'How do I configure SELinux?'
+ * });
+ *
+ * // Update only specific fields
+ * setState({ isOpen: false });
+ */
+export const useVirtualAssistant = (): [VirtualAssistantState, (updates: Partial<VirtualAssistantState>) => void] => {
+  const [state, setStateInternal] = useState<VirtualAssistantState>(VirtualAssistantStateSingleton.getState());
+
+  useEffect(() => {
+    const unsubscribe = VirtualAssistantStateSingleton.getInstance().subscribe(() => {
+      setStateInternal({ ...VirtualAssistantStateSingleton.getState() });
+    });
+    return unsubscribe;
+  }, []);
+
+  const setState = (updates: Partial<VirtualAssistantState>) => {
+    const instance = VirtualAssistantStateSingleton.getInstance();
+
+    if ('isOpen' in updates && updates.isOpen !== undefined) {
+      instance.isOpen = updates.isOpen;
+    }
+    if ('message' in updates) {
+      instance.message = updates.message;
+    }
+    if ('currentModel' in updates) {
+      instance.currentModel = updates.currentModel;
+    }
+  };
+
+  return [state, setState];
+};

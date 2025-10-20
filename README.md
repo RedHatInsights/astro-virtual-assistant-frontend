@@ -67,44 +67,42 @@ import { useRemoteHook } from '@scalprum/react-core';
 import { getModule } from '@scalprum/core';
 
 function RemoteComponent() {
-  // Access the isOpen state
-  const { hookResult: [isOpen, setIsOpen], loading, error } = useRemoteHook({
+  // Use the unified Virtual Assistant state hook
+  const { hookResult: [state, setState], loading, error } = useRemoteHook({
     scope: 'virtualAssistant',
-    module: './VirtualAssistantStateSingleton',
-    importName: 'useIsOpen',
+    module: './state/globalState',
+    importName: 'useVirtualAssistant',
   });
 
-  // Access the current model
-  const { hookResult: [currentModel, setCurrentModel], loading: modelLoading } = useRemoteHook({
-    scope: 'virtualAssistant',
-    module: './VirtualAssistantStateSingleton',
-    importName: 'useCurrentModel',
-  });
-
-  // Access the message state
-  const { hookResult: [message, setMessage], loading: messageLoading } = useRemoteHook({
-    scope: 'virtualAssistant',
-    module: './VirtualAssistantStateSingleton',
-    importName: 'useMessage',
-  });
-
-  if (loading || modelLoading || messageLoading) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>;
   if (error) return <div>Error loading hook</div>;
 
   // Example: Load ModelValues and set default model on mount
   useEffect(() => {
     const setDefaultModel = async () => {
-      const models = await getModule('virtualAssistant', 'VirtualAssistantStateSingleton', 'ModelValues');
-      setCurrentModel(models.RHEL_LIGHTSPEED);
-    }
-  }, []);
+      try {
+        const ModelValues = await getModule({
+          scope: 'virtualAssistant',
+          module: './state/globalState',
+          importName: 'ModelValues'
+        });
+        setState({ currentModel: ModelValues.RHEL_LIGHTSPEED });
+      } catch (err) {
+        console.error('Failed to load ModelValues:', err);
+      }
+    };
+    setDefaultModel();
+  }, [setCurrentModel]);
 
   return (
     <button onClick={() => {
-      setMessage('Help me with RHEL configuration');
-      setIsOpen(true);
+      // Open VA with a specific model and message using a single setState call
+      setState({
+        isOpen: true,
+        message: 'Help me with RHEL configuration'
+      });
     }}>
-      Ask Virtual Assistant
+      Ask Virtual Assistant (Current: {state.currentModel || 'None'})
     </button>
   );
 }
@@ -112,9 +110,10 @@ function RemoteComponent() {
 
 ### Available Hooks
 
-- `useIsOpen()` - Returns `[boolean, Dispatch<SetStateAction<boolean>>]`
-- `useCurrentModel()` - Returns `[Models | undefined, Dispatch<SetStateAction<Models | undefined>>]`
-- `useMessage()` - Returns `[string | undefined, Dispatch<SetStateAction<string | undefined>>]`
+- `useVirtualAssistant()` - **Recommended**: Returns `[VirtualAssistantState, (updates: Partial<VirtualAssistantState>) => void]` - Unified hook for managing all VA state (isOpen, message, currentModel)
+- `useIsOpen()` - Returns `[boolean, Dispatch<SetStateAction<boolean>>]` - Individual hook for open/close state
+- `useCurrentModel()` - Returns `[Models | undefined, Dispatch<SetStateAction<Models | undefined>>]` - Individual hook for model selection
+- `useMessage()` - Returns `[string | undefined, Dispatch<SetStateAction<string | undefined>>]` - Individual hook for message state
 
 ### Available Models
 

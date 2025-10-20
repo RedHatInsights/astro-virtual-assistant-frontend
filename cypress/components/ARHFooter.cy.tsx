@@ -2,6 +2,7 @@ import React from 'react';
 import ARHFooter from '../../src/Components/ARHClient/ARHFooter';
 import { AIStateContext } from '@redhat-cloud-services/ai-react-state';
 import { Events, StateManager } from '@redhat-cloud-services/ai-client-state';
+import { VirtualAssistantStateSingleton } from '../../src/utils/VirtualAssistantStateSingleton';
 
 // Create mock state manager - ARHFooter expects a different interface
 const createMockStateManager = (overrides: any = {}) => {
@@ -213,5 +214,19 @@ describe('ARHFooter Component', () => {
       // Send button should still be enabled for warning
       cy.get('button[aria-label="Send"]').should('not.be.disabled');
     });
+  });
+
+  it.only('should send default message from state singleton', () => {
+    VirtualAssistantStateSingleton.setMessage('Testing');
+    cy.mount(
+      <TestWrapper>
+        <ARHFooter />
+      </TestWrapper>
+    );
+
+    cy.get('#query-input').should('have.value', 'Testing');
+    cy.get('button[aria-label="Send"]').should('not.be.disabled');
+    cy.get('button[aria-label="Send"]').click()
+    cy.get('#query-input').should('have.value', '');
   });
 });

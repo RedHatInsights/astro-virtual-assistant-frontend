@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import useStateManager from '../useStateManager';
 import { useLocation } from 'react-router-dom';
+import { VirtualAssistantStateSingleton } from '../../utils/VirtualAssistantStateSingleton';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -34,6 +35,8 @@ jest.mock('@unleash/proxy-client-react', () => ({
 describe('useStateManager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    VirtualAssistantStateSingleton.setIsOpen(false);
+    VirtualAssistantStateSingleton.setCurrentModel(undefined);
     (useLocation as jest.Mock).mockReturnValue({ pathname: '/' });
 
     // Mock fetch to prevent network calls and silence warnings
