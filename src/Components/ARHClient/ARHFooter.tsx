@@ -4,6 +4,7 @@ import { useActiveConversation, useInProgress, useInitLimitation, useMessages, u
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
 import useArhMessageQuota from './useArhMessageQuota';
 import ARHNewChatModal from './ARHNewChatModal';
+import { useMessage } from '../../utils/VirtualAssistantStateSingleton';
 
 const ARHFooter = ({ isCompact }: { isCompact?: boolean }) => {
   const sendMessage = useSendMessage();
@@ -11,10 +12,12 @@ const ARHFooter = ({ isCompact }: { isCompact?: boolean }) => {
   const activeConversation = useActiveConversation();
   const initLimitations = useInitLimitation();
   const messages = useMessages<IFDAdditionalAttributes>();
+  const [defaultMessage, setDefaultMessage] = useMessage();
   const handleSend = (message: string | number) => {
     sendMessage(`${message}`, {
       stream: true,
     });
+    setDefaultMessage(undefined);
   };
   const conversationLock = useMemo(() => {
     return !activeConversation && initLimitations?.reason === 'quota-breached';
@@ -33,6 +36,7 @@ const ARHFooter = ({ isCompact }: { isCompact?: boolean }) => {
         isSendButtonDisabled={isDisabled}
         hasAttachButton={false}
         isCompact={isCompact}
+        {...(defaultMessage && { value: defaultMessage })}
       />
       <ChatbotFootnote label="Always review AI generated content prior to use." />
       {/* used to confirm to create a new chat */}
