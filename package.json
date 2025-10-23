@@ -29,7 +29,7 @@
     "static": "fec static --port=8004"
   },
   "dependencies": {
-    "@patternfly/chatbot": "6.4.0-prerelease.7",
+    "@patternfly/chatbot": "6.4.1",
     "@patternfly/patternfly": "^6.3.0",
     "@patternfly/react-core": "^6.3.0",
     "@patternfly/react-icons": "^6.3.0",
