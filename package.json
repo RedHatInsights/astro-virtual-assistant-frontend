@@ -33,7 +33,7 @@
     "@patternfly/patternfly": "^6.3.0",
     "@patternfly/react-core": "^6.3.0",
     "@patternfly/react-icons": "^6.3.0",
-    "@patternfly/virtual-assistant": "1.0.0-prerelease.9",
+    "@patternfly/virtual-assistant": "2.0.2",
     "@redhat-cloud-services/ai-client-state": "^0.14.1",
     "@redhat-cloud-services/ai-react-state": "^0.14.3",
     "@redhat-cloud-services/arh-client": "^0.12.0",
