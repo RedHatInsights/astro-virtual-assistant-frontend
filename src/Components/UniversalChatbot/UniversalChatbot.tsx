@@ -11,6 +11,7 @@ import UniversalHeader from './UniversalHeader';
 import UniversalFooter from './UniversalFooter';
 import UniversalMessages from './UniversalMessages';
 import UniversalAssistantSelection from './UniversalAssistantSelection';
+import { Models } from '../../aiClients/types';
 
 import '@patternfly/chatbot/dist/css/main.css';
 
@@ -140,7 +141,7 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
                 ? undefined
                 : () => {
                     // TODO: figure out nice way to handle custom conversation creation flow
-                    setShowNewConversationWarning(true);
+                    currentModel === Models.ASK_RED_HAT && setShowNewConversationWarning(true);
                     manager?.handleNewChat?.(setConversationsDrawerOpened);
                   }
             }
