@@ -28,6 +28,7 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
   private _isInitialized = false;
   private _isInitializing = false;
   private initialApiResponse: PostTalkResponseAPI | null = null;
+  private cachedWelcomeConfig: WelcomeConfig | null = null;
   async createNewConversation(): Promise<IConversation> {
     // VA does not manage conversations
     return {
@@ -90,6 +91,11 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
   }
 
   getWelcomeConfig(): WelcomeConfig {
+    // Return cached config if available to maintain stable references
+    if (this.cachedWelcomeConfig) {
+      return this.cachedWelcomeConfig;
+    }
+
     if (!this._isInitialized || !this.initialApiResponse) {
       // Return empty config to let useVaManager handle the default content
       return {
@@ -124,6 +130,9 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
       content,
       buttons,
     };
+
+    // Cache the result to maintain stable references across calls
+    this.cachedWelcomeConfig = result;
 
     return result;
   }
