@@ -3,13 +3,12 @@
   "extends": ["config:base"],
   "packageRules": [
     {
+      "comment": "Set the bump strategy for all npm packages",
       "matchManagers": ["npm"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "npm minor and patch dependencies",
-      "rangeStrategy": "bump",
-      "enabled": true
+      "rangeStrategy": "replace"
     },
     {
+      "comment": "Disable major updates",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["major"],
       "enabled": false
