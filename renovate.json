@@ -5,7 +5,7 @@
     {
       "comment": "Set the bump strategy for all npm packages",
       "matchManagers": ["npm"],
-      "rangeStrategy": "replace"
+      "rangeStrategy": "bump"
     },
     {
       "comment": "Disable major updates",
