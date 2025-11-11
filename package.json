@@ -94,7 +94,7 @@
     "stylelint-scss": "6.4.1",
     "ts-patch": "^3.3.0",
     "typescript": "^5.9.3",
-    "webpack-bundle-analyzer": "4.9.1"
+    "webpack-bundle-analyzer": "4.10.2"
   },
   "insights": {
     "appname": "virtual-assistant"
