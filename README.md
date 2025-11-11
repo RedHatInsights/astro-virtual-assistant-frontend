@@ -42,6 +42,87 @@ You still need to complete once the `Initial etc/hosts setup` as detailed in the
 After that, you can run `npm run start:standalone`.
 
 
+## Virtual Assistant State Management
+
+The Virtual Assistant uses a singleton pattern for global state management, allowing control from anywhere in the application - inside or outside of React. This is particularly useful for:
+
+- Opening/closing the assistant from external events
+- Setting the current model programmatically
+- Passing messages to the assistant
+- Integration with federated modules via remote hooks
+
+### Available State
+
+- `isOpen` - Boolean indicating if the assistant is open
+- `message` - Optional string message to pass to the assistant
+- `currentModel` - Currently selected AI model (enum: `Models`)
+
+### Usage via Remote Hooks (Scalprum)
+
+For federated modules that want to integrate with the Virtual Assistant, use the [Scalprum remote hook pattern](https://github.com/scalprum/scaffolding/blob/main/packages/react-core/docs/use-remote-hook.md):
+
+```typescript
+import React from 'react';
+import { useRemoteHook } from '@scalprum/react-core';
+
+function RemoteComponent() {
+  // Import the entire module to access both the hook and ModelValues
+  const { hookResult: module, loading, error } = useRemoteHook({
+    scope: 'virtualAssistant',
+    module: './state/globalState',
+    // Omit importName to get the entire module namespace
+    //importName: 'useIsOpen' // to import just the hook to control open state
+  });
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error loading hook</div>;
+
+  // Destructure what we need from the module
+  const { useVirtualAssistant, ModelValues } = module;
+  
+  // Now call the hook
+  const [state, setState] = useVirtualAssistant();
+
+  return (
+    <button onClick={() => {
+      // Open VA with a specific model and message using a single setState call
+      setState({
+        isOpen: true,
+        currentModel: ModelValues.RHEL_LIGHTSPEED,
+        message: 'Help me with RHEL configuration'
+      });
+    }}>
+      Ask Virtual Assistant (Current: {state.currentModel || 'None'})
+    </button>
+  );
+}
+```
+
+### Available Hooks
+
+- `useVirtualAssistant()` - **Recommended**: Returns `[VirtualAssistantState, (updates: Partial<VirtualAssistantState>) => void]` - Unified hook for managing all VA state (isOpen, message, currentModel)
+- `useIsOpen()` - Returns `[boolean, Dispatch<SetStateAction<boolean>>]` - Individual hook for open/close state
+- `useCurrentModel()` - Returns `[Models | undefined, Dispatch<SetStateAction<Models | undefined>>]` - Individual hook for model selection
+- `useMessage()` - Returns `[string | undefined, Dispatch<SetStateAction<string | undefined>>]` - Individual hook for message state
+
+### Available Models
+
+```typescript
+import { Models, ModelValues } from './utils/VirtualAssistantStateSingleton';
+
+// TypeScript enum
+Models.ASK_RED_HAT
+Models.RHEL_LIGHTSPEED
+Models.VA
+Models.OAI
+
+// Plain object (JavaScript-friendly)
+ModelValues.ASK_RED_HAT      // "Ask Red Hat"
+ModelValues.RHEL_LIGHTSPEED  // "RHEL Lightspeed"
+ModelValues.VA               // "Virtual Assistant"
+ModelValues.OAI              // "OpenShift assisted Installer"
+```
+
 ### Testing
 
 `npm run verify` will run `npm run lint` (eslint) and `npm test` (Jest)
