@@ -1,19 +1,29 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
+  "extends": [
+    ":semanticPrefixFixDepsChoreOthers",
+    ":ignoreModulesAndTests",
+    "mergeConfidence:age-confidence-badges",
+    "replacements:all",
+    "workarounds:all"
+  ],
   "packageRules": [
     {
+      "comment": "Rule 1: Set the update strategy for npm to 'bump'",
+      "matchManagers": ["npm"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "comment": "Rule 2: Enable minor and patch updates (NO GROUPING)",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "npm minor and patch dependencies",
-      "rangeStrategy": "bump",
       "enabled": true
     },
     {
+      "comment": "Rule 3: Disable major npm updates",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     }
-  ],
-  "semanticCommits": "enabled"
+  ]
 }
