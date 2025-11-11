@@ -9,18 +9,15 @@
   ],
   "packageRules": [
     {
-      "comment": "Rule 1: Set the update strategy for npm to 'bump'",
       "matchManagers": ["npm"],
       "rangeStrategy": "bump"
     },
     {
-      "comment": "Rule 2: Enable minor and patch updates (NO GROUPING)",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
       "enabled": true
     },
     {
-      "comment": "Rule 3: Disable major npm updates",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["major"],
       "enabled": false
