@@ -175,17 +175,19 @@ export const useVirtualAssistant = (): [VirtualAssistantState, (updates: Partial
     return unsubscribe;
   }, []);
 
-  const setState = (updates: Partial<VirtualAssistantState>) => {
+  const setState = (updates: SetStateAction<Partial<VirtualAssistantState>>) => {
     const instance = VirtualAssistantStateSingleton.getInstance();
 
-    if ('isOpen' in updates && updates.isOpen !== undefined) {
-      instance.isOpen = updates.isOpen;
+    const newValue = typeof updates === 'function' ? updates(VirtualAssistantStateSingleton.getState()) : updates;
+
+    if ('isOpen' in newValue && newValue.isOpen !== undefined) {
+      instance.isOpen = newValue.isOpen;
     }
-    if ('message' in updates) {
-      instance.message = updates.message;
+    if ('message' in newValue) {
+      instance.message = newValue.message;
     }
-    if ('currentModel' in updates) {
-      instance.currentModel = updates.currentModel;
+    if ('currentModel' in newValue) {
+      instance.currentModel = newValue.currentModel;
     }
   };
 

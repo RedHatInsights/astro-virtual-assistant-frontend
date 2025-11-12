@@ -64,6 +64,20 @@ function useStateManager(isOpen: boolean) {
     setCurrentModel(model);
   }, [isOpen, currentModel, managers, location.pathname]);
 
+  useEffect(() => {
+    if (!managers || managers.length === 0) {
+      return;
+    }
+
+    // Check if currentModel exists in managers
+    const modelExists = currentModel && managers.some((m) => m.model === currentModel);
+
+    if (!modelExists) {
+      // Current model is not in managers, set to first manager's model
+      setCurrentModel(managers[0].model);
+    }
+  }, [currentModel, managers, setCurrentModel]);
+
   const currentManager = currentModel && managers ? managers.find((m) => m.model === currentModel) : undefined;
 
   useEffect(() => {
