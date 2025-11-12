@@ -39,7 +39,7 @@
     "@redhat-cloud-services/arh-client": "^0.12.0",
     "@redhat-cloud-services/frontend-components": "^7.0.12",
     "@redhat-cloud-services/frontend-components-utilities": "^7.0.9",
-    "@redhat-cloud-services/lightspeed-client": "^0.14.3",
+    "@redhat-cloud-services/lightspeed-client": "^0.15.0",
     "@redhat-cloud-services/rhel-lightspeed-client": "^0.3.0",
     "@scalprum/core": "^0.8.3",
     "@scalprum/react-core": "^0.10.2",
