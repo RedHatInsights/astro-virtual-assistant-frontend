@@ -1,12 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    ":semanticPrefixFixDepsChoreOthers",
-    ":ignoreModulesAndTests",
-    "mergeConfidence:age-confidence-badges",
-    "replacements:all",
-    "workarounds:all"
-  ],
+  "extends": ["config:recommended"],
   "packageRules": [
     {
       "matchManagers": ["npm"],
@@ -15,6 +9,7 @@
     {
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm minor and patch dependencies",
       "enabled": true
     },
     {
