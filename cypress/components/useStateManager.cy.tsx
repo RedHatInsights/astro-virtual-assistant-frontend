@@ -1,9 +1,24 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import useStateManager from '../../src/aiClients/useStateManager';
 import { VirtualAssistantStateSingleton, Models } from '../../src/utils/VirtualAssistantStateSingleton';
 
-// Mock the scalprum react-core module
-const mockHookResults: Array<Record<string, unknown>> = [];
+// Extend window interface for mock data
+declare global {
+  interface Window {
+    cypressMockData: {
+      hookResults: Array<Record<string, unknown>>;
+    };
+  }
+}
+
+// Helper to set mock hook results
+const setMockHookResults = (results: Array<Record<string, unknown>>) => {
+  if (!window.cypressMockData) {
+    window.cypressMockData = { hookResults: [] };
+  }
+  window.cypressMockData.hookResults = results;
+};
 
 // Create a mock state manager factory
 const createStateManager = () => ({
@@ -11,25 +26,6 @@ const createStateManager = () => ({
   isInitializing: () => false,
   init: cy.stub(),
   destroy: cy.stub(),
-});
-
-// Set up mocks before importing the component
-before(() => {
-  // Mock @scalprum/react-core
-  cy.stub(window, 'require').callsFake((module: string) => {
-    if (module === '@scalprum/react-core') {
-      return {
-        useRemoteHookManager: () => ({
-          addHook: cy.stub(),
-          cleanup: cy.stub(),
-          get hookResults() {
-            return mockHookResults;
-          },
-        }),
-      };
-    }
-    return {};
-  });
 });
 
 // Test wrapper component that uses the useStateManager hook
@@ -63,11 +59,8 @@ describe('useStateManager Model Selection Tests', () => {
     VirtualAssistantStateSingleton.setIsOpen(false);
     VirtualAssistantStateSingleton.setCurrentModel(undefined);
     
-    // Clear mock hook results
-    mockHookResults.length = 0;
-    
     // Set up default managers (ARH and RHEL)
-    mockHookResults.push(
+    const defaultManagers = [
       {
         id: 'arh',
         loading: false,
@@ -104,14 +97,20 @@ describe('useStateManager Model Selection Tests', () => {
           },
         },
       }
-    );
+    ];
+    
+    setMockHookResults(defaultManagers);
   });
 
   it('should auto-correct when currentModel does not exist in managers', () => {
     // Set current model to one that doesn't exist in managers
     VirtualAssistantStateSingleton.setCurrentModel(Models.VA);
 
-    cy.mount(<UseStateManagerComponent isOpen={true} />);
+    cy.mount(
+      <BrowserRouter>
+        <UseStateManagerComponent isOpen={true} />
+      </BrowserRouter>
+    );
 
     // Verify component mounted
     cy.get('[data-testid="use-state-manager"]').should('exist');
@@ -136,7 +135,11 @@ describe('useStateManager Model Selection Tests', () => {
     // Set current model to RHEL Lightspeed which exists in managers
     VirtualAssistantStateSingleton.setCurrentModel(Models.RHEL_LIGHTSPEED);
 
-    cy.mount(<UseStateManagerComponent isOpen={true} />);
+    cy.mount(
+      <BrowserRouter>
+        <UseStateManagerComponent isOpen={true} />
+      </BrowserRouter>
+    );
 
     // Verify component mounted
     cy.get('[data-testid="use-state-manager"]').should('exist');
@@ -161,7 +164,11 @@ describe('useStateManager Model Selection Tests', () => {
     // Don't set any current model (remains undefined)
     VirtualAssistantStateSingleton.setCurrentModel(undefined);
 
-    cy.mount(<UseStateManagerComponent isOpen={true} />);
+    cy.mount(
+      <BrowserRouter>
+        <UseStateManagerComponent isOpen={true} />
+      </BrowserRouter>
+    );
 
     // Verify component mounted
     cy.get('[data-testid="use-state-manager"]').should('exist');
@@ -182,9 +189,8 @@ describe('useStateManager Model Selection Tests', () => {
     // Set current model to one that doesn't exist
     VirtualAssistantStateSingleton.setCurrentModel(Models.VA);
 
-    // Clear default managers and add only one
-    mockHookResults.length = 0;
-    mockHookResults.push({
+    // Set up only one manager
+    setMockHookResults([{
       id: 'arh',
       loading: false,
       error: null,
@@ -201,9 +207,13 @@ describe('useStateManager Model Selection Tests', () => {
           routes: ['/insights/*'],
         },
       },
-    });
+    }]);
 
-    cy.mount(<UseStateManagerComponent isOpen={true} />);
+    cy.mount(
+      <BrowserRouter>
+        <UseStateManagerComponent isOpen={true} />
+      </BrowserRouter>
+    );
 
     // Verify component mounted
     cy.get('[data-testid="use-state-manager"]').should('exist');
@@ -224,10 +234,14 @@ describe('useStateManager Model Selection Tests', () => {
     // Set a current model
     VirtualAssistantStateSingleton.setCurrentModel(Models.ASK_RED_HAT);
 
-    // Clear all managers
-    mockHookResults.length = 0;
+    // Set empty managers list
+    setMockHookResults([]);
 
-    cy.mount(<UseStateManagerComponent isOpen={true} />);
+    cy.mount(
+      <BrowserRouter>
+        <UseStateManagerComponent isOpen={true} />
+      </BrowserRouter>
+    );
 
     // Verify component mounted
     cy.get('[data-testid="use-state-manager"]').should('exist');

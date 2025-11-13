@@ -52,3 +52,20 @@ export const useScalprum = () => ({
     chrome: mockChromeApi,
   },
 });
+
+// Mock hook manager data storage - use global window object for test control
+if (!window.cypressMockData) {
+  window.cypressMockData = {};
+}
+
+if (!window.cypressMockData.hookResults) {
+  window.cypressMockData.hookResults = [];
+}
+
+export const useRemoteHookManager = () => ({
+  get hookResults() {
+    return window.cypressMockData.hookResults || [];
+  },
+  addHook: () => {},
+  cleanup: () => {},
+});
