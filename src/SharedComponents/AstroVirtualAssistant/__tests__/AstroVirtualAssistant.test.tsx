@@ -46,9 +46,10 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
   });
 
   it('should show Chameleon when flag is enabled', async () => {
+    const mockSetOpen = jest.fn();
     const { queryByAltText } = render(
       <MemoryRouter>
-        <AstroVirtualAssistant showAssistant={true} />
+        <AstroVirtualAssistant showAssistant={true} isOpen={false} setOpen={mockSetOpen} />
       </MemoryRouter>
     );
 
@@ -58,6 +59,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
   });
 
   it('should hide Chameleon when there are no managers', async () => {
+    const mockSetOpen = jest.fn();
     (useStateManager as jest.Mock).mockReturnValue({
       managers: [],
       currentModel: '',
@@ -66,7 +68,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
 
     const { queryByAltText } = render(
       <MemoryRouter>
-        <AstroVirtualAssistant showAssistant={true} />
+        <AstroVirtualAssistant showAssistant={true} isOpen={false} setOpen={mockSetOpen} />
       </MemoryRouter>
     );
 
@@ -76,10 +78,11 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
   });
 
   it('should show Astro when flag is disabled', async () => {
+    const mockSetOpen = jest.fn();
     mockUseFlag.mockReturnValue(false);
     const { queryByAltText } = render(
       <MemoryRouter>
-        <AstroVirtualAssistant showAssistant={true} />
+        <AstroVirtualAssistant showAssistant={true} isOpen={false} setOpen={mockSetOpen} />
       </MemoryRouter>
     );
 

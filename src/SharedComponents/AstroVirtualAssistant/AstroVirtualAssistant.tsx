@@ -114,12 +114,12 @@ const AstroVirtualAssistantUnified = ({
   );
 };
 
-const AstroVirtualAssistant = (props: { 
-  showAssistant: boolean; 
-  isOpen: boolean; 
+const AstroVirtualAssistant = (props: {
+  showAssistant: boolean;
+  isOpen: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  startInput?: string; 
-  className?: string; 
+  startInput?: string;
+  className?: string;
 }) => {
   const useChatBots = useFlag('platform.va.chameleon.enabled');
 
