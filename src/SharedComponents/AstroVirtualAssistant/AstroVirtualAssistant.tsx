@@ -28,26 +28,6 @@ interface AstroVirtualAssistantProps {
   className?: string;
 }
 
-const useAstroConfig = (props: AstroVirtualAssistantProps) => {
-  // if useOpenConfig is enabled, set showAssistant to true, override parameter isOpen and setOpen
-  const isOpenConfig = useFlag('platform.virtual-assistant.is-open-config');
-  const [tempIsOpen, setTempIsOpen] = useState<boolean>(false);
-
-  if (!isOpenConfig) {
-    return {
-      showAssistant: true,
-      isOpen: tempIsOpen,
-      setOpen: setTempIsOpen,
-    };
-  }
-
-  return {
-    showAssistant: props.showAssistant,
-    isOpen: props.isOpen,
-    setOpen: props.setOpen,
-  };
-};
-
 const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps> = ({ showAssistant, isOpen, setOpen, startInput, className }) => {
   const chrome = useChrome();
   const { messages, setMessages, ask, start, status, error, loadingResponse } = useAstro(messageProcessors, {
@@ -57,13 +37,11 @@ const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps>
   const [isFullScreen, setFullScreen] = useState<boolean>(false);
   const [input, setInput] = useState<string>('');
 
-  const config = useAstroConfig({ showAssistant, isOpen, setOpen });
-
   useEffect(() => {
-    if (config.isOpen) {
+    if (isOpen) {
       void start();
     }
-  }, [config.isOpen]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (startInput) {
@@ -71,14 +49,14 @@ const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps>
     }
   }, [startInput]);
 
-  if (!config.showAssistant) {
+  if (!showAssistant) {
     return null;
   }
 
   return (
     <Stack className={classnames('astro-wrapper-stack', className)}>
       <StackItem>
-        {(status === Status.STARTED || status === Status.LOADING) && config.isOpen && (
+        {(status === Status.STARTED || status === Status.LOADING) && isOpen && (
           <AstroChat
             key="astro-chat"
             messages={messages}
@@ -88,7 +66,7 @@ const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps>
             ask={ask}
             blockInput={loadingResponse || error !== null}
             preview={chrome.isBeta()}
-            onClose={() => config.setOpen(false)}
+            onClose={() => setOpen(false)}
             fullscreen={isFullScreen}
             setFullScreen={setFullScreen}
             isLoading={status === Status.LOADING}
@@ -96,7 +74,7 @@ const AstroVirtualAssistantLegacy: FunctionComponent<AstroVirtualAssistantProps>
         )}
       </StackItem>
       <StackItem className="astro-wrapper-stack__badge pf-v6-u-mt-sm pf-v6-u-mt-xl-on-md">
-        <AstroBadge onClick={() => config.setOpen((prev) => !prev)} />
+        <AstroBadge onClick={() => setOpen((prev) => !prev)} />
       </StackItem>
     </Stack>
   );
@@ -136,15 +114,20 @@ const AstroVirtualAssistantUnified = ({
   );
 };
 
-const AstroVirtualAssistant = (props: { showAssistant: boolean; startInput?: string; className?: string }) => {
+const AstroVirtualAssistant = (props: { 
+  showAssistant: boolean; 
+  isOpen: boolean; 
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  startInput?: string; 
+  className?: string; 
+}) => {
   const useChatBots = useFlag('platform.va.chameleon.enabled');
-  const [isOpen, setOpen] = useIsOpen();
 
   const ChatbotComponent = useChatBots ? AstroVirtualAssistantUnified : AstroVirtualAssistantLegacy;
 
   return createPortal(
     <div className="virtualAssistant">
-      <ChatbotComponent {...props} isOpen={isOpen} setOpen={setOpen} className={props.className} />
+      <ChatbotComponent {...props} className={props.className} />
     </div>,
     document.body
   );
