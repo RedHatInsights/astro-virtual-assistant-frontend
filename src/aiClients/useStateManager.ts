@@ -89,7 +89,7 @@ function useStateManager(isOpen: boolean) {
         console.error('Failed to initialize state manager:', e);
       }
     }
-  }, [currentManager]);
+  }, [isOpen, currentManager]);
 
   return {
     managers,
