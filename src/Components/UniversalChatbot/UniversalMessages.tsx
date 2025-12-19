@@ -114,7 +114,7 @@ const UniversalMessages = ({
           />
         )}
         {messages.map((message, index) => (
-          <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} />
+          <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} conversationId={activeConversation?.id} />
         ))}
         <div ref={scrollToBottomRef}></div>
       </MessageBox>
