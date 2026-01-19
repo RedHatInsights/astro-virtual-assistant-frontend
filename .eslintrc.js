@@ -6,6 +6,9 @@ module.exports = {
     render: 'readonly',
     mount: 'readonly',
   },
+  parserOptions: {
+    requireConfigFile: false,
+  },
   overrides: [
     {
       files: ['src/**/*.ts', 'src/**/*.tsx'],
