@@ -3,7 +3,7 @@ import { CommandType } from '../../src/types/Command';
 import { AssistantMessage, From } from '../../src/types/Message';
 import React, { useEffect } from 'react';
 import { ChromeUser } from '@redhat-cloud-services/types';
-import { MessageProcessorOptions } from '../../src/Components/Message/MessageProcessor';
+import { MessageProcessorOptions } from '../../src/types/Common';
 
 
 const BASIC_MESSAGE : AssistantMessage = {

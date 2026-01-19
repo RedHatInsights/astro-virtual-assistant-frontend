@@ -7,5 +7,6 @@ global.window.crypto = {
 };
 // in case the cryto package is mangled and the method does not exist
 if (!global.window.crypto.randomUUID) {
+  // @ts-ignore
   global.window.crypto.randomUUID = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 }

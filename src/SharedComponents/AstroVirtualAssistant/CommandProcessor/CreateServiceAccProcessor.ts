@@ -1,6 +1,5 @@
-import { EnvType } from '../../../types/Common';
+import { EnvType, MessageProcessorOptions } from '../../../types/Common';
 import { PostCreateServiceAccRequest, postCreateServiceAcc } from '../../../api/PostCreateServiceAccount';
-import { MessageProcessorOptions } from '../../../Components/Message/MessageProcessor';
 
 export const createServiceAccProcessor = async (args: Record<string, string>, options: MessageProcessorOptions) => {
   const requestPayload: PostCreateServiceAccRequest = {

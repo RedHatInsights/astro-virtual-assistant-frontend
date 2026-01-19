@@ -21,6 +21,14 @@ export interface AskFromOption {
   optionId: string | undefined;
 }
 
+export interface AskOptions {
+  hideMessage?: boolean;
+  hideResponse?: boolean;
+  label: string;
+  waitResponses?: boolean;
+  optionId?: string;
+}
+
 // Brand Assistant
 export interface AssistantMessage extends BaseMessage {
   messageId: string;
