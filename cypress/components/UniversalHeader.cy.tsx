@@ -65,7 +65,7 @@ describe('UniversalHeader Component', () => {
     
     // Should have PatternFly ChatbotHeaderMenu component
     cy.get('.pf-chatbot__menu').should('exist');
-    cy.get('button.pf-chatbot__button--toggle-menu[aria-label="Toggle menu"]').should('exist');
+    cy.get('button.pf-chatbot__button--toggle-menu[aria-label="Chat history menu"]').should('exist');
   });
 
   it('should handle menu toggle click', () => {
@@ -89,7 +89,7 @@ describe('UniversalHeader Component', () => {
     );
     
     // Click the menu toggle button
-    cy.get('button.pf-chatbot__button--toggle-menu[aria-label="Toggle menu"]').click();
+    cy.get('button.pf-chatbot__button--toggle-menu[aria-label="Chat history menu"]').click();
     
     // Should call setConversationsDrawerOpened
     cy.get('@setConversationsDrawerOpened').should('have.been.called');

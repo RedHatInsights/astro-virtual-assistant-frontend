@@ -1,10 +1,10 @@
 import { CommandArgsMap, CommandType } from '../../types/Command';
-import { MessageProcessor } from '../../Components/Message/MessageProcessor';
 import { From } from '../../types/Message';
 import { feedbackCommandProcessor } from './CommandProcessor/FeedbackCommandProcessor';
 import { thumbsCommandProcessor } from './CommandProcessor/ThumbsCommandProcessor';
 import { manageOrg2FaCommandProcessor } from './CommandProcessor/ManageOrg2FaProcessor';
 import { createServiceAccProcessor } from './CommandProcessor/CreateServiceAccProcessor';
+import { MessageProcessor } from '../../types/Common';
 
 // in case we need more tours
 const TOUR_DICT = {

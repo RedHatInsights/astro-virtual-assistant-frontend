@@ -8,12 +8,31 @@ import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg'
 import { useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import { commandMessageProcessor } from '../../SharedComponents/AstroVirtualAssistant/CommandMessageProcessor';
 import { AssistantMessage, Banner, From, SystemMessage } from '../../types/Message';
-import { MessageProcessorOptions } from '../Message/MessageProcessor';
 import useChrome from '@redhat-cloud-services/frontend-components/useChrome';
-import { createSystemMessageContent } from '../Message/SystemMessageEntry';
 import { useBannerMessages, useSystemMessages } from './useLocalMessages';
 import BannerEntry from './BannerMessage';
 import useVAFeedback from './useVAFeedback';
+import { MessageProcessorOptions } from '../../types/Common';
+
+export function createSystemMessageContent(message: SystemMessage): string {
+  let systemMessageText = '';
+
+  switch (message.type) {
+    case 'empty_response':
+      systemMessageText = 'The Virtual Assistant had trouble responding. Please try a different question.';
+      break;
+    case 'finish_conversation_message':
+      systemMessageText = 'End of conversation';
+      break;
+    case 'redirect_message':
+      systemMessageText = `Your browser may block pop-ups. Please allow pop-ups or click [here](${message.additionalContent?.[0]}).`;
+      break;
+    case 'request_error':
+      systemMessageText = 'Please try again later.';
+  }
+
+  return systemMessageText;
+}
 
 const TextResponseComponent = ({
   parentMessage,

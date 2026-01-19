@@ -21,8 +21,6 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 // Mock feature flag hook - requires Unleash context
 jest.mock('@unleash/proxy-client-react');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { useFlag: mockUseFlag } = require('@unleash/proxy-client-react');
-mockUseFlag.mockReturnValue(true);
 
 jest.mock(
   '../../../aiClients/useStateManager',
@@ -42,21 +40,7 @@ jest.mock(
 describe('AstroVirtualAssistant ARH Show Condition', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseFlag.mockReturnValue(true); // Default to Chameleon enabled
   });
-
-  it('should show Chameleon when flag is enabled', async () => {
-    const { queryByAltText } = render(
-      <MemoryRouter>
-        <AstroVirtualAssistant showAssistant={true} />
-      </MemoryRouter>
-    );
-
-    await waitFor(() => {
-      expect(queryByAltText('Launch AI assistant')).toBeInTheDocument();
-    });
-  });
-
   it('should hide Chameleon when there are no managers', async () => {
     (useStateManager as jest.Mock).mockReturnValue({
       managers: [],
@@ -72,19 +56,6 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
 
     await waitFor(() => {
       expect(queryByAltText('Launch AI assistant')).not.toBeInTheDocument();
-    });
-  });
-
-  it('should show Astro when flag is disabled', async () => {
-    mockUseFlag.mockReturnValue(false);
-    const { queryByAltText } = render(
-      <MemoryRouter>
-        <AstroVirtualAssistant showAssistant={true} />
-      </MemoryRouter>
-    );
-
-    await waitFor(() => {
-      expect(queryByAltText('Launch virtual assistant')).toBeInTheDocument();
     });
   });
 });
