@@ -1,13 +1,5 @@
-import { IAIClient, IConversation, IConversationMessage, IMessageResponse, ISendMessageOptions } from '@redhat-cloud-services/ai-client-common';
-import {
-  PostTalkResponseAPI,
-  ResponseOptions,
-  ResponseText,
-  Response as VAResponse,
-  isResponseOptions,
-  isResponseText,
-  postTalk,
-} from '../api/PostTalk';
+import { IAIClient, IConversation, IMessageResponse, ISendMessageOptions } from '@redhat-cloud-services/ai-client-common';
+import { PostTalkResponseAPI, Response as VAResponse, isResponseOptions, isResponseText, postTalk } from '../api/PostTalk';
 import { WelcomeButton, WelcomeConfig } from './types';
 
 const TEMP_CONVERSATION_ID = 'va-conversation';
@@ -39,7 +31,7 @@ class VAClient implements IAIClient<VAAdditionalAttributes> {
     };
   }
 
-  public async getConversationHistory(conversationId: string): Promise<any> {
+  public async getConversationHistory(): Promise<IMessageResponse<VAAdditionalAttributes>[]> {
     return [];
   }
   healthCheck(): Promise<unknown> {

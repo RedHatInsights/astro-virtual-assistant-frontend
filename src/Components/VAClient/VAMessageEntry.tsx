@@ -53,7 +53,7 @@ const TextResponseComponent = ({
     },
     (error) => {
       console.error('Error sending feedback:', error);
-    }
+    },
   );
   return (
     <Message
@@ -91,7 +91,7 @@ const OptionsResponseComponent = ({
     },
     (error) => {
       console.error('Error sending feedback:', error);
-    }
+    },
   );
   return (
     <Message
@@ -128,7 +128,7 @@ const SystemMessageComponent = ({ message }: { message: SystemMessage }) => {
     },
     (error) => {
       console.error('Error sending feedback:', error);
-    }
+    },
   );
   return (
     <Message
@@ -195,7 +195,7 @@ const CommandResponseComponent = ({
       ...systemMessages.map((msg, index) => <SystemMessageComponent key={`system-message-${index}`} message={msg} />),
       ...bannerMessages.map((msg, index) => <BannerMessageComponent key={`banner-message-${index}`} message={msg} />),
     ],
-    [systemMessages, bannerMessages]
+    [systemMessages, bannerMessages],
   );
 
   if (mixedMessages.length > 0) {

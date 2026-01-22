@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import { renderHook } from '@testing-library/react';
 import useScrollToBottom from '../../UniversalChatbot/useScrollToBottom';
 import { useMessages } from '@redhat-cloud-services/ai-react-state';
@@ -22,7 +21,7 @@ describe('useScrollToBottom', () => {
     mockUseMessages.mockReturnValue([]);
 
     // Mock ref.current
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     jest.spyOn(require('react'), 'useRef').mockReturnValue({
       current: mockElement,
     });
@@ -51,7 +50,7 @@ describe('useScrollToBottom', () => {
           isBannerOpen: false,
           messages: [],
         },
-      }
+      },
     );
 
     // Clear any initial calls
@@ -77,7 +76,7 @@ describe('useScrollToBottom', () => {
           isBannerOpen: true,
           messages: [],
         },
-      }
+      },
     );
 
     // Add a message while banner is open - should not scroll
@@ -105,7 +104,7 @@ describe('useScrollToBottom', () => {
           isBannerOpen: false,
           messages: [],
         },
-      }
+      },
     );
 
     // Add a message - should not scroll because ref is null

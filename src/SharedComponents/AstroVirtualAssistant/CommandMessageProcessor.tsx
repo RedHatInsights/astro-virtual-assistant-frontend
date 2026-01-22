@@ -33,10 +33,13 @@ const startPendoGuide = (tourId: string) => {
 
 const commandArgsToDict = (type: CommandType, args: string[]) => {
   const keys = CommandArgsMap[type];
-  return keys?.reduce((acc, key, index) => {
-    acc[key] = args[index] || ''; // Default to an empty string if the argument is missing
-    return acc;
-  }, {} as Record<string, string>);
+  return keys?.reduce(
+    (acc, key, index) => {
+      acc[key] = args[index] || ''; // Default to an empty string if the argument is missing
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 };
 
 export const commandMessageProcessor: MessageProcessor = async (message, options) => {
@@ -79,7 +82,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
           } else {
             options.addBanner('toggle_org_2fa', [args.enable_org_2fa]);
           }
-        } catch (error) {
+        } catch {
           options.addBanner('toggle_org_2fa_failed', [args.enable_org_2fa]);
         }
         break;

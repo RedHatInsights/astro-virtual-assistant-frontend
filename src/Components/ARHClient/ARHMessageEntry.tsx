@@ -27,7 +27,7 @@ function ARHMessageEntry({ message, avatar }: { message: MessageType<IFDAddition
         try {
           const linkUrl = new URL(source.link);
           isExternal = linkUrl.origin !== currentUrl.origin;
-        } catch (error) {
+        } catch {
           isExternal = true;
         }
         acc.push({

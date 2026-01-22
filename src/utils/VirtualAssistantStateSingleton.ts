@@ -11,8 +11,8 @@ export const ModelValues = Object.freeze(
       ...acc,
       [key]: value,
     }),
-    {} as Record<string, Models>
-  )
+    {} as Record<string, Models>,
+  ),
 );
 
 export type VirtualAssistantState = {

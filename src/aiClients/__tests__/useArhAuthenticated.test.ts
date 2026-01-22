@@ -46,7 +46,6 @@ jest.mock('@unleash/proxy-client-react', () => ({
   useFlags: jest.fn(() => []),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const checkARHAuth = require('../../Components/ARHClient/checkARHAuth').default;
 
 describe('useArhAuthenticated', () => {

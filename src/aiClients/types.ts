@@ -54,7 +54,7 @@ export type StateManagerConfiguration<S extends IAIClient> = {
   stateManager: StateManager<Record<string, unknown>, S>;
   isPreview?: boolean;
   handleNewChat?: (toggleDrawer: (isOpen: boolean) => void) => void;
-  MessageEntryComponent?: React.ComponentType<any>;
+  MessageEntryComponent?: React.ComponentType<unknown>;
   FooterComponent?: React.ComponentType<FooterComponentProps>;
   routes?: string[];
 };

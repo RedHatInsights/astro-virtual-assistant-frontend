@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import checkARHAuth from '../checkARHAuth';
 import { ChromeUser } from '@redhat-cloud-services/types';
 
@@ -50,7 +49,7 @@ describe('checkARHAuth', () => {
           Authorization: 'Bearer token',
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
   });
 

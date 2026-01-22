@@ -16,7 +16,7 @@ const mockUseInProgress = useInProgress as jest.MockedFunction<typeof useInProgr
 const mockUseInitLimitation = useInitLimitation as jest.MockedFunction<typeof useInitLimitation>;
 const mockUseMessages = useMessages as jest.MockedFunction<typeof useMessages>;
 const mockUseSendMessage = useSendMessage as jest.MockedFunction<typeof useSendMessage>;
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const mockUseArhMessageQuota = require('../useArhMessageQuota') as jest.MockedFunction<any>;
 
 describe('ARHFooter Logic', () => {

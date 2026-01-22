@@ -1,7 +1,7 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { ModuleFederationPlugin } = require('webpack').container;
-// eslint-disable-next-line rulesdir/disallow-fec-relative-imports
+
 const config = require('@redhat-cloud-services/frontend-components-config');
 
 const JSConfig = {
