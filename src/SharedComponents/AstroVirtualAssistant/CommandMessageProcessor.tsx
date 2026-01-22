@@ -82,7 +82,7 @@ export const commandMessageProcessor: MessageProcessor = async (message, options
           } else {
             options.addBanner('toggle_org_2fa', [args.enable_org_2fa]);
           }
-        } catch (error) {
+        } catch {
           options.addBanner('toggle_org_2fa_failed', [args.enable_org_2fa]);
         }
         break;

@@ -51,4 +51,22 @@ module.exports = [
       parser: require('@typescript-eslint/parser'),
     },
   },
+
+  // Relaxed rules for test files
+  {
+    files: ['**/__tests__/**/*.ts', '**/__tests__/**/*.tsx', '**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
+  },
+
+  // Relaxed rules for mock files
+  {
+    files: ['**/__mocks__/**/*.ts', '**/__mocks__/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ];
