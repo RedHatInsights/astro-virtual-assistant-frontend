@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": false,
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=7.0.0"
+    "node": ">=16.20.2",
+    "npm": ">=7.24.2"
   },
   "scripts": {
     "build": "fec build",
@@ -36,8 +36,8 @@
     "@redhat-cloud-services/ai-client-state": "^0.15.0",
     "@redhat-cloud-services/ai-react-state": "^0.15.0",
     "@redhat-cloud-services/arh-client": "^0.12.0",
-    "@redhat-cloud-services/frontend-components": "^7.0.24",
-    "@redhat-cloud-services/frontend-components-utilities": "^7.0.20",
+    "@redhat-cloud-services/frontend-components": "^7.0.26",
+    "@redhat-cloud-services/frontend-components-utilities": "^7.0.22",
     "@redhat-cloud-services/lightspeed-client": "^0.15.0",
     "@redhat-cloud-services/rhel-lightspeed-client": "^0.3.0",
     "@scalprum/core": "^0.9.0",
@@ -59,8 +59,8 @@
     "@cypress/code-coverage": "^3.14.7",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
     "@redhat-cloud-services/eslint-config-redhat-cloud-services": "1.3.0",
-    "@redhat-cloud-services/frontend-components-config": "6.7.21",
-    "@redhat-cloud-services/tsc-transform-imports": "^1.0.37",
+    "@redhat-cloud-services/frontend-components-config": "6.7.23",
+    "@redhat-cloud-services/tsc-transform-imports": "^1.0.39",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/jest": "^29.5.14",
