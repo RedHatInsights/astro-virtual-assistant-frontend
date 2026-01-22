@@ -245,8 +245,8 @@ describe('CommandMessageProcessors that call APIs', () => {
     };
     cy.mount(<CommandMessageProcessorWrapper message={message} options={options} />);
 
-    cy.wait('@serviceAccountAPIFailure').then(() => {
-      expect(options.addBanner).to.have.been.calledWith('create_service_account_failed', []);
-    });
+    cy.wait('@serviceAccountAPIFailure');
+    // Use Cypress retry mechanism to wait for async error handling to complete
+    cy.wrap(options.addBanner).should('have.been.calledWith', 'create_service_account_failed', []);
   });
 });
