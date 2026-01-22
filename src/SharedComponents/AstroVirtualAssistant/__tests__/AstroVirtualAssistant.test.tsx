@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import AstroVirtualAssistant from '../AstroVirtualAssistant';
@@ -20,7 +19,6 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 
 // Mock feature flag hook - requires Unleash context
 jest.mock('@unleash/proxy-client-react');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 
 jest.mock(
   '../../../aiClients/useStateManager',
@@ -34,7 +32,7 @@ jest.mock(
       ],
       currentModel: 'Ask Red Hat',
       setCurrentModel: () => {},
-    })) // create a mock fn
+    })), // create a mock fn
 );
 
 describe('AstroVirtualAssistant ARH Show Condition', () => {
@@ -51,7 +49,7 @@ describe('AstroVirtualAssistant ARH Show Condition', () => {
     const { queryByAltText } = render(
       <MemoryRouter>
         <AstroVirtualAssistant showAssistant={true} />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     await waitFor(() => {
