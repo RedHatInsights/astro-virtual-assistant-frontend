@@ -30,15 +30,27 @@ const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className }) => {
 
   // Initialize state manager when available
   useEffect(() => {
-    if (stateManager && !stateManager.isInitialized() && !stateManager.isInitializing()) {
-      stateManager.init().catch((e) => {
-        console.error('Failed to initialize state manager:', e);
-        setError(e instanceof Error ? e : new Error('Failed to initialize state manager'));
-      });
+    if (!stateManager) {
+      return;
     }
-    if (stateManager) {
+
+    if (stateManager.isInitialized()) {
+      // Already initialized
       setIsInitialized(true);
+    } else if (!stateManager.isInitializing()) {
+      // Need to initialize
+      stateManager
+        .init()
+        .then(() => {
+          setIsInitialized(true);
+        })
+        .catch((e) => {
+          console.error('Failed to initialize state manager:', e);
+          setError(e instanceof Error ? e : new Error('Failed to initialize state manager'));
+          setIsInitialized(false);
+        });
     }
+    // If isInitializing() is true, do nothing - wait for completion
   }, [stateManager]);
 
   // Handle error state
@@ -59,12 +71,6 @@ const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className }) => {
     );
   }
 
-  const handleClose = () => {
-    if (onClose) {
-      onClose();
-    }
-  };
-
   return (
     <AIStateProvider stateManager={stateManager}>
       <div className={classnames('va-embed', className)}>
@@ -72,7 +78,7 @@ const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className }) => {
           managers={managers}
           currentModel={currentModel}
           setCurrentModel={setCurrentModel}
-          setOpen={handleClose}
+          setOpen={() => onClose?.()}
           displayMode={ChatbotDisplayMode.embedded}
         />
       </div>

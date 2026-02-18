@@ -106,7 +106,10 @@ describe('VAEmbed Component', () => {
       cy.get('#ai-chatbot').should('exist');
     });
 
-    // Verify it's not rendered as a portal to document.body
-    cy.get('body').children().should('not.contain', '.va-embed');
+    // Verify it's rendered inline within the container, not as a portal
+    // The key test is that it exists within embed-container AND also within parent-wrapper
+    cy.get('[data-testid="parent-wrapper"]').within(() => {
+      cy.get('.va-embed').should('exist');
+    });
   });
 });
