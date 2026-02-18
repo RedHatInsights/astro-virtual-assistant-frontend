@@ -1,5 +1,3 @@
-/// <reference types="cypress" />
-
 import React from 'react';
 import { Panel, PanelMain } from '@patternfly/react-core';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
