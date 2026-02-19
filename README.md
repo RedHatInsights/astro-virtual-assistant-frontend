@@ -3,6 +3,8 @@ This can be tested on the landing page.
 
 Note: You don't have to run it anymore with the landing page frontend.
 
+For more detailed information about the virtual assistant and what it provides, [look through the detailed documentation](./docs/).
+
 ## For AI Agent Onboarding
 
 **See [ONBOARDING_GUIDE.md](./ONBOARDING_GUIDE.md)** for instructions on how to integrate your AI agent into Chameleon.
