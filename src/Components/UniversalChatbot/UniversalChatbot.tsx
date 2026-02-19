@@ -14,8 +14,9 @@ import UniversalAssistantSelection from './UniversalAssistantSelection';
 
 import '@patternfly/chatbot/dist/css/main.css';
 
-function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: ChatbotProps) {
-  const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(ChatbotDisplayMode.default);
+function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers, displayMode: propDisplayMode }: ChatbotProps) {
+  const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(propDisplayMode || ChatbotDisplayMode.default);
+  const effectiveDisplayMode = propDisplayMode || displayMode;
   const [isBannerOpen, setIsBannerOpen] = useState(true);
   const [username, setUsername] = useState('');
   const [avatar, setAvatar] = useState(emptyAvatar);
@@ -64,7 +65,7 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
 
   const FooterComponent = manager?.FooterComponent ?? UniversalFooter;
   const chatbotClassName = classnames({
-    'universal-chatbot-relative': displayMode !== ChatbotDisplayMode.fullscreen,
+    'universal-chatbot-relative': effectiveDisplayMode !== ChatbotDisplayMode.fullscreen,
   });
 
   const drawerContent = (
@@ -74,8 +75,8 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
         conversationsDrawerOpened={conversationsDrawerOpened}
         scrollToBottomRef={scrollToBottomRef}
         setOpen={setOpen}
-        setDisplayMode={setDisplayMode}
-        displayMode={displayMode}
+        setDisplayMode={propDisplayMode ? undefined : setDisplayMode}
+        displayMode={effectiveDisplayMode}
         isCompact
       />
       <UniversalAssistantSelection containerRef={rootElementRef} />
@@ -105,7 +106,7 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
         managers={managers}
       >
         <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot" className={chatbotClassName}>
-          <Chatbot displayMode={displayMode}>{drawerContent}</Chatbot>
+          <Chatbot displayMode={effectiveDisplayMode}>{drawerContent}</Chatbot>
         </div>
       </UniversalChatbotProvider>
     );
@@ -122,15 +123,15 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers }: 
       managers={managers}
     >
       <div ref={rootElementRef} id="ai-chatbot" aria-label="AI Assistant Chatbot" className={chatbotClassName}>
-        <Chatbot displayMode={displayMode} isCompact>
+        <Chatbot displayMode={effectiveDisplayMode} isCompact>
           <ChatbotConversationHistoryNav
-            displayMode={displayMode}
+            displayMode={effectiveDisplayMode}
             isDrawerOpen={conversationsDrawerOpened}
             onDrawerToggle={() => setConversationsDrawerOpened((prev) => !prev)}
             setIsDrawerOpen={setConversationsDrawerOpened}
             onSelectActiveItem={(_e, conversationId) => {
               setActiveConversation(`${conversationId}`);
-              if (displayMode === ChatbotDisplayMode.default) {
+              if (effectiveDisplayMode === ChatbotDisplayMode.default) {
                 setConversationsDrawerOpened(false);
               }
             }}

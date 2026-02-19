@@ -27,7 +27,7 @@ function UniversalHeader({
 }: {
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
   setOpen: (open: boolean) => void;
-  setDisplayMode: React.Dispatch<React.SetStateAction<ChatbotDisplayMode>>;
+  setDisplayMode?: React.Dispatch<React.SetStateAction<ChatbotDisplayMode>>;
   displayMode: ChatbotDisplayMode;
   conversationsDrawerOpened: boolean;
   historyManagement: boolean;
@@ -58,19 +58,21 @@ function UniversalHeader({
       </ChatbotHeaderMain>
       <ChatbotHeaderActions>
         {currentManager?.isPreview ? <UniversalHeaderPreviewBadge /> : null}
-        <Button
-          variant="plain"
-          className={isCompact ? 'pf-chatbot__button--toggle-menu pf-m-compact' : 'pf-chatbot__button--toggle-menu'}
-          onClick={() => {
-            setDisplayMode((prev) => (prev === ChatbotDisplayMode.default ? ChatbotDisplayMode.fullscreen : ChatbotDisplayMode.default));
-          }}
-          aria-label={displayMode === ChatbotDisplayMode.default ? 'Switch chatbot to fullscreen mode' : 'Switch to default mode'}
-          icon={
-            <Icon color="var(--pf-t--global--icon--color--subtle)" size={isCompact ? 'lg' : 'xl'}>
-              {displayMode === ChatbotDisplayMode.default ? <ExpandAltIcon /> : <CompressAltIcon />}
-            </Icon>
-          }
-        />
+        {setDisplayMode && (
+          <Button
+            variant="plain"
+            className={isCompact ? 'pf-chatbot__button--toggle-menu pf-m-compact' : 'pf-chatbot__button--toggle-menu'}
+            onClick={() => {
+              setDisplayMode((prev) => (prev === ChatbotDisplayMode.default ? ChatbotDisplayMode.fullscreen : ChatbotDisplayMode.default));
+            }}
+            aria-label={displayMode === ChatbotDisplayMode.default ? 'Switch chatbot to fullscreen mode' : 'Switch to default mode'}
+            icon={
+              <Icon color="var(--pf-t--global--icon--color--subtle)" size={isCompact ? 'lg' : 'xl'}>
+                {displayMode === ChatbotDisplayMode.default ? <ExpandAltIcon /> : <CompressAltIcon />}
+              </Icon>
+            }
+          />
+        )}
         <ChatbotHeaderCloseButton
           isCompact={isCompact}
           onClick={() => {

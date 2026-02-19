@@ -32,6 +32,7 @@ module.exports = {
     ],
     exposes: {
       './AstroVirtualAssistant': path.resolve(__dirname, './src/SharedComponents/AstroVirtualAssistant/AstroVirtualAssistant.tsx'),
+      './VAEmbed': path.resolve(__dirname, './src/SharedComponents/VAEmbed/VAEmbed.tsx'),
       './useArhChatbot': path.resolve(__dirname, './src/aiClients/useArhClient.ts'),
       './useRhelChatbot': path.resolve(__dirname, './src/aiClients/useRhelLightSpeedManager.ts'),
       './useVaChatbot': path.resolve(__dirname, './src/aiClients/useVaManager.ts'),

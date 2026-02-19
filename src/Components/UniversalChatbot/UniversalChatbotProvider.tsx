@@ -1,5 +1,6 @@
 import React, { Dispatch, PropsWithChildren } from 'react';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
+import { ChatbotDisplayMode } from '@patternfly/chatbot';
 
 import { Models, StateManagerConfiguration } from '../../aiClients/types';
 
@@ -15,6 +16,8 @@ export type UniversalChatbotContextType = {
 
 export type ChatbotProps = {
   setOpen: (isOpen: boolean) => void;
+  /** When provided, displayMode is controlled externally and fullscreen toggle is hidden */
+  displayMode?: ChatbotDisplayMode;
 } & Pick<UniversalChatbotContextType, 'currentModel' | 'managers' | 'setCurrentModel'>;
 
 export const UniversalChatbotContext = React.createContext<UniversalChatbotContextType>({
