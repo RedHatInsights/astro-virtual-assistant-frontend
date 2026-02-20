@@ -52,7 +52,7 @@ const AstroVirtualAssistant = (props: { showAssistant: boolean; startInput?: str
     <div className="virtualAssistant">
       <AstroVirtualAssistantUnified {...props} isOpen={isOpen} setOpen={setOpen} className={props.className} />
     </div>,
-    document.body
+    document.body,
   );
 };
 

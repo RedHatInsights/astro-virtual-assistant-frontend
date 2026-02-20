@@ -50,7 +50,7 @@ const UniversalMessages = ({
   setIsBannerOpen: (isOpen: boolean) => void;
   isBannerOpen: boolean;
   scrollToBottomRef: React.RefObject<HTMLDivElement>;
-  MessageEntryComponent?: React.ComponentType<any>;
+  MessageEntryComponent?: React.ComponentType<unknown>;
   isCompact?: boolean;
   welcome?: WelcomeConfig;
 }) => {

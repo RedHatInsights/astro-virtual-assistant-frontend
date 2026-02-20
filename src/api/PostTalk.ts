@@ -1,6 +1,5 @@
 import axiosInstance from '@redhat-cloud-services/frontend-components-utilities/interceptors/interceptors';
 
-import { Metadata } from '../types/Metadata';
 import { CommandType } from '../types/Command';
 
 export interface ResponseText {

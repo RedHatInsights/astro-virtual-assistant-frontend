@@ -61,7 +61,7 @@ export default function useVaManager(): UseManagerHook {
         buttons: welcomeConfig?.buttons,
       },
     }),
-    [stateManager, welcomeConfig]
+    [stateManager, welcomeConfig],
   );
 
   return { manager, loading: false };

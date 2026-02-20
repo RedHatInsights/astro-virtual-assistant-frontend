@@ -44,7 +44,7 @@ describe('useStateManager', () => {
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
-      })
+      }),
     ) as jest.Mock;
 
     // Default remote hook results: ARH and RHEL managers available, async one failing
@@ -91,7 +91,7 @@ describe('useStateManager', () => {
             routes: ['/ai/*'],
           },
         },
-      }
+      },
     );
   });
 
@@ -192,7 +192,7 @@ describe('useStateManager', () => {
             routes: ['/ai/*'],
           },
         },
-      }
+      },
     );
     (useLocation as jest.Mock).mockReturnValue({ pathname: '/foo/bar/baz' });
 
