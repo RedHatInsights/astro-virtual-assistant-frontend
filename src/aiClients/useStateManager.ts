@@ -62,7 +62,7 @@ function useStateManager(isOpen: boolean) {
     const matchingManager = managers.find((manager) => manager.routes?.some((r) => matchPath({ path: r, end: true }, location.pathname)));
     const model = (matchingManager || managers[0]).model;
     setCurrentModel(model);
-  }, [isOpen, currentModel, managers, location.pathname]);
+  }, [isOpen, managers, location.pathname]);
 
   useEffect(() => {
     if (!managers || managers.length === 0) {
