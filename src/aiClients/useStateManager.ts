@@ -11,15 +11,15 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
   useEffect(() => {
     addHook({
       scope: 'virtualAssistant',
+      module: './useVaChatbot',
+    });
+    addHook({
+      scope: 'virtualAssistant',
       module: './useArhChatbot',
     });
     addHook({
       scope: 'virtualAssistant',
       module: './useRhelChatbot',
-    });
-    addHook({
-      scope: 'virtualAssistant',
-      module: './useVaChatbot',
     });
     addHook({
       scope: 'assistedInstallerApp',
