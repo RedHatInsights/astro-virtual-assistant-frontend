@@ -6,7 +6,7 @@ import { Message, SourcesCardProps } from '@patternfly/chatbot';
 
 import { useMessageFeedback } from './useMessageFeedback';
 import useArhMessageQuota from './useArhMessageQuota';
-import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import ARH_BOT_ICON from '../../assets/rh-icon-ai-chatbot-happy-red.svg';
 import { Alert } from '@patternfly/react-core';
 
 import './ARHMessages.scss';

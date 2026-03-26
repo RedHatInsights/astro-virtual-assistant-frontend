@@ -8,7 +8,7 @@ import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
 import { WelcomeConfig } from '../../aiClients/types';
 
 import UniversalBanner from './UniversalBanner';
-import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import ARH_BOT_ICON from '../../assets/rh-icon-ai-chatbot-happy-red.svg';
 import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
 
 function MessageEntry({ message, avatar, isCompact }: { message: MessageType; avatar: string; isCompact?: boolean }) {

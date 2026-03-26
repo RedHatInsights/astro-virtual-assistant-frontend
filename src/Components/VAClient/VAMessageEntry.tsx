@@ -4,7 +4,7 @@ import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 
 import { VAAdditionalAttributes } from '../../aiClients/vaClient';
 import { ResponseCommand, ResponseOptions, ResponseText, isResponseCommand, isResponseOptions, isResponseText } from '../../api/PostTalk';
-import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import ARH_BOT_ICON from '../../assets/rh-icon-ai-chatbot-happy-red.svg';
 import { useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import { commandMessageProcessor } from '../../SharedComponents/AstroVirtualAssistant/CommandMessageProcessor';
 import { AssistantMessage, Banner, From, SystemMessage } from '../../types/Message';
