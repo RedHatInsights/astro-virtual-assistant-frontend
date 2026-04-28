@@ -1,9 +1,15 @@
 .arh__badge {
   &__button {
-    border-radius: 52px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: #ee0000;
     position: relative;
     transition: all 0.2s ease-in-out;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     
     &::before {
       content: '';
@@ -13,7 +19,7 @@
       right: 0;
       bottom: 0;
       background: rgba(255, 255, 255, 0.2);
-      border-radius: 52px;
+      border-radius: 50%;
       opacity: 0;
       transition: opacity 0.2s ease-in-out;
       pointer-events: none;
@@ -26,9 +32,10 @@
   }
   
   &__image {
-    width: 52px;
-    height: 52px;
+    width: 46px;
+    height: 46px;
     position: relative;
+    top: 2px;
     z-index: 0;
   }
 }

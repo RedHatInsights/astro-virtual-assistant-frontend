@@ -10,7 +10,7 @@ import {
 import { Brand, Button, Icon, Title } from '@patternfly/react-core';
 import React, { useContext } from 'react';
 import { CompressAltIcon, ExpandAltIcon } from '@patternfly/react-icons';
-import ARH_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import ARH_ICON from '../../assets/rh-icon-ai-chatbot-happy-red.svg';
 import { UniversalChatbotContext } from './UniversalChatbotProvider';
 
 import './UniversalHeader.scss';
