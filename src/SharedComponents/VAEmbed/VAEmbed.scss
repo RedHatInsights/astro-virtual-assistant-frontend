@@ -1,3 +1,9 @@
+.va-embed {
+  .pf-chatbot--embedded .pf-chatbot--layout--welcome .pf-chatbot__prompt-suggestions {
+    flex-direction: column;
+  }
+}
+
 .va-embed-error {
   padding: 1rem;
   text-align: center;
