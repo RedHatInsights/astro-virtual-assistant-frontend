@@ -123,5 +123,71 @@ describe('useHccAiManager', () => {
 
       expect(result.current.loading).toBe(false);
     });
+
+    describe('fetchFunction behavior', () => {
+      let fetchFunction: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+      let mockFetch: jest.Mock;
+      const originalFetch = global.fetch;
+
+      beforeEach(() => {
+        const { LightspeedClient } = jest.requireMock('@redhat-cloud-services/lightspeed-client');
+        mockFetch = jest.fn().mockResolvedValue({ ok: true });
+        global.fetch = mockFetch;
+
+        renderHook(() => useHccAiManager());
+
+        fetchFunction = LightspeedClient.mock.calls[0][0].fetchFunction;
+      });
+
+      afterEach(() => {
+        global.fetch = originalFetch;
+      });
+
+      it('should add Authorization header', async () => {
+        await fetchFunction('https://example.com/v1/info', { headers: {} });
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://example.com/v1/info',
+          expect.objectContaining({
+            headers: expect.objectContaining({
+              Authorization: 'Bearer mock-token',
+            }),
+          })
+        );
+      });
+
+      it('should inject model and provider for query requests', async () => {
+        const body = JSON.stringify({ query: 'hello' });
+        await fetchFunction('https://example.com/v1/query', { body, headers: {} });
+
+        const calledBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+        expect(calledBody.model).toBe('publishers/google/models/gemini-2.5-flash');
+        expect(calledBody.provider).toBe('google-vertex');
+        expect(calledBody.query).toBe('hello');
+      });
+
+      it('should inject model and provider for streaming_query requests', async () => {
+        const body = JSON.stringify({ query: 'hello' });
+        await fetchFunction('https://example.com/v1/streaming_query', { body, headers: {} });
+
+        const calledBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+        expect(calledBody.model).toBe('publishers/google/models/gemini-2.5-flash');
+        expect(calledBody.provider).toBe('google-vertex');
+      });
+
+      it('should not modify body for non-query requests', async () => {
+        const body = JSON.stringify({ some: 'data' });
+        await fetchFunction('https://example.com/v1/conversations', { body, headers: {} });
+
+        expect(mockFetch.mock.calls[0][1].body).toBe(body);
+      });
+
+      it('should leave body unchanged if JSON parsing fails', async () => {
+        const body = 'not-valid-json';
+        await fetchFunction('https://example.com/v1/query', { body, headers: {} });
+
+        expect(mockFetch.mock.calls[0][1].body).toBe(body);
+      });
+    });
   });
 });

@@ -19,10 +19,14 @@ export default function useHccAiManager(): UseManagerHook {
         // Tracking: https://redhat-internal.slack.com/archives/C07MC7G9T8A/p1778709207779339
         let body = options?.body;
         if (typeof input === 'string' && /\/v1\/(streaming_)?query$/.test(input) && typeof body === 'string') {
-          const parsed = JSON.parse(body);
-          parsed.model = 'publishers/google/models/gemini-2.5-flash';
-          parsed.provider = 'google-vertex';
-          body = JSON.stringify(parsed);
+          try {
+            const parsed = JSON.parse(body);
+            parsed.model = 'publishers/google/models/gemini-2.5-flash';
+            parsed.provider = 'google-vertex';
+            body = JSON.stringify(parsed);
+          } catch {
+            // leave body unchanged if parsing fails
+          }
         }
         return fetch(input, {
           ...options,
