@@ -1,6 +1,6 @@
 .va-embed {
-  .pf-chatbot--embedded .pf-chatbot--layout--welcome .pf-chatbot__prompt-suggestions {
-    flex-direction: column;
+  .pf-chatbot--embedded .pf-chatbot__prompt-suggestions {
+    flex-direction: column !important;
   }
 }
 
