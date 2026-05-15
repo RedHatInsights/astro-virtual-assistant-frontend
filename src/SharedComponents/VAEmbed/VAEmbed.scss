@@ -1,8 +1,6 @@
 .va-embed {
-  @media screen and (min-width: 64rem) {
-    .pf-chatbot--embedded .pf-chatbot--layout--welcome .pf-chatbot__prompt-suggestions {
-      flex-direction: column;
-    }
+  .pf-chatbot__prompt-suggestions {
+    flex-direction: column !important;
   }
 }
 
