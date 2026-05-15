@@ -3,34 +3,7 @@ import { ScalprumProvider } from '@scalprum/react-core';
 import { FlagProvider } from '@unleash/proxy-client-react';
 import useHccAiManager from '../../src/aiClients/useHccAiManager';
 import { Models } from '../../src/aiClients/types';
-
-const mockChromeApi = {
-  auth: {
-    getToken: () => Promise.resolve('mock-token'),
-    getUser: () =>
-      Promise.resolve({
-        identity: {
-          user: {
-            username: 'testuser',
-            email: 'test@test.com',
-            first_name: 'Test',
-            last_name: 'User',
-            is_internal: false,
-            is_active: true,
-            is_org_admin: true,
-            locale: 'en-US',
-          },
-          account_number: '123456',
-          internal: { account_id: '123456' },
-          org_id: 'test-org',
-          type: 'User',
-        },
-        entitlements: {},
-      }),
-  },
-  getEnvironment: () => 'stage',
-  isBeta: () => false,
-};
+import { mockChromeApi } from '../mocks/chromeApi';
 
 const UseHccAiManagerComponent = () => {
   const { manager, loading } = useHccAiManager();
