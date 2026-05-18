@@ -2,6 +2,13 @@
   .pf-chatbot__prompt-suggestions {
     flex-direction: column !important;
   }
+
+  // Ensure column layout persists on all screen sizes, including larger breakpoints
+  @media screen and (min-width: 1024px) {
+    .pf-chatbot__prompt-suggestions {
+      flex-direction: column !important;
+    }
+  }
 }
 
 .va-embed-error {
