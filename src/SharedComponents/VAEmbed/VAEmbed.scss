@@ -1,14 +1,15 @@
 .va-embed {
   // Fallback for any other prompt-suggestions instances
   .pf-chatbot__prompt-suggestions {
-    flex-direction: column !important;
+    flex-direction: column;
   }
 
   // Override PatternFly's default prompt suggestions layout
   // PatternFly uses .pf-chatbot--embedded .pf-chatbot--layout--welcome .pf-chatbot__prompt-suggestions
-  // with flex-direction: row at 64rem (1024px), so we need matching specificity
+  // with flex-direction: row at 64rem (1024px)
+  // Our selector has higher specificity (5 classes vs 3), so no !important needed
   .pf-chatbot--embedded .pf-chatbot--layout--welcome .pf-chatbot__prompt-suggestions {
-    flex-direction: column !important;
+    flex-direction: column;
   }
 }
 
