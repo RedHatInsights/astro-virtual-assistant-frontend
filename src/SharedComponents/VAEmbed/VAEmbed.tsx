@@ -38,7 +38,7 @@ const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className }) => {
 
   return (
     <AIStateProvider stateManager={stateManager}>
-      <div className={classnames('va-embed', className)}>
+      <div className={classnames('virtualAssistant', 'va-embed', className)}>
         <UniversalChatbot
           managers={managers}
           currentModel={currentModel}
