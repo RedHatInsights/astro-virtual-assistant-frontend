@@ -38,14 +38,16 @@ const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className }) => {
 
   return (
     <AIStateProvider stateManager={stateManager}>
-      <div className={classnames('virtualAssistant', 'va-embed', className)}>
-        <UniversalChatbot
-          managers={managers}
-          currentModel={currentModel}
-          setCurrentModel={setCurrentModel}
-          setOpen={() => onClose?.()}
-          displayMode={ChatbotDisplayMode.embedded}
-        />
+      <div className="virtualAssistant">
+        <div className={classnames('va-embed', className)}>
+          <UniversalChatbot
+            managers={managers}
+            currentModel={currentModel}
+            setCurrentModel={setCurrentModel}
+            setOpen={() => onClose?.()}
+            displayMode={ChatbotDisplayMode.embedded}
+          />
+        </div>
       </div>
     </AIStateProvider>
   );
