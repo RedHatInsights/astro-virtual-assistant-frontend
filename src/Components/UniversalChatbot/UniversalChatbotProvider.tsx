@@ -18,6 +18,8 @@ export type ChatbotProps = {
   setOpen: (isOpen: boolean) => void;
   /** When provided, displayMode is controlled externally and fullscreen toggle is hidden */
   displayMode?: ChatbotDisplayMode;
+  /** When true, the header (brand icon, model name, close button) is hidden */
+  hideHeader?: boolean;
 } & Pick<UniversalChatbotContextType, 'currentModel' | 'managers' | 'setCurrentModel'>;
 
 export const UniversalChatbotContext = React.createContext<UniversalChatbotContextType>({

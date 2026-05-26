@@ -15,7 +15,7 @@ import { Models } from '../../aiClients/types';
 
 import '@patternfly/chatbot/dist/css/main.css';
 
-function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers, displayMode: propDisplayMode }: ChatbotProps) {
+function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers, displayMode: propDisplayMode, hideHeader }: ChatbotProps) {
   const [displayMode, setDisplayMode] = useState<ChatbotDisplayMode>(propDisplayMode || ChatbotDisplayMode.default);
   const effectiveDisplayMode = propDisplayMode || displayMode;
   const [isBannerOpen, setIsBannerOpen] = useState(true);
@@ -71,15 +71,17 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers, di
 
   const drawerContent = (
     <>
-      <UniversalHeader
-        historyManagement={!!manager?.historyManagement}
-        conversationsDrawerOpened={conversationsDrawerOpened}
-        scrollToBottomRef={scrollToBottomRef}
-        setOpen={setOpen}
-        setDisplayMode={propDisplayMode ? undefined : setDisplayMode}
-        displayMode={effectiveDisplayMode}
-        isCompact
-      />
+      {!hideHeader && (
+        <UniversalHeader
+          historyManagement={!!manager?.historyManagement}
+          conversationsDrawerOpened={conversationsDrawerOpened}
+          scrollToBottomRef={scrollToBottomRef}
+          setOpen={setOpen}
+          setDisplayMode={propDisplayMode ? undefined : setDisplayMode}
+          displayMode={effectiveDisplayMode}
+          isCompact
+        />
+      )}
       <UniversalAssistantSelection containerRef={rootElementRef} />
       <UniversalMessages
         isBannerOpen={isBannerOpen}
