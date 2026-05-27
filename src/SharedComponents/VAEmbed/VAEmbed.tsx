@@ -14,8 +14,6 @@ export interface VAEmbedProps {
   onClose?: () => void;
   /** Additional CSS class name for custom styling */
   className?: string;
-  /** When true, the header (brand icon, model name, close button) is hidden */
-  hideHeader?: boolean;
 }
 
 /**
@@ -25,7 +23,7 @@ export interface VAEmbedProps {
  * Unlike AstroVirtualAssistant which uses createPortal to render to document.body,
  * this component renders inline and can be placed anywhere in the component tree.
  */
-const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className, hideHeader }) => {
+const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className }) => {
   const { currentModel, managers, setCurrentModel } = useStateManager(true);
   const stateManager = managers && currentModel ? managers.find((m) => m.model === currentModel)?.stateManager : undefined;
 
@@ -48,7 +46,6 @@ const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className, hideHeader }) => 
             setCurrentModel={setCurrentModel}
             setOpen={() => onClose?.()}
             displayMode={ChatbotDisplayMode.embedded}
-            hideHeader={hideHeader}
           />
         </div>
       </div>

@@ -19,10 +19,12 @@ export type VirtualAssistantState = {
   isOpen: boolean;
   message?: string;
   currentModel?: Models;
+  hideHeader: boolean;
 };
 
 const initialState: VirtualAssistantState = {
   isOpen: false,
+  hideHeader: false,
 };
 
 export class VirtualAssistantStateSingleton {
@@ -48,6 +50,10 @@ export class VirtualAssistantStateSingleton {
 
   public static setCurrentModel(value: Models | undefined) {
     VirtualAssistantStateSingleton.getInstance().currentModel = value;
+  }
+
+  public static setHideHeader(value: boolean) {
+    VirtualAssistantStateSingleton.getInstance().hideHeader = value;
   }
 
   public static getState() {
@@ -91,6 +97,15 @@ export class VirtualAssistantStateSingleton {
     VirtualAssistantStateSingleton._state.currentModel = value;
     this.notify();
   }
+
+  get hideHeader() {
+    return VirtualAssistantStateSingleton._state.hideHeader;
+  }
+
+  set hideHeader(value: boolean) {
+    VirtualAssistantStateSingleton._state.hideHeader = value;
+    this.notify();
+  }
 }
 
 export const useCurrentModel = (): [Models | undefined, Dispatch<SetStateAction<Models | undefined>>] => {
@@ -127,6 +142,24 @@ export const useMessage = (): [string | undefined, Dispatch<SetStateAction<strin
   };
 
   return [message, setMessage];
+};
+
+export const useHideHeader = (): [boolean, Dispatch<SetStateAction<boolean>>] => {
+  const [hideHeader, setHideHeaderState] = useState(VirtualAssistantStateSingleton.getInstance().hideHeader);
+
+  useEffect(() => {
+    const unsubscribe = VirtualAssistantStateSingleton.getInstance().subscribe(() => {
+      setHideHeaderState(VirtualAssistantStateSingleton.getInstance().hideHeader);
+    });
+    return unsubscribe;
+  }, []);
+
+  const setHideHeader = (value: SetStateAction<boolean>) => {
+    const newValue = typeof value === 'function' ? value(VirtualAssistantStateSingleton.getInstance().hideHeader) : value;
+    VirtualAssistantStateSingleton.getInstance().hideHeader = newValue;
+  };
+
+  return [hideHeader, setHideHeader];
 };
 
 export const useIsOpen = (): [boolean, Dispatch<SetStateAction<boolean>>] => {
@@ -188,6 +221,9 @@ export const useVirtualAssistant = (): [VirtualAssistantState, (updates: Partial
     }
     if ('currentModel' in newValue) {
       instance.currentModel = newValue.currentModel;
+    }
+    if ('hideHeader' in newValue && newValue.hideHeader !== undefined) {
+      instance.hideHeader = newValue.hideHeader;
     }
   };
 
