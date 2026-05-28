@@ -77,7 +77,7 @@ spec:
     - name: revision
       value: main
     - name: pathInRepo
-      value: pipelines/platform-ui/docker-build-run-all-tests.yaml
+      value: pipelines/platform-ui/docker-build-run-all-tests-v2.yaml
     resolver: git
   taskRunTemplate:
     serviceAccountName: build-pipeline-virtual-assistant-frontend
