@@ -24,6 +24,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:playwright": "playwright test",
     "postinstall": "ts-patch install && rimraf .cache",
     "verify": "npm-run-all build lint",
     "static": "fec static --port=8004"
@@ -57,9 +58,11 @@
   },
   "devDependencies": {
     "@cypress/code-coverage": "^3.14.7",
+    "@playwright/test": "^1.40.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.6.2",
     "@redhat-cloud-services/eslint-config-redhat-cloud-services": "1.3.0",
     "@redhat-cloud-services/frontend-components-config": "6.7.23",
+    "@redhat-cloud-services/playwright-test-auth": "^0.0.2",
     "@redhat-cloud-services/tsc-transform-imports": "^1.0.39",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
