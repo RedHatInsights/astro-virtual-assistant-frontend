@@ -81,6 +81,15 @@ spec:
     resolver: git
   taskRunTemplate:
     serviceAccountName: build-pipeline-virtual-assistant-frontend
+    podTemplate:
+      # Override /etc/hosts to redirect stage.foo.redhat.com to localhost
+      hostAliases:
+        - ip: "::1"
+          hostnames:
+            - "stage.foo.redhat.com"
+        - ip: "127.0.0.1"
+          hostnames:
+            - "stage.foo.redhat.com"
   workspaces:
   - name: workspace
     volumeClaimTemplate:
