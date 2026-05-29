@@ -22,14 +22,18 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    // IMPORTANT: Use PLAYWRIGHT_BASE_URL, NOT HCC_ENV_URL (which is for pipeline infrastructure)
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8004',
+    // In CI: Points to frontend proxy sidecar (stage.foo.redhat.com:1337)
+    // Locally: Can override with PLAYWRIGHT_BASE_URL env var
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://stage.foo.redhat.com:1337',
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
 
     // Screenshot on failure
     screenshot: 'only-on-failure',
+
+    // Ignore HTTPS errors (self-signed certs in CI proxy)
+    ignoreHTTPSErrors: true,
   },
 
   // Configure projects for major browsers
