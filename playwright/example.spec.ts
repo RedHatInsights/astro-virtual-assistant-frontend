@@ -10,13 +10,16 @@ import { test, expect } from '@playwright/test';
 test.describe('Virtual Assistant - Smoke Tests', () => {
   test('should load the application', async ({ page }) => {
     // Navigate to the application
+    // Note: page.goto() waits for 'load' event by default
+    // Do NOT use 'networkidle' - apps with background activity (polling, websockets, analytics)
+    // will never reach network idle state
     await page.goto('/');
 
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle');
+    // Wait for actual application elements instead of network idle
+    // Replace this with specific selectors for your app
+    // Example: await page.waitForSelector('[data-testid="virtual-assistant-chat"]');
 
     // Basic assertion - replace with actual app-specific checks
-    // For example, check for a specific heading or element
     const title = await page.title();
     expect(title).toBeTruthy();
   });
