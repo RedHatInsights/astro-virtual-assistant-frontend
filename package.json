@@ -88,6 +88,11 @@
     "typescript": "^5.9.3",
     "webpack-bundle-analyzer": "4.10.2"
   },
+  "overrides": {
+    "monaco-editor": {
+      "dompurify": "^3.4.0"
+    }
+  },
   "insights": {
     "appname": "virtual-assistant"
   }
