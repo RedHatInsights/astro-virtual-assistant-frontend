@@ -1,36 +1,54 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Example smoke test for Virtual Assistant Frontend
+ * Virtual Assistant E2E Tests
  *
- * This test demonstrates the basic Playwright setup.
- * Replace with actual tests for your application.
+ * Tests the core functionality of the Virtual Assistant chatbot:
+ * - Opening and closing the assistant
+ * - Verifying default model selection
+ * - Basic interaction flows
  */
 
-test.describe('Virtual Assistant - Smoke Tests', () => {
-  test('should load the application', async ({ page }) => {
+test.describe('Virtual Assistant - E2E Tests', () => {
+  test('should open and close the virtual assistant with correct default model', async ({ page }) => {
     // Navigate to the application
-    // Note: page.goto() waits for 'load' event by default
-    // Do NOT use 'networkidle' - apps with background activity (polling, websockets, analytics)
-    // will never reach network idle state
     await page.goto('/');
 
-    // Wait for actual application elements instead of network idle
-    // Replace this with specific selectors for your app
-    // Example: await page.waitForSelector('[data-testid="virtual-assistant-chat"]');
+    // Step 1: Ensure virtual assistant is closed upon reaching the landing page
+    const assistantToggle = page.locator('button[aria-label="Launch AI assistant"]');
+    await expect(assistantToggle).toBeVisible();
 
-    // Basic assertion - replace with actual app-specific checks
-    const title = await page.title();
-    expect(title).toBeTruthy();
-  });
+    // Verify chatbot is not visible initially
+    const chatbot = page.locator('#ai-chatbot');
+    await expect(chatbot).not.toBeVisible();
 
-  test.skip('example test - replace with your actual tests', async ({ page }) => {
-    // This is a placeholder test
-    // Replace with your actual Virtual Assistant test scenarios
-    await page.goto('/');
+    // Step 2: Open the virtual assistant
+    await assistantToggle.click();
 
-    // Example: Check for Virtual Assistant chat interface
-    // const chatInput = page.locator('[data-testid="chat-input"]');
-    // await expect(chatInput).toBeVisible();
+    // Wait for chatbot to appear
+    await expect(chatbot).toBeVisible();
+
+    // Step 3: Confirm that the selected assistant is the appropriate value in the dropdown
+    // The default model should be "Ask Red Hat" with selection title "General Red Hat (Default)"
+    const modelSelectionToggle = page.locator('.universal-model-selection__toggle');
+    await expect(modelSelectionToggle).toBeVisible();
+    await expect(modelSelectionToggle).toContainText('General Red Hat (Default)');
+
+    // Optional: Open dropdown to verify the selected option
+    await modelSelectionToggle.click();
+    const selectedOption = page.locator('[role="option"][aria-selected="true"]');
+    await expect(selectedOption).toContainText('General Red Hat (Default)');
+
+    // Close the dropdown
+    await page.keyboard.press('Escape');
+
+    // Step 4: Close the virtual assistant
+    const closeButton = page.locator('.pf-chatbot__header-actions button[aria-label*="Close"]');
+    await expect(closeButton).toBeVisible();
+    await closeButton.click();
+
+    // Step 5: Confirm that the virtual assistant has been closed
+    await expect(chatbot).not.toBeVisible();
+    await expect(assistantToggle).toBeVisible();
   });
 });
