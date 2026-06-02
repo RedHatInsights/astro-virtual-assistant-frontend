@@ -36,7 +36,7 @@ spec:
       # Install npm dependencies (including Playwright)
       npm ci
       # Note: Playwright browsers are pre-installed in the playwright image
-      # when image version matches package.json (both 1.40.0)
+      # when image version matches package.json (both 1.60.0)
 
   # Unit tests script
   - name: unit-tests-script
