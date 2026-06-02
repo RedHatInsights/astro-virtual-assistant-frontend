@@ -75,6 +75,7 @@ function UniversalHeader({
         )}
         <ChatbotHeaderCloseButton
           isCompact={isCompact}
+          aria-label="Close AI assistant"
           onClick={() => {
             setOpen(false);
             if (scrollToBottomRef.current) {

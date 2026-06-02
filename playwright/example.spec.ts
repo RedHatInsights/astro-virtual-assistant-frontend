@@ -31,28 +31,52 @@ test.describe('Virtual Assistant - E2E Tests', () => {
     const chatbot = page.locator('#ai-chatbot');
     await expect(chatbot).not.toBeVisible();
 
-    // Step 2: Open the virtual assistant
+    // Step 2: Determine expected default based on feature flags and entitlements
+    // Intercept the feature flags and ARH auth responses to determine which assistants are enabled
+    let isArhEnabled = false;
+    let isArhAuthenticated = false;
+
+    // Listen for feature flag API calls
+    page.on('response', async (response) => {
+      if (response.url().includes('/api/featureflags')) {
+        const flags = await response.json();
+        isArhEnabled = flags?.toggles?.find((t: any) => t.name === 'platform.arh.enabled')?.enabled || false;
+      }
+      // Listen for ARH authentication check
+      if (response.url().includes('access.redhat.com') || response.url().includes('access.stage.redhat.com')) {
+        isArhAuthenticated = response.ok();
+      }
+    });
+
+    // Step 3: Open the virtual assistant
     await assistantToggle.click();
 
-    // Wait for chatbot to appear
+    // Wait for chatbot to appear and for async managers to load
     await expect(chatbot).toBeVisible();
 
-    // Step 3: Confirm that the selected assistant is the appropriate value in the dropdown
-    // The default model should be "Ask Red Hat" with selection title "General Red Hat (Default)"
+    // Step 4: Determine expected default model based on configuration
+    // Default is the first available manager in order: ARH -> VA -> RHEL -> HCC AI -> Assisted Installer
+    let expectedDefault = 'Hybrid Cloud Console'; // VA is always available (no flags/auth required)
+
+    if (isArhEnabled && isArhAuthenticated) {
+      expectedDefault = 'Ask Red Hat'; // ARH is first in the list
+    }
+
+    // Step 5: Verify the default model matches expected
     const modelSelectionToggle = page.locator('.universal-model-selection__toggle');
     await expect(modelSelectionToggle).toBeVisible();
-    await expect(modelSelectionToggle).toContainText('General Red Hat (Default)');
+    await expect(modelSelectionToggle).toContainText(expectedDefault);
 
-    // Optional: Open dropdown to verify the selected option
+    // Open dropdown to verify the selected option
     await modelSelectionToggle.click();
     const selectedOption = page.locator('[role="option"][aria-selected="true"]');
-    await expect(selectedOption).toContainText('General Red Hat (Default)');
+    await expect(selectedOption).toContainText(expectedDefault);
 
     // Close the dropdown
     await page.keyboard.press('Escape');
 
     // Step 4: Close the virtual assistant
-    const closeButton = page.locator('.pf-chatbot__header-actions button[aria-label*="Close"]');
+    const closeButton = page.locator('button[aria-label="Close AI assistant"]');
     await expect(closeButton).toBeVisible();
     await closeButton.click();
 
