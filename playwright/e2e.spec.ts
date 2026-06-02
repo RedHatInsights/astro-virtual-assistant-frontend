@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, Response } from '@playwright/test';
 import { disableCookiePrompt } from '@redhat-cloud-services/playwright-test-auth';
 
 /**
@@ -14,8 +14,9 @@ import { disableCookiePrompt } from '@redhat-cloud-services/playwright-test-auth
  * authenticates once and saves the session state, which all tests reuse.
  */
 
-// Timeout for federated module loading (Virtual Assistant loads asynchronously)
-const FEDERATED_MODULE_TIMEOUT = 15000;
+// Timeouts
+const FEDERATED_MODULE_TIMEOUT = 15000; // Virtual Assistant loads asynchronously
+const API_RESPONSE_TIMEOUT = 10000; // Feature flags and auth API calls
 
 // Selectors
 const SELECTORS = {
@@ -38,27 +39,40 @@ interface FeatureFlagsResponse {
 
 /**
  * Determines which AI assistants are enabled based on feature flags and authentication
+ * Waits for the actual API responses before returning results
  */
 async function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: boolean; isArhAuthenticated: boolean }> {
+  // Wait for feature flags response
+  const featureFlagsPromise = page.waitForResponse(
+    (response) => response.url().includes('/api/featureflags'),
+    { timeout: API_RESPONSE_TIMEOUT }
+  ).catch(() => null);
+
+  // Wait for ARH authentication check
+  const arhAuthPromise = page.waitForResponse(
+    (response) => response.url().includes('access.redhat.com') || response.url().includes('access.stage.redhat.com'),
+    { timeout: API_RESPONSE_TIMEOUT }
+  ).catch(() => null);
+
+  const [featureFlagsResponse, arhAuthResponse] = await Promise.all([featureFlagsPromise, arhAuthPromise]);
+
   let isArhEnabled = false;
   let isArhAuthenticated = false;
 
-  const responseHandler = async (response: Response) => {
+  // Process feature flags response
+  if (featureFlagsResponse) {
     try {
-      if (response.url().includes('/api/featureflags')) {
-        const flags = (await response.json()) as FeatureFlagsResponse;
-        isArhEnabled = flags?.toggles?.find((t) => t.name === 'platform.arh.enabled')?.enabled || false;
-      }
-      // Listen for ARH authentication check
-      if (response.url().includes('access.redhat.com') || response.url().includes('access.stage.redhat.com')) {
-        isArhAuthenticated = response.ok();
-      }
-    } catch (error) {
-      // Ignore JSON parsing errors for non-JSON responses
+      const flags = (await featureFlagsResponse.json()) as FeatureFlagsResponse;
+      isArhEnabled = flags?.toggles?.find((t) => t.name === 'platform.arh.enabled')?.enabled || false;
+    } catch {
+      // Ignore JSON parsing errors
     }
-  };
+  }
 
-  page.on('response', responseHandler);
+  // Process ARH auth response
+  if (arhAuthResponse) {
+    isArhAuthenticated = arhAuthResponse.ok();
+  }
 
   return { isArhEnabled, isArhAuthenticated };
 }
