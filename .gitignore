@@ -31,3 +31,4 @@ cypress/screenshots
 playwright-report
 test-results
 playwright/.cache
+playwright/.auth

@@ -7,11 +7,16 @@ import { test, expect } from '@playwright/test';
  * - Opening and closing the assistant
  * - Verifying default model selection
  * - Basic interaction flows
+ *
+ * Authentication is handled automatically via globalSetup from
+ * @redhat-cloud-services/playwright-test-auth. The global setup
+ * authenticates once and saves the session state, which all tests reuse.
  */
 
 test.describe('Virtual Assistant - E2E Tests', () => {
   test('should open and close the virtual assistant with correct default model', async ({ page }) => {
     // Navigate to the application
+    // User is already authenticated via globalSetup
     await page.goto('/');
 
     // Step 1: Ensure virtual assistant is closed upon reaching the landing page
