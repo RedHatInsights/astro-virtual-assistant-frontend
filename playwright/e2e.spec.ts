@@ -1,4 +1,4 @@
-import { test, expect, Page, Response } from '@playwright/test';
+import { expect, Page, Response, test } from '@playwright/test';
 import { disableCookiePrompt } from '@redhat-cloud-services/playwright-test-auth';
 
 /**
