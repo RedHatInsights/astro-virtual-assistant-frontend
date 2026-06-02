@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { globalSetup } from '@redhat-cloud-services/playwright-test-auth';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -19,6 +20,10 @@ export default defineConfig({
   // Reporter to use
   reporter: 'html',
 
+  // Global setup for authentication
+  // This logs in once before all tests and saves the authentication state
+  globalSetup,
+
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
@@ -34,6 +39,11 @@ export default defineConfig({
 
     // Ignore HTTPS errors (self-signed certs in CI proxy)
     ignoreHTTPSErrors: true,
+
+    // Storage state for authenticated sessions
+    // Global setup will authenticate and save to this file
+    // All tests will reuse this authentication state
+    storageState: 'playwright/.auth/user.json',
   },
 
   // Configure projects for major browsers
