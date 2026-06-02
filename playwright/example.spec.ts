@@ -13,6 +13,9 @@ import { test, expect } from '@playwright/test';
  * authenticates once and saves the session state, which all tests reuse.
  */
 
+// Timeout for federated module loading (Virtual Assistant loads asynchronously)
+const FEDERATED_MODULE_TIMEOUT = 15000;
+
 test.describe('Virtual Assistant - E2E Tests', () => {
   test('should open and close the virtual assistant with correct default model', async ({ page }) => {
     // Navigate to the application
@@ -20,8 +23,9 @@ test.describe('Virtual Assistant - E2E Tests', () => {
     await page.goto('/');
 
     // Step 1: Ensure virtual assistant is closed upon reaching the landing page
+    // Note: VA loads as a federated module, so we need extended timeout
     const assistantToggle = page.locator('button[aria-label="Launch AI assistant"]');
-    await expect(assistantToggle).toBeVisible();
+    await expect(assistantToggle).toBeVisible({ timeout: FEDERATED_MODULE_TIMEOUT });
 
     // Verify chatbot is not visible initially
     const chatbot = page.locator('#ai-chatbot');
