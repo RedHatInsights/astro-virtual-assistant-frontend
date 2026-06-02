@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { disableCookiePrompt } from '@redhat-cloud-services/playwright-test-auth';
 
 /**
  * Virtual Assistant E2E Tests
@@ -64,6 +65,9 @@ async function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: bool
 
 test.describe('Virtual Assistant - E2E Tests', () => {
   test('should open and close the virtual assistant with correct default model', async ({ page }) => {
+    // Block TrustArc cookie consent prompts to prevent flaky tests
+    await disableCookiePrompt(page);
+
     // Set up response listeners BEFORE navigation to catch all API calls
     const assistantConfig = await detectEnabledAssistants(page);
 
