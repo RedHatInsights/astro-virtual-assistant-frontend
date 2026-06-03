@@ -39,42 +39,50 @@ interface FeatureFlagsResponse {
 
 /**
  * Determines which AI assistants are enabled based on feature flags and authentication
- * Waits for the actual API responses before returning results
+ * Returns a promise that resolves after navigation triggers the API responses
  */
-async function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: boolean; isArhAuthenticated: boolean }> {
+function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: boolean; isArhAuthenticated: boolean }> {
   // Wait for feature flags response
   const featureFlagsPromise = page.waitForResponse(
     (response) => response.url().includes('/api/featureflags'),
     { timeout: API_RESPONSE_TIMEOUT }
   ).catch(() => null);
 
-  // Wait for ARH authentication check
+  // Wait for ARH authentication check - specific endpoint only
   const arhAuthPromise = page.waitForResponse(
-    (response) => response.url().includes('access.redhat.com') || response.url().includes('access.stage.redhat.com'),
+    (response) => {
+      const url = response.url();
+      return (
+        (url.includes('access.redhat.com') || url.includes('access.stage.redhat.com')) &&
+        url.includes('/hydra/rest/contacts/sso/current') &&
+        response.request().method() === 'GET'
+      );
+    },
     { timeout: API_RESPONSE_TIMEOUT }
   ).catch(() => null);
 
-  const [featureFlagsResponse, arhAuthResponse] = await Promise.all([featureFlagsPromise, arhAuthPromise]);
+  // Return promise that processes responses when they arrive
+  return Promise.all([featureFlagsPromise, arhAuthPromise]).then(async ([featureFlagsResponse, arhAuthResponse]) => {
+    let isArhEnabled = false;
+    let isArhAuthenticated = false;
 
-  let isArhEnabled = false;
-  let isArhAuthenticated = false;
-
-  // Process feature flags response
-  if (featureFlagsResponse) {
-    try {
-      const flags = (await featureFlagsResponse.json()) as FeatureFlagsResponse;
-      isArhEnabled = flags?.toggles?.find((t) => t.name === 'platform.arh.enabled')?.enabled || false;
-    } catch {
-      // Ignore JSON parsing errors
+    // Process feature flags response
+    if (featureFlagsResponse) {
+      try {
+        const flags = (await featureFlagsResponse.json()) as FeatureFlagsResponse;
+        isArhEnabled = flags?.toggles?.find((t) => t.name === 'platform.arh.enabled')?.enabled || false;
+      } catch {
+        // Ignore JSON parsing errors
+      }
     }
-  }
 
-  // Process ARH auth response
-  if (arhAuthResponse) {
-    isArhAuthenticated = arhAuthResponse.ok();
-  }
+    // Process ARH auth response
+    if (arhAuthResponse) {
+      isArhAuthenticated = arhAuthResponse.ok();
+    }
 
-  return { isArhEnabled, isArhAuthenticated };
+    return { isArhEnabled, isArhAuthenticated };
+  });
 }
 
 test.describe('Virtual Assistant - E2E Tests', () => {
@@ -83,11 +91,14 @@ test.describe('Virtual Assistant - E2E Tests', () => {
     await disableCookiePrompt(page);
 
     // Set up response listeners BEFORE navigation to catch all API calls
-    const assistantConfig = await detectEnabledAssistants(page);
+    const detectionPromise = detectEnabledAssistants(page);
 
-    // Navigate to the application
+    // Navigate to the application to trigger API responses
     // User is already authenticated via globalSetup
     await page.goto('/');
+
+    // Wait for API responses to determine configuration
+    const assistantConfig = await detectionPromise;
 
     // Step 1: Ensure virtual assistant is closed upon reaching the landing page
     // Note: VA loads as a federated module, so we need extended timeout

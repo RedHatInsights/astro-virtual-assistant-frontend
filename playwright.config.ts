@@ -21,7 +21,7 @@ export default defineConfig({
 
   // Global setup for authentication
   // This logs in once before all tests and saves the authentication state
-  globalSetup: '@redhat-cloud-services/playwright-test-auth/global-setup',
+  globalSetup: require.resolve('@redhat-cloud-services/playwright-test-auth/global-setup'),
 
   // Shared settings for all the projects below
   use: {

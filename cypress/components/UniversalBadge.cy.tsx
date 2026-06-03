@@ -4,14 +4,13 @@ import UniversalBadge from '../../src/Components/UniversalChatbot/UniversalBadge
 describe('UniversalBadge Component', () => {
   it('should render the badge with tooltip', () => {
     const mockOnClick = cy.stub();
-    
+
     cy.mount(<UniversalBadge onClick={mockOnClick} />);
-    
-    // Should render the button
-    cy.get('button').should('exist');
-    
-    // Should have the correct image
-    cy.get('img[alt="Launch AI assistant"]').should('exist');
+
+    // Should render the button with aria-label
+    cy.get('button[aria-label="Launch AI assistant"]').should('exist');
+
+    // Should have the image
     cy.get('img.arh__badge__image').should('exist');
   });
 
@@ -41,13 +40,14 @@ describe('UniversalBadge Component', () => {
 
   it('should have correct accessibility attributes', () => {
     const mockOnClick = cy.stub();
-    
+
     cy.mount(<UniversalBadge onClick={mockOnClick} />);
-    
-    // Button should be accessible
+
+    // Button should be accessible with aria-label
     cy.get('button').should('have.attr', 'type', 'button');
-    
-    // Image should have alt text
-    cy.get('img').should('have.attr', 'alt', 'Launch AI assistant');
+    cy.get('button').should('have.attr', 'aria-label', 'Launch AI assistant');
+
+    // Image should have empty alt (decorative, button provides label)
+    cy.get('img').should('have.attr', 'alt', '');
   });
 });

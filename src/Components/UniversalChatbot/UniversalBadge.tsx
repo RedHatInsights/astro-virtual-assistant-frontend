@@ -12,7 +12,7 @@ const UniversalBadge: React.FunctionComponent<UniversalBadgeProps> = ({ onClick 
   return (
     <Tooltip position="left" content={<div>AI assistants</div>}>
       <Button variant="plain" className="pf-v6-u-p-0 arh__badge__button" onClick={onClick} aria-label="Launch AI assistant">
-        <img className="arh__badge__image" src={ChameleonBadge} alt="Launch AI assistant" />
+        <img className="arh__badge__image" src={ChameleonBadge} alt="" />
       </Button>
     </Tooltip>
   );
