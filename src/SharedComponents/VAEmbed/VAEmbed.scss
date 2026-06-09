@@ -1,4 +1,8 @@
-.va-embed {
+.virtualAssistant .va-embed {
+  .pf-chatbot__header {
+    display: none;
+  }
+
   // Fallback for any other prompt-suggestions instances
   .pf-chatbot__prompt-suggestions {
     flex-direction: column;
