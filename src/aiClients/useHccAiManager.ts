@@ -23,6 +23,9 @@ export default function useHccAiManager(): UseManagerHook {
             const parsed = JSON.parse(body);
             parsed.model = 'publishers/google/models/gemini-2.5-flash';
             parsed.provider = 'google-vertex';
+            // Workaround: topic summary generation times out due to unknown bug in lightspeed-stack,
+            // even though it should be performed in the background.
+            parsed.generate_topic_summary = false;
             body = JSON.stringify(parsed);
           } catch {
             // leave body unchanged if parsing fails

@@ -156,23 +156,25 @@ describe('useHccAiManager', () => {
         );
       });
 
-      it('should inject model and provider for query requests', async () => {
+      it('should inject model, provider, and disable topic summary for query requests', async () => {
         const body = JSON.stringify({ query: 'hello' });
         await fetchFunction('https://example.com/v1/query', { body, headers: {} });
 
         const calledBody = JSON.parse(mockFetch.mock.calls[0][1].body);
         expect(calledBody.model).toBe('publishers/google/models/gemini-2.5-flash');
         expect(calledBody.provider).toBe('google-vertex');
+        expect(calledBody.generate_topic_summary).toBe(false);
         expect(calledBody.query).toBe('hello');
       });
 
-      it('should inject model and provider for streaming_query requests', async () => {
+      it('should inject model, provider, and disable topic summary for streaming_query requests', async () => {
         const body = JSON.stringify({ query: 'hello' });
         await fetchFunction('https://example.com/v1/streaming_query', { body, headers: {} });
 
         const calledBody = JSON.parse(mockFetch.mock.calls[0][1].body);
         expect(calledBody.model).toBe('publishers/google/models/gemini-2.5-flash');
         expect(calledBody.provider).toBe('google-vertex');
+        expect(calledBody.generate_topic_summary).toBe(false);
       });
 
       it('should not modify body for non-query requests', async () => {
