@@ -106,7 +106,7 @@ describe('UniversalHeader Component', () => {
     cy.get('button[aria-label*="Switch chatbot to"]').should('exist');
     
     // Should have close button (PatternFly ChatbotHeaderCloseButton)
-    cy.get('button[aria-label="Close"]').should('exist');
+    cy.get('button[aria-label="Close AI assistant"]').should('exist');
     
     // Both menu and close buttons use the same chatbot menu container class
     cy.get('.pf-chatbot__menu').should('have.length', 2);

@@ -6,6 +6,7 @@ export enum Models {
   RHEL_LIGHTSPEED = 'RHEL Lightspeed',
   VA = 'Virtual Assistant',
   OAI = 'OpenShift assisted Installer',
+  HCC_AI = 'HCC AI Assistant',
 }
 
 export interface WelcomeButton {
