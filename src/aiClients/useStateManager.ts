@@ -29,6 +29,10 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
       scope: 'assistedInstallerApp',
       module: './useAsyncChatbot',
     });
+    addHook({
+      scope: 'assistedMigrationApp',
+      module: './useOmaChatbot',
+    });
     return cleanup;
   }, [addHook]);
 
