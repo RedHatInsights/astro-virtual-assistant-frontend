@@ -1,5 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useArhAuthenticated } from '../useArhClient';
+import useArhClient from '../useArhClient';
 import { ChromeUser } from '@redhat-cloud-services/types';
 
 // Mock the useChrome hook
@@ -156,5 +157,74 @@ describe('useArhAuthenticated', () => {
     await waitFor(() => {
       expect(checkARHAuth).toHaveBeenCalledWith('https://access.redhat.com', mockUser, 'mock-token');
     });
+  });
+});
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockUseFlag = require('@unleash/proxy-client-react').useFlag;
+
+describe('useArhClient', () => {
+  const mockUser: ChromeUser = {
+    entitlements: {},
+    identity: {
+      org_id: 'org-123',
+      account_number: '123456',
+      internal: {
+        org_id: 'org-123',
+        account_id: 'account-123',
+      },
+      type: 'User',
+      user: {
+        is_internal: false,
+        is_org_admin: false,
+        locale: 'en-US',
+        username: 'testuser',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_active: true,
+      },
+    },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockChrome.getEnvironment.mockReturnValue('stage');
+    mockChrome.auth.getUser.mockResolvedValue(mockUser);
+    checkARHAuth.mockResolvedValue(true);
+    // Default: all flags enabled
+    mockUseFlag.mockImplementation(() => true);
+  });
+
+  it('sets isPreview to false when arh-default flag is ON', async () => {
+    mockUseFlag.mockImplementation((flag: string) => {
+      if (flag === 'platform.chatbot.arh-default') return true;
+      return true;
+    });
+
+    const { result } = renderHook(() => useArhClient());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.manager).not.toBeNull();
+    expect(result.current.manager?.isPreview).toBe(false);
+  });
+
+  it('sets isPreview to true when arh-default flag is OFF', async () => {
+    mockUseFlag.mockImplementation((flag: string) => {
+      if (flag === 'platform.chatbot.arh-default') return false;
+      return true; // platform.arh.enabled stays true
+    });
+
+    const { result } = renderHook(() => useArhClient());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.manager).not.toBeNull();
+    expect(result.current.manager?.isPreview).toBe(true);
   });
 });

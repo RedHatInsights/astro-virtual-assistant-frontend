@@ -15,11 +15,13 @@ const createStateManager = () => ({
   init: jest.fn(),
 });
 
+const mockAddHook = jest.fn();
+const mockCleanup = jest.fn();
 const mockHookResults: Array<Record<string, unknown>> = [];
 jest.mock('@scalprum/react-core', () => ({
   useRemoteHookManager: jest.fn(() => ({
-    addHook: jest.fn(),
-    cleanup: jest.fn(),
+    addHook: mockAddHook,
+    cleanup: mockCleanup,
     get hookResults() {
       return mockHookResults;
     },
@@ -203,5 +205,31 @@ describe('useStateManager', () => {
     });
 
     expect(result.current.currentModel).toBe('Ask Red Hat');
+  });
+
+  it('registers ARH before VA when arh-default flag is ON', () => {
+    mockUseFlag.mockReturnValue(true);
+
+    renderHook(() => useStateManager(true));
+
+    const modules = mockAddHook.mock.calls.map(([arg]: [{ module: string }]) => arg.module);
+    const arhIndex = modules.indexOf('./useArhChatbot');
+    const vaIndex = modules.indexOf('./useVaChatbot');
+    expect(arhIndex).toBeGreaterThanOrEqual(0);
+    expect(vaIndex).toBeGreaterThanOrEqual(0);
+    expect(arhIndex).toBeLessThan(vaIndex);
+  });
+
+  it('registers VA before ARH when arh-default flag is OFF', () => {
+    mockUseFlag.mockReturnValue(false);
+
+    renderHook(() => useStateManager(true));
+
+    const modules = mockAddHook.mock.calls.map(([arg]: [{ module: string }]) => arg.module);
+    const arhIndex = modules.indexOf('./useArhChatbot');
+    const vaIndex = modules.indexOf('./useVaChatbot');
+    expect(arhIndex).toBeGreaterThanOrEqual(0);
+    expect(vaIndex).toBeGreaterThanOrEqual(0);
+    expect(vaIndex).toBeLessThan(arhIndex);
   });
 });

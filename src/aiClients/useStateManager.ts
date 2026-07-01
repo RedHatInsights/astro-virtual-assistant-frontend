@@ -2,21 +2,36 @@ import { useEffect, useMemo, useRef } from 'react';
 import { IAIClient } from '@redhat-cloud-services/ai-client-common';
 import { useRemoteHookManager } from '@scalprum/react-core';
 import { matchPath, useLocation } from 'react-router-dom';
+import { useFlag } from '@unleash/proxy-client-react';
 
 import { StateManagerConfiguration, UseManagerHook } from './types';
 import { useCurrentModel } from '../utils/VirtualAssistantStateSingleton';
 
 function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined {
   const { addHook, hookResults, cleanup } = useRemoteHookManager<UseManagerHook>();
+  const arhDefaultFlag = useFlag('platform.chatbot.arh-default');
   useEffect(() => {
-    addHook({
-      scope: 'virtualAssistant',
-      module: './useArhChatbot',
-    });
-    addHook({
-      scope: 'virtualAssistant',
-      module: './useVaChatbot',
-    });
+    if (arhDefaultFlag) {
+      // ARH first in dropdown (current behavior)
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useArhChatbot',
+      });
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useVaChatbot',
+      });
+    } else {
+      // VA first in dropdown
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useVaChatbot',
+      });
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useArhChatbot',
+      });
+    }
     addHook({
       scope: 'virtualAssistant',
       module: './useRhelChatbot',
@@ -30,7 +45,7 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
       module: './useAsyncChatbot',
     });
     return cleanup;
-  }, [addHook]);
+  }, [addHook, arhDefaultFlag]);
 
   return useMemo(() => {
     const passingResults = (hookResults || []).filter((r) => !r.error);
