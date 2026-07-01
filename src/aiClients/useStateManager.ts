@@ -6,10 +6,11 @@ import { useFlag } from '@unleash/proxy-client-react';
 
 import { StateManagerConfiguration, UseManagerHook } from './types';
 import { useCurrentModel } from '../utils/VirtualAssistantStateSingleton';
+import { ARH_DEFAULT_FLAG } from './flags';
 
 function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined {
   const { addHook, hookResults, cleanup } = useRemoteHookManager<UseManagerHook>();
-  const arhDefaultFlag = useFlag('platform.chatbot.arh-default');
+  const arhDefaultFlag = useFlag(ARH_DEFAULT_FLAG);
   useEffect(() => {
     if (arhDefaultFlag) {
       // ARH first in dropdown (current behavior)

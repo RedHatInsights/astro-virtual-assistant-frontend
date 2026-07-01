@@ -9,6 +9,7 @@ import ARHMessageEntry from '../Components/ARHClient/ARHMessageEntry';
 import ARHFooter from '../Components/ARHClient/ARHFooter';
 import { DEFAULT_WELCOME_CONTENT } from '../Components/UniversalChatbot/types';
 import { useFlag } from '@unleash/proxy-client-react';
+import { ARH_DEFAULT_FLAG } from './flags';
 
 function useArhBaseUrl() {
   const chrome = useChrome();
@@ -69,7 +70,7 @@ function useArhClient(): UseManagerHook {
   const { loading, isAuthenticated } = useArhAuthenticated();
   const baseUrl = useArhBaseUrl();
   const chrome = useChrome();
-  const arhDefaultFlag = useFlag('platform.chatbot.arh-default');
+  const arhDefaultFlag = useFlag(ARH_DEFAULT_FLAG);
   const manager = useMemo(() => {
     const client = new IFDClient({
       // Will change to ARH
