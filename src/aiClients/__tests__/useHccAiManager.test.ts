@@ -1,24 +1,24 @@
 import { renderHook } from '@testing-library/react';
-import { LightspeedClient } from '@redhat-cloud-services/lightspeed-client';
 import useHccAiManager from '../useHccAiManager';
 import { Models } from '../types';
 
 // Mock LightspeedClient
 jest.mock('@redhat-cloud-services/lightspeed-client', () => {
+  const mockClient = {
+    init: jest.fn().mockResolvedValue({ conversations: [] }),
+    sendMessage: jest.fn(),
+    createNewConversation: jest.fn(),
+    getConversationHistory: jest.fn().mockResolvedValue([]),
+    healthCheck: jest.fn(),
+  };
   return {
-    LightspeedClient: jest.fn(() => ({
-      init: jest.fn().mockResolvedValue({ conversations: [] }),
-      sendMessage: jest.fn(),
-      createNewConversation: jest.fn(),
-      getConversationHistory: jest.fn().mockResolvedValue([]),
-      healthCheck: jest.fn(),
-    })),
+    LightspeedClient: jest.fn(() => mockClient),
   };
 });
 
 // Mock AI client state
 const mockStateManager = {
-  isInitialized: jest.fn(() => true), // assume initialized for all tests
+  isInitialized: jest.fn(() => false),
   isInitializing: jest.fn(() => false),
   init: jest.fn(),
   getClient: jest.fn(),
@@ -40,7 +40,7 @@ jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
 }));
 
 // Track useFlag return value
-let mockUseFlagReturn = true;
+let mockUseFlagReturn = false;
 jest.mock('@unleash/proxy-client-react', () => ({
   useFlag: jest.fn(() => mockUseFlagReturn),
 }));
@@ -48,12 +48,11 @@ jest.mock('@unleash/proxy-client-react', () => ({
 describe('useHccAiManager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseFlagReturn = true;
+    mockUseFlagReturn = false;
   });
 
   describe('when feature flag is off', () => {
     it('should return null manager', () => {
-      mockUseFlagReturn = false;
       const { result } = renderHook(() => useHccAiManager());
 
       expect(result.current.manager).toBeNull();
@@ -62,10 +61,15 @@ describe('useHccAiManager', () => {
   });
 
   describe('when feature flag is on', () => {
-    it('should create LightspeedClient with correct config', () => {
-      const { result } = renderHook(() => useHccAiManager());
+    beforeEach(() => {
+      mockUseFlagReturn = true;
+    });
 
-      expect(result.current.manager?.model).toBe(Models.HCC_AI);
+    it('should create LightspeedClient with correct config', () => {
+      const { LightspeedClient } = jest.requireMock('@redhat-cloud-services/lightspeed-client');
+
+      renderHook(() => useHccAiManager());
+
       expect(LightspeedClient).toHaveBeenCalledWith(
         expect.objectContaining({
           baseUrl: expect.stringContaining('/api/ai-assistant'),
@@ -74,10 +78,50 @@ describe('useHccAiManager', () => {
       );
     });
 
+    it('should return HCC_AI model', () => {
+      const { result } = renderHook(() => useHccAiManager());
+
+      expect(result.current.manager?.model).toBe(Models.HCC_AI);
+    });
+
     it('should enable history management', () => {
       const { result } = renderHook(() => useHccAiManager());
 
       expect(result.current.manager?.historyManagement).toBe(true);
+    });
+
+    it('should not stream messages', () => {
+      const { result } = renderHook(() => useHccAiManager());
+
+      expect(result.current.manager?.streamMessages).toBe(false);
+    });
+
+    it('should provide static welcome buttons', () => {
+      const { result } = renderHook(() => useHccAiManager());
+
+      expect(result.current.manager?.welcome?.buttons).toEqual([
+        { title: 'What can you help me with?', value: 'What can you help me with?' },
+        { title: 'List the principals in my organization', value: 'List the principals in my organization' },
+      ]);
+    });
+
+    it('should not have a custom MessageEntryComponent', () => {
+      const { result } = renderHook(() => useHccAiManager());
+
+      expect(result.current.manager?.MessageEntryComponent).toBeUndefined();
+    });
+
+    it('should set correct model name and selection info', () => {
+      const { result } = renderHook(() => useHccAiManager());
+
+      expect(result.current.manager?.modelName).toBe('HCC AI Assistant');
+      expect(result.current.manager?.selectionTitle).toBe('HCC AI Assistant');
+    });
+
+    it('should not be loading', () => {
+      const { result } = renderHook(() => useHccAiManager());
+
+      expect(result.current.loading).toBe(false);
     });
 
     describe('fetchFunction behavior', () => {
@@ -86,15 +130,13 @@ describe('useHccAiManager', () => {
       const originalFetch = global.fetch;
 
       beforeEach(() => {
+        const { LightspeedClient } = jest.requireMock('@redhat-cloud-services/lightspeed-client');
         mockFetch = jest.fn().mockResolvedValue({ ok: true });
         global.fetch = mockFetch;
 
         renderHook(() => useHccAiManager());
-        const config = jest.mocked(LightspeedClient).mock.calls[0][0];
-        if (!config.fetchFunction) {
-          throw new Error('Expected LightspeedClient to receive a custom fetchFunction');
-        }
-        fetchFunction = config.fetchFunction;
+
+        fetchFunction = LightspeedClient.mock.calls[0][0].fetchFunction;
       });
 
       afterEach(() => {
