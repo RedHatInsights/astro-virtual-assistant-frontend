@@ -42,8 +42,8 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
       module: './useHccAiChatbot',
     });
     addHook({
-      scope: 'assistedInstallerApp',
-      module: './useAsyncChatbot',
+      scope: 'virtualAssistant',
+      module: './useMasChatbot',
     });
     return cleanup;
   }, [addHook, arhDefaultFlag]);
