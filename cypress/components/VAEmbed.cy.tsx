@@ -1,61 +1,118 @@
 import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { Panel, PanelMain } from '@patternfly/react-core';
-import { ChatbotDisplayMode } from '@patternfly/chatbot';
-import UniversalChatbot from '../../src/Components/UniversalChatbot/UniversalChatbot';
-import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
+import VAEmbed from '../../src/SharedComponents/VAEmbed/VAEmbed';
 import { Models } from '../../src/aiClients/types';
 import VAClient from '../../src/aiClients/vaClient';
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
-import '../../src/SharedComponents/VAEmbed/VAEmbed.scss';
 
-// Create a simple mock VAEmbed that shows the same behavior as the real one
-const MockVAEmbed = ({ className, onClose }: { className?: string; onClose?: () => void }) => {
-  // Use real state manager like VAChatbot test does
-  const vaClient = React.useMemo(() => new VAClient(), []);
-  const stateManager = React.useMemo(() => createClientStateManager(vaClient), [vaClient]);
+// Extend window interface for mock data (used by cypress/mocks/scalprum-react-core.js)
+declare global {
+  interface Window {
+    cypressMockData: {
+      hookResults: Array<Record<string, unknown>>;
+    };
+  }
+}
 
-  // Mock managers with all required properties
-  const mockManagers = [{
-    model: Models.VA,
-    modelName: 'Virtual Assistant',
-    stateManager,
-    historyManagement: false,
-    streamMessages: false,
-    docsUrl: '',
-    selectionTitle: 'Virtual Assistant',
-    selectionDescription: 'Test VA',
-  }];
-
-  return (
-    <AIStateProvider stateManager={stateManager}>
-      <div className="virtualAssistant" style={{ height: '100%', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <div className={`va-embed ${className || ''}`} style={{ height: '100%', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <UniversalChatbot
-            managers={mockManagers}
-            currentModel={Models.VA}
-            setCurrentModel={() => {}}
-            setOpen={onClose || (() => {})}
-            displayMode={ChatbotDisplayMode.embedded}
-          />
-        </div>
-      </div>
-    </AIStateProvider>
-  );
+// Mock Chrome API
+const mockChromeApi = {
+  auth: {
+    getToken: () => Promise.resolve('mock-token'),
+    getUser: () => Promise.resolve({
+      identity: {
+        user: {
+          username: 'testuser',
+          email: 'test@test.com',
+          first_name: 'Test',
+          last_name: 'User',
+          is_internal: false,
+          is_active: true,
+          is_org_admin: true,
+          locale: 'en-US'
+        },
+        account_number: '123456',
+        internal: {
+          account_id: '123456'
+        },
+        org_id: 'test-org',
+        type: 'User'
+      },
+      entitlements: {}
+    }),
+  },
+  getEnvironment: () => 'stage',
+  isBeta: () => false,
 };
 
-// Simple component that embeds MockVAEmbed
+// Setup mock managers for VAEmbed's useStateManager hook
+const setupMockManagers = () => {
+  const vaClient = new VAClient();
+  const stateManager = createClientStateManager(vaClient);
+
+  const mockManagers = [{
+    id: 'va',
+    loading: false,
+    error: null,
+    hookResult: {
+      manager: {
+        model: Models.VA,
+        modelName: 'Virtual Assistant',
+        stateManager,
+        historyManagement: false,
+        streamMessages: false,
+        docsUrl: '',
+        selectionTitle: 'Virtual Assistant',
+        selectionDescription: 'Test VA',
+      },
+    },
+  }];
+
+  if (!window.cypressMockData) {
+    window.cypressMockData = { hookResults: [] };
+  }
+  window.cypressMockData.hookResults = mockManagers;
+
+  // Add Chrome API to window for VA client
+  (window as any).chrome = mockChromeApi;
+};
+
+// Test wrapper that provides Router context
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <BrowserRouter>
+    {children}
+  </BrowserRouter>
+);
+
+// Simple component that embeds real VAEmbed
 const HelpPanelWithEmbed = () => (
   <Panel data-testid="help-panel">
     <PanelMain>
       <h2>Help Panel</h2>
-      <MockVAEmbed className="test-embed" />
+      <VAEmbed className="test-embed" />
     </PanelMain>
   </Panel>
 );
 
 describe('VAEmbed Component', () => {
+  beforeEach(() => {
+    // Setup mock managers and Chrome API for useStateManager
+    setupMockManagers();
+  });
+
   it('should render embedded in a help panel', () => {
-    cy.mount(<HelpPanelWithEmbed />);
+    // Suppress Chrome API errors for this test
+    cy.on('uncaught:exception', (err) => {
+      if (err.message.includes('getUser')) {
+        return false;
+      }
+    });
+
+    cy.mount(
+      <TestWrapper>
+        <HelpPanelWithEmbed />
+      </TestWrapper>
+    );
 
     // Verify help panel exists
     cy.get('[data-testid="help-panel"]').should('exist');
@@ -76,9 +133,11 @@ describe('VAEmbed Component', () => {
 
   it('should render with custom className', () => {
     cy.mount(
-      <div data-testid="custom-container">
-        <MockVAEmbed className="custom-style" />
-      </div>
+      <TestWrapper>
+        <div data-testid="custom-container">
+          <VAEmbed className="custom-style" />
+        </div>
+      </TestWrapper>
     );
 
     // Verify VAEmbed renders with correct classes
@@ -92,13 +151,15 @@ describe('VAEmbed Component', () => {
 
   it('should render inline without portal behavior', () => {
     cy.mount(
-      <div data-testid="parent-wrapper">
-        <h1>Page Title</h1>
-        <div data-testid="embed-container">
-          <MockVAEmbed className="inline-embed" />
+      <TestWrapper>
+        <div data-testid="parent-wrapper">
+          <h1>Page Title</h1>
+          <div data-testid="embed-container">
+            <VAEmbed className="inline-embed" />
+          </div>
+          <footer>Footer Content</footer>
         </div>
-        <footer>Footer Content</footer>
-      </div>
+      </TestWrapper>
     );
 
     // Verify embedded component is within normal DOM flow
@@ -123,17 +184,19 @@ describe('VAEmbed Component', () => {
 
   it('should fill the full height of a 600px container', () => {
     cy.mount(
-      <div
-        data-testid="height-test-container"
-        style={{
-          height: '600px',
-          border: '3px solid blue',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <MockVAEmbed className="height-test-embed" />
-      </div>
+      <TestWrapper>
+        <div
+          data-testid="height-test-container"
+          style={{
+            height: '600px',
+            border: '3px solid blue',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <VAEmbed className="height-test-embed" />
+        </div>
+      </TestWrapper>
     );
 
     // Wait for component to render
