@@ -98,7 +98,7 @@ spec:
     - name: url
       value: https://github.com/RedHatInsights/konflux-pipelines
     - name: revision
-      value: main
+      value: e0da8f2347fae1b5fd6a9113b2b5a3a3bbe4e584
     - name: pathInRepo
       value: pipelines/platform-ui/docker-build-run-all-tests-v2.yaml
     resolver: git
@@ -128,6 +128,19 @@ spec:
           limits:
             memory: "8Gi"
             cpu: "2000m"
+  taskRunSpecs:
+  - pipelineTaskName: run-unit-tests
+    podTemplate:
+      securityContext:
+        # Extract source as the same user that installs dependencies and runs tests.
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1005770000
+  - pipelineTaskName: run-e2e-tests
+    podTemplate:
+      securityContext:
+        # Make the shared workspace and proxy config volume writable by test steps.
+        fsGroup: 1005770000
   workspaces:
   - name: workspace
     volumeClaimTemplate:
@@ -138,7 +151,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 2Gi
+            storage: 5Gi
       status: {}
   - name: git-auth
     secret:
