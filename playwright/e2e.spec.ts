@@ -41,7 +41,7 @@ interface FeatureFlagsResponse {
  * Determines which AI assistants are enabled based on feature flags and authentication
  * Returns a promise that resolves after navigation triggers the API responses
  */
-function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: boolean; isArhAuthenticated: boolean }> {
+function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: boolean; isArhAuthenticated: boolean; isVaEnabled: boolean }> {
   // Wait for feature flags response
   const featureFlagsPromise = page.waitForResponse(
     (response) => response.url().includes('/api/featureflags'),
@@ -65,12 +65,14 @@ function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: boolean; i
   return Promise.all([featureFlagsPromise, arhAuthPromise]).then(async ([featureFlagsResponse, arhAuthResponse]) => {
     let isArhEnabled = false;
     let isArhAuthenticated = false;
+    let isVaEnabled = false;
 
     // Process feature flags response
     if (featureFlagsResponse) {
       try {
         const flags = (await featureFlagsResponse.json()) as FeatureFlagsResponse;
         isArhEnabled = flags?.toggles?.find((t) => t.name === 'platform.arh.enabled')?.enabled || false;
+        isVaEnabled = flags?.toggles?.find((t) => t.name === 'platform.chatbot.va.enabled')?.enabled || false;
       } catch {
         // Ignore JSON parsing errors
       }
@@ -81,7 +83,7 @@ function detectEnabledAssistants(page: Page): Promise<{ isArhEnabled: boolean; i
       isArhAuthenticated = arhAuthResponse.ok();
     }
 
-    return { isArhEnabled, isArhAuthenticated };
+    return { isArhEnabled, isArhAuthenticated, isVaEnabled };
   });
 }
 
@@ -116,11 +118,24 @@ test.describe('Virtual Assistant - E2E Tests', () => {
     await expect(chatbot).toBeVisible();
 
     // Step 3: Determine expected default model based on configuration
-    // Default is the first available manager in order: ARH -> VA -> RHEL -> HCC AI
-    let expectedDefault = 'Hybrid Cloud Console'; // VA is always available (no flags/auth required)
+    // When VA enabled: VA or ARH first (depends on arh-default flag)
+    // When VA disabled: HCC AI > MAS > ARH fallback order
+    let expectedDefault: string;
 
-    if (assistantConfig.isArhEnabled && assistantConfig.isArhAuthenticated) {
-      expectedDefault = 'Ask Red Hat'; // ARH is first in the list
+    if (assistantConfig.isVaEnabled) {
+      // VA is available — it's the default unless arh-default moves ARH first
+      expectedDefault = 'Hybrid Cloud Console';
+      if (assistantConfig.isArhEnabled && assistantConfig.isArhAuthenticated) {
+        // arh-default may make ARH the first; either way ARH is available
+        expectedDefault = 'Ask Red Hat';
+      }
+    } else {
+      // VA disabled — fallback priority: HCC AI, MAS, ARH
+      expectedDefault = 'HCC AI Assistant';
+      if (assistantConfig.isArhEnabled && assistantConfig.isArhAuthenticated) {
+        // ARH is available but HCC AI is still first in priority
+        expectedDefault = 'HCC AI Assistant';
+      }
     }
 
     // Step 4: Verify the default model matches expected
