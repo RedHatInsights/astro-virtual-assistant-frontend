@@ -6,12 +6,13 @@ import { useFlag } from '@unleash/proxy-client-react';
 
 import { StateManagerConfiguration, UseManagerHook } from './types';
 import { useCurrentModel } from '../utils/VirtualAssistantStateSingleton';
-import { ARH_DEFAULT_FLAG, MAO_ONLY_FLAG } from './flags';
+import { ARH_DEFAULT_FLAG, MAO_ONLY_FLAG, VA_ENABLED_FLAG } from './flags';
 
 function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined {
   const { addHook, hookResults, cleanup } = useRemoteHookManager<UseManagerHook>();
   const arhDefaultFlag = useFlag(ARH_DEFAULT_FLAG);
   const maoOnlyFlag = useFlag(MAO_ONLY_FLAG);
+  const vaEnabledFlag = useFlag(VA_ENABLED_FLAG);
   useEffect(() => {
     if (maoOnlyFlag) {
       // MAO-only mode: register only the MAS chatbot, hiding the dropdown
@@ -22,41 +23,65 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
       return cleanup;
     }
 
-    if (arhDefaultFlag) {
-      // ARH first in dropdown (current behavior)
-      addHook({
-        scope: 'virtualAssistant',
-        module: './useArhChatbot',
-      });
-      addHook({
-        scope: 'virtualAssistant',
-        module: './useVaChatbot',
-      });
+    if (vaEnabledFlag) {
+      // VA available — arh-default controls VA vs ARH ordering
+      if (arhDefaultFlag) {
+        addHook({
+          scope: 'virtualAssistant',
+          module: './useArhChatbot',
+        });
+        addHook({
+          scope: 'virtualAssistant',
+          module: './useVaChatbot',
+        });
+      } else {
+        addHook({
+          scope: 'virtualAssistant',
+          module: './useVaChatbot',
+        });
+        addHook({
+          scope: 'virtualAssistant',
+          module: './useArhChatbot',
+        });
+      }
     } else {
-      // VA first in dropdown
+      // VA disabled — skip VA entirely (no client initialization).
+      // Fallback priority: HCC AI, MAS, ARH.
+      // arh-default does not override this priority.
       addHook({
         scope: 'virtualAssistant',
-        module: './useVaChatbot',
+        module: './useHccAiChatbot',
+      });
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useMasChatbot',
       });
       addHook({
         scope: 'virtualAssistant',
         module: './useArhChatbot',
       });
     }
+
+    if (vaEnabledFlag) {
+      // When VA is enabled, add remaining managers after VA/ARH
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useHccAiChatbot',
+      });
+      addHook({
+        scope: 'virtualAssistant',
+        module: './useMasChatbot',
+      });
+    }
+
+    // RHEL Lightspeed always registered last — it is route-only
+    // and must not become the general fallback
     addHook({
       scope: 'virtualAssistant',
       module: './useRhelChatbot',
     });
-    addHook({
-      scope: 'virtualAssistant',
-      module: './useHccAiChatbot',
-    });
-    addHook({
-      scope: 'virtualAssistant',
-      module: './useMasChatbot',
-    });
     return cleanup;
-  }, [addHook, arhDefaultFlag, maoOnlyFlag]);
+  }, [addHook, arhDefaultFlag, maoOnlyFlag, vaEnabledFlag]);
 
   return useMemo(() => {
     const passingResults = (hookResults || []).filter((r) => !r.error);
@@ -69,8 +94,7 @@ function useAsyncManagers(): StateManagerConfiguration<IAIClient>[] | undefined 
       .filter(({ hookResult }) => !!hookResult?.manager)
       .map(({ hookResult }) => hookResult?.manager as StateManagerConfiguration<IAIClient>);
 
-    // we need at least one manager
-    return managers.length ? managers : undefined;
+    return managers;
   }, [hookResults]);
 }
 
@@ -82,7 +106,7 @@ function useStateManager(isOpen: boolean) {
   const location = useLocation();
 
   useEffect(() => {
-    if (!managers || (currentModel && wasOpenRef.current)) {
+    if (!managers || managers.length === 0 || (currentModel && wasOpenRef.current)) {
       return;
     }
     if (!wasOpenRef.current && isOpen) {
@@ -95,15 +119,15 @@ function useStateManager(isOpen: boolean) {
   }, [isOpen, managers, location.pathname]);
 
   useEffect(() => {
-    if (!managers || managers.length === 0) {
+    if (!managers || managers.length === 0 || !currentModel) {
       return;
     }
 
-    // Check if currentModel exists in managers
-    const modelExists = currentModel && managers.some((m) => m.model === currentModel);
+    // Re-select when a previously-selected model is no longer available
+    // (e.g. flag toggled, auth lost). Initial selection is handled above.
+    const modelExists = managers.some((m) => m.model === currentModel);
 
     if (!modelExists) {
-      // Current model is not in managers, set to first manager's model
       setCurrentModel(managers[0].model);
     }
   }, [currentModel, managers, setCurrentModel]);
