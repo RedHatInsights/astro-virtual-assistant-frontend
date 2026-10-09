@@ -58,6 +58,12 @@ function useMasClient(): UseManagerHook {
       baseUrl,
       blueprintId: MAS_BLUEPRINT_ID,
       fetchFunction: async (input, options) => {
+        // Refresh token if the request is to the user.session.submit endpoint
+        // TODO: This is a temporary solution to refresh the token. We should find a better way to handle this for production.
+        const requestUrl = typeof input === 'string' ? input : input instanceof URL ? input?.href : input?.url ?? '';
+        if (requestUrl && requestUrl.includes('api/sessions/user.session.submit')) {
+          await chrome.$internal.forceAuthRefresh();
+        }
         const token = await chrome.auth.getToken();
         if (!token) {
           throw new Error('User is not authenticated');
