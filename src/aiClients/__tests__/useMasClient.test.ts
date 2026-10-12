@@ -99,30 +99,24 @@ describe('useMasClient', () => {
       );
     });
 
-    it('falls back to getToken when forceAuthRefresh returns no access_token', async () => {
+    it('does not submit when forceAuthRefresh returns no access_token', async () => {
       mockForceAuthRefresh.mockResolvedValue(null);
       mockGetToken.mockResolvedValue('fallback-token');
 
-      await fetchFunction(SUBMIT_URL, { headers: {} });
+      await expect(fetchFunction(SUBMIT_URL, { headers: {} })).rejects.toThrow('Failed to refresh authentication');
 
       expect(mockForceAuthRefresh).toHaveBeenCalled();
-      expect(mockGetToken).toHaveBeenCalled();
-      expect(mockFetch).toHaveBeenCalledWith(
-        SUBMIT_URL,
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: 'Bearer fallback-token',
-          }),
-        })
-      );
+      expect(mockGetToken).not.toHaveBeenCalled();
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('does not submit when forceAuthRefresh and getToken both fail', async () => {
-      mockForceAuthRefresh.mockResolvedValue(null);
-      mockGetToken.mockResolvedValue('');
+    it('does not submit when forceAuthRefresh rejects', async () => {
+      mockForceAuthRefresh.mockRejectedValue(new Error('SSO network failure'));
+      mockGetToken.mockResolvedValue('fallback-token');
 
-      await expect(fetchFunction(SUBMIT_URL, { headers: {} })).rejects.toThrow('User is not authenticated');
+      await expect(fetchFunction(SUBMIT_URL, { headers: {} })).rejects.toThrow('SSO network failure');
 
+      expect(mockGetToken).not.toHaveBeenCalled();
       expect(mockFetch).not.toHaveBeenCalled();
     });
 

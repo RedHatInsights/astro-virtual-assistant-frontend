@@ -66,7 +66,7 @@ function useMasClient(): UseManagerHook {
           const user = await chrome.$internal.forceAuthRefresh();
           token = (user as { access_token?: string } | null | undefined)?.access_token;
           if (!token) {
-            token = await chrome.auth.getToken();
+            throw new Error('Failed to refresh authentication');
           }
         } else {
           token = await chrome.auth.getToken();
