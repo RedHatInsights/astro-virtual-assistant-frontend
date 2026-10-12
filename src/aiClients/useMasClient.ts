@@ -58,7 +58,19 @@ function useMasClient(): UseManagerHook {
       baseUrl,
       blueprintId: MAS_BLUEPRINT_ID,
       fetchFunction: async (input, options) => {
-        const token = await chrome.auth.getToken();
+        // Refresh token if the request is to the user.session.submit endpoint
+        // TODO(RHCLOUD-52092): Replace with getToken({ minValidity: 420 }) when available.
+        const requestUrl = typeof input === 'string' ? input : input instanceof URL ? input?.href : input?.url ?? '';
+        let token: string | undefined;
+        if (requestUrl && requestUrl.includes('api/sessions/user.session.submit')) {
+          const user = await chrome.$internal.forceAuthRefresh();
+          token = (user as { access_token?: string } | null | undefined)?.access_token;
+          if (!token) {
+            throw new Error('Failed to refresh authentication');
+          }
+        } else {
+          token = await chrome.auth.getToken();
+        }
         if (!token) {
           throw new Error('User is not authenticated');
         }
