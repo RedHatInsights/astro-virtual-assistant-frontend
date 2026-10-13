@@ -1,7 +1,7 @@
 import React from 'react';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import { ChatbotDisplayMode } from '@patternfly/chatbot';
-import { Bullseye, Spinner } from '@patternfly/react-core';
+import { Bullseye, Content, Spinner } from '@patternfly/react-core';
 import classnames from 'classnames';
 
 import UniversalChatbot from '../../Components/UniversalChatbot/UniversalChatbot';
@@ -27,11 +27,20 @@ const VAEmbed: React.FC<VAEmbedProps> = ({ onClose, className }) => {
   const { currentModel, managers, setCurrentModel } = useStateManager(true);
   const stateManager = managers && currentModel ? managers.find((m) => m.model === currentModel)?.stateManager : undefined;
 
-  // Wait for managers to load (same pattern as AstroVirtualAssistant)
-  if (!managers || !currentModel || !stateManager) {
+  // Managers still loading (undefined = hooks not yet resolved)
+  if (managers === undefined) {
     return (
       <Bullseye>
         <Spinner size="lg" aria-label="Loading Virtual Assistant" />
+      </Bullseye>
+    );
+  }
+
+  // Managers resolved but none available
+  if (managers.length === 0 || !currentModel || !stateManager) {
+    return (
+      <Bullseye>
+        <Content component="p">No assistant is currently available.</Content>
       </Bullseye>
     );
   }

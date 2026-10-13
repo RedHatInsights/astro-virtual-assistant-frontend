@@ -41,13 +41,19 @@ interface StateManagerConfiguration<T extends IAIClient> {
 
 ## Manager Registration Order
 
-Managers are registered in `src/aiClients/useStateManager.ts`. The **first** enabled manager becomes the default. Order matters:
+Managers are registered in `src/aiClients/useStateManager.ts`. The **first** enabled manager becomes the default. Order depends on feature flags:
 
-1. ARH (Ask Red Hat)
-2. VA (Virtual Assistant)
-3. RHEL Lightspeed
-4. HCC AI
-5. MAS (Multi-Agent System)
+**VA enabled** (`platform.chatbot.va.enabled` ON):
+- `platform.chatbot.arh-default` OFF → VA, ARH, HCC AI, MAS, RHEL Lightspeed
+- `platform.chatbot.arh-default` ON → ARH, VA, HCC AI, MAS, RHEL Lightspeed
+
+**VA disabled** (`platform.chatbot.va.enabled` OFF or missing):
+- HCC AI, MAS, ARH, RHEL Lightspeed (VA is not registered)
+
+**MAO-only** (`platform.chatbot.mao-only` ON):
+- MAS only
+
+RHEL Lightspeed is always registered last — it is route-matched only and must not become the general fallback default.
 
 When adding a new service, place it in the `stateManagers` array at the desired priority position.
 
