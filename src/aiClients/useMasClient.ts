@@ -104,8 +104,8 @@ function useMasClient(): UseManagerHook {
             value: 'What can you help me with?',
           },
           {
-            title: 'Tell me about Multi-Agent System.',
-            value: 'Tell me about Multi-Agent System.',
+            title: 'What are my top CVEs?',
+            value: 'What are my top CVEs?',
           },
         ],
       },

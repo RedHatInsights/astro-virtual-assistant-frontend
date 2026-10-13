@@ -98,7 +98,7 @@ describe('useMasClient', () => {
     it('should provide static welcome buttons', () => {
       cy.get('[data-testid="welcome-buttons"]').should(
         'contain',
-        '["What can you help me with?","Tell me about Multi-Agent System."]'
+        '["What can you help me with?","What are my top CVEs?"]'
       );
     });
   });
