@@ -75,12 +75,16 @@ spec:
 
       npx playwright test
 
-  # Run app script - start Caddy to serve app assets
-  - name: run-app-script
-    value: |
-      #!/bin/bash
-      set -ex
-      /usr/bin/caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+  # Start Caddy directly so V2 does not require a shell in the app image.
+  - name: run-app-command
+    value: /usr/bin/caddy
+  - name: run-app-args
+    value:
+    - run
+    - --config
+    - /etc/caddy/Caddyfile
+    - --adapter
+    - caddyfile
 
   # E2E configuration
   - name: e2e-playwright-image
@@ -96,9 +100,9 @@ spec:
   pipelineRef:
     params:
     - name: url
-      value: https://github.com/RedHatInsights/konflux-pipelines
+      value: https://github.com/catastrophe-brandon/konflux-pipelines
     - name: revision
-      value: e0da8f2347fae1b5fd6a9113b2b5a3a3bbe4e584
+      value: 1257daeca362f3f8d7380df121dcf1ad55725670
     - name: pathInRepo
       value: pipelines/platform-ui/docker-build-run-all-tests-v2.yaml
     resolver: git
