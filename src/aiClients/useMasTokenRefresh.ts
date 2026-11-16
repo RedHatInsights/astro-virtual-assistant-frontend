@@ -25,8 +25,7 @@ export function getTokenExpMs(token: string): number | null {
   }
 }
 
-/** How long before the token expires a refresh is attempted. */
-// LOCAL TESTING ONLY - do not commit. Real value: 2 * 60 * 1000. With ~15 min tokens, a 13 min lead refreshes about every 2 min.
+/** How long before the token expires a refresh is attempted. With ~15 min tokens, a 5 min lead refreshes about every 10 min. */
 const REFRESH_LEAD_MS = 5 * 60 * 1000;
 /** Lower bound between cycles after a successful refresh, so a short-lived token can never cause a request loop. */
 const MIN_REARM_DELAY_MS = 30 * 1000;
@@ -59,6 +58,7 @@ type Monitor = {
   timer: ReturnType<typeof setTimeout> | undefined;
   /** Cancels the in-flight refresh request when the monitor is stopped. */
   abort: AbortController;
+  generation: number;
 };
 
 const monitors = new Map<string, Monitor>();
@@ -98,8 +98,39 @@ function scheduleRetry(monitor: Monitor, reason: string): void {
   arm(monitor, delayMs);
 }
 
+/**
+ * Sync the given token to the backend right away (fire and forget), bypassing
+ * the normal refresh cycle. Called once, when a monitor is created: on submit
+ * this just confirms a token the backend already has; on recovery (reload of
+ * a still-running session) it delivers the browser's current token immediately
+ * instead of waiting for the next scheduled refresh, which could be minutes away.
+ * Failures are logged only — the normal refresh cycle will retry.
+ */
+async function syncTokenImmediately(monitor: Monitor, token: string): Promise<void> {
+  if (!isCurrent(monitor)) return;
+  try {
+    const response = await fetch(`${monitor.baseUrl}/api/sessions/session.token-refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ sessionId: monitor.sessionId }),
+      signal: monitor.abort.signal,
+    });
+    if (!isCurrent(monitor)) return;
+    if (!response.ok) {
+      console.debug(`[MAS token-refresh] immediate sync: endpoint returned ${response.status} — the scheduled refresh will retry`);
+    }
+  } catch (err) {
+    if (!isCurrent(monitor)) return;
+    console.debug('[MAS token-refresh] immediate sync failed — the scheduled refresh will retry', err);
+  }
+}
+
 async function runCycle(monitor: Monitor): Promise<void> {
   if (!isCurrent(monitor)) return;
+  const requestGeneration = monitor.generation;
   try {
     // TODO(RHCLOUD-52092): Replace with getToken({ minValidity: 420 }) when available.
     const user = await monitor.chrome.$internal.forceAuthRefresh();
@@ -122,6 +153,14 @@ async function runCycle(monitor: Monitor): Promise<void> {
     if (!isCurrent(monitor)) return;
 
     if (response.status === 403 || response.status === 404 || response.status === 410) {
+      if (monitor.generation !== requestGeneration) {
+        // A follow-up submit (or reopen) confirmed the session is alive again
+        // while this request was in flight. This response describes a session
+        // state that no longer applies: ignore it instead of retiring and try again soon.
+        console.debug(`[MAS token-refresh] ignoring stale ${response.status} response — a follow-up submit confirmed the session is still active`);
+        arm(monitor, MIN_REARM_DELAY_MS);
+        return;
+      }
       // 403 — forbidden; 404 — session ID unknown; 410 — session existed but has ended.
       // Retrying cannot change any of these: stop for good.
       retire(monitor);
@@ -163,7 +202,7 @@ async function runCycle(monitor: Monitor): Promise<void> {
  * is reopened. The monitor reschedules itself from each refreshed token's
  * `exp`, so it does not depend on further submits.
  *
- * A monitor fires 2 minutes before the token expires, force-refreshes via
+ * A monitor fires 5 minutes before the token expires, force-refreshes via
  * HCC Chrome, then POSTs the new token to the MAS backend so the running
  * Temporal workflow picks it up for the next sub-agent call.
  *
@@ -171,8 +210,19 @@ async function runCycle(monitor: Monitor): Promise<void> {
  * session) or 410 (session ended). Network errors, 5xx, and other failures are retried with
  * backoff. Never throws.
  */
-export function ensureTokenRefreshMonitor(sessionId: string, token: string, baseUrl: string, chrome: ChromeAuth): void {
-  if (monitors.has(sessionId)) return;
+export function ensureTokenRefreshMonitor(
+  sessionId: string,
+  token: string,
+  baseUrl: string,
+  chrome: ChromeAuth,
+  options?: { syncImmediately?: boolean }
+): void {
+  const existing = monitors.get(sessionId);
+  if (existing) {
+    existing.generation += 1;
+    return;
+  }
+  const syncImmediately = options?.syncImmediately ?? false;
 
   const expMs = getTokenExpMs(token);
   if (expMs === null) {
@@ -188,8 +238,15 @@ export function ensureTokenRefreshMonitor(sessionId: string, token: string, base
     failures: 0,
     timer: undefined,
     abort: new AbortController(),
+    generation: 0,
   };
   monitors.set(sessionId, monitor);
+  if (syncImmediately) {
+    // Recovery (reload of a still-running session): the backend may still have
+    // the pre-reload token, so deliver the browser's current one right away
+    // instead of waiting for the next scheduled refresh, which could be minutes away.
+    void syncTokenImmediately(monitor, token);
+  }
   arm(monitor, Math.max(expMs - Date.now() - REFRESH_LEAD_MS, 0));
 }
 

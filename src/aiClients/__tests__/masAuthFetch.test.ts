@@ -194,7 +194,8 @@ describe('submit', () => {
     await submit('session-1');
 
     expect(jest.getTimerCount()).toBe(1);
-    await advance(13 * 60 * 1000);
+    // 15-minute token, 5-minute REFRESH_LEAD_MS lead → first fire at 10 minutes.
+    await advance(10 * 60 * 1000);
     // One monitor → one refresh attempt, not three.
     expect(forceAuthRefresh).toHaveBeenCalledTimes(3 + 1); // 3 submits' own refreshes + 1 monitor cycle
   });
@@ -289,6 +290,32 @@ describe('reopening a conversation (session.chat.get)', () => {
     await advance(0);
 
     expect(isTokenRefreshMonitorActive('session-1')).toBe(true);
+  });
+
+  it('immediately synchronizes the current token when recovering a running session', async () => {
+    const originalFetch = global.fetch;
+    const tokenRefreshFetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+    global.fetch = tokenRefreshFetch;
+    try {
+      const recoveryToken = jwtExpiringIn(900);
+      getToken.mockResolvedValue(recoveryToken);
+      routeFetch(forbidden(), fakeResponse('RUNNING'));
+
+      await masFetch(chatUrl('session-1'));
+      await advance(0);
+
+      expect(tokenRefreshFetch).toHaveBeenCalledTimes(1);
+      expect(tokenRefreshFetch).toHaveBeenCalledWith(
+        `${BASE_URL}/api/sessions/session.token-refresh`,
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: `Bearer ${recoveryToken}` }),
+          body: JSON.stringify({ sessionId: 'session-1' }),
+        })
+      );
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 
   it.each(['COMPLETED', 'FAILED', 'CANCELLED', 'PENDING', 'LOCKED', 'IN_USE'])('starts no monitor when the session is %s', async (status) => {

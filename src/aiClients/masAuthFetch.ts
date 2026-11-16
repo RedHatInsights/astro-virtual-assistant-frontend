@@ -41,9 +41,8 @@ function getSessionIdFromBody(body: RequestInit['body']): string | undefined {
  * refresh monitor exists. Used when a conversation is reopened (page reload,
  * switching conversations).
  *
- * Uses session.status.get, which any logged-in user may call. The history
- * request the UI makes (session.chat.get) is admin-only, so its answer cannot
- * be relied on. Best-effort: any failure leaves things as they were.
+ * Uses session.status.get, which any logged-in user may call. Best-effort:
+ * any failure leaves things as they were.
  */
 function ensureMonitorIfSessionIsActive(sessionId: string, token: string, baseUrl: string, chrome: MasFetchChrome, doFetch: FetchLike): void {
   if (isTokenRefreshMonitorActive(sessionId)) return;
@@ -55,7 +54,9 @@ function ensureMonitorIfSessionIsActive(sessionId: string, token: string, baseUr
     .then((status) => {
       // The endpoint answers with the bare status string, e.g. "RUNNING".
       if (typeof status === 'string' && ACTIVE_STATUSES.has(status)) {
-        ensureTokenRefreshMonitor(sessionId, token, baseUrl, chrome);
+        // Recovery: the backend may still be holding the pre-reload token, so
+        // deliver this one right away instead of waiting for the first scheduled refresh.
+        ensureTokenRefreshMonitor(sessionId, token, baseUrl, chrome, { syncImmediately: true });
       }
     })
     .catch(() => {

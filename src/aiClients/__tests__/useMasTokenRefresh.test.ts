@@ -36,9 +36,11 @@ function deferred<T>() {
 
 const advance = (ms: number) => jest.advanceTimersByTimeAsync(ms);
 
-/** A 15-minute token fires its first refresh 13 minutes (15 − 2) after it is issued. */
-const FIRST_FIRE_MS = 13 * 60 * 1000;
+/** A 15-minute token fires its first refresh 10 minutes (15 − 5, the REFRESH_LEAD_MS lead) after it is issued. */
+const FIRST_FIRE_MS = 10 * 60 * 1000;
 const SECOND = 1000;
+/** Mirrors MIN_REARM_DELAY_MS in useMasTokenRefresh.ts. */
+const MIN_REARM_DELAY_MS = 30 * SECOND;
 const HOUR = 60 * 60 * 1000;
 
 // ─── Mock chrome ─────────────────────────────────────────────────────────────
@@ -164,6 +166,47 @@ describe('ensureTokenRefreshMonitor', () => {
     expect(mockForceAuthRefresh).toHaveBeenCalledTimes(1);
   });
 
+  it('does not sync immediately by default (e.g. right after a submit, where the backend already has this token)', async () => {
+    start('session-1', jwtExpiringIn(900));
+
+    await advance(0);
+
+    expect(fetchMock()).not.toHaveBeenCalled();
+  });
+
+  it('with syncImmediately, sends the starting token to the backend right away, without waiting for the scheduled refresh', async () => {
+    const initialToken = jwtExpiringIn(900);
+    ensureTokenRefreshMonitor('session-1', initialToken, BASE_URL, mockChrome, { syncImmediately: true });
+
+    await advance(0);
+
+    expect(mockForceAuthRefresh).not.toHaveBeenCalled();
+    expect(fetchMock()).toHaveBeenCalledTimes(1);
+    expect(fetchMock()).toHaveBeenCalledWith(
+      REFRESH_URL,
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: `Bearer ${initialToken}`,
+        }),
+        body: JSON.stringify({ sessionId: 'session-1' }),
+      })
+    );
+  });
+
+  it('with syncImmediately, a failed immediate sync does not block the scheduled refresh', async () => {
+    fetchMock().mockResolvedValueOnce({ ok: false, status: 500 }).mockResolvedValue({ ok: true, status: 200 });
+    ensureTokenRefreshMonitor('session-1', jwtExpiringIn(900), BASE_URL, mockChrome, { syncImmediately: true });
+
+    await advance(0); // immediate sync fails
+    expect(fetchMock()).toHaveBeenCalledTimes(1);
+    expect(isTokenRefreshMonitorActive('session-1')).toBe(true);
+
+    await advance(FIRST_FIRE_MS);
+    expect(mockForceAuthRefresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock()).toHaveBeenCalledTimes(2);
+  });
+
   it('runs independent monitors for different sessions', async () => {
     start('session-A', jwtExpiringIn(900));
     start('session-B', jwtExpiringIn(600));
@@ -176,7 +219,7 @@ describe('ensureTokenRefreshMonitor', () => {
     expect(JSON.parse(fetchMock().mock.calls[1][1].body)).toEqual({ sessionId: 'session-A' });
   });
 
-  it('fires exactly 2 minutes before token expiry', async () => {
+  it('fires exactly the lead time before token expiry', async () => {
     start('session-1', jwtExpiringIn(900));
 
     await advance(FIRST_FIRE_MS - 1);
@@ -186,7 +229,7 @@ describe('ensureTokenRefreshMonitor', () => {
     expect(mockForceAuthRefresh).toHaveBeenCalledTimes(1);
   });
 
-  it('fires immediately when the token is already within the 2-minute buffer', async () => {
+  it('fires immediately when the token is already within the lead-time buffer', async () => {
     start('session-1', jwtExpiringIn(60));
 
     await advance(0);
@@ -246,8 +289,8 @@ describe('after a successful refresh', () => {
 
   it('never reschedules sooner than 30 seconds even if the new token expires very soon', async () => {
     start('session-1', jwtExpiringIn(900));
-    // Extends the expiry by only 10 s, leaving 130 s → 10 s until the 2-minute lead.
-    mockForceAuthRefresh.mockImplementationOnce(async () => ({ access_token: jwtExpiringIn(130) }));
+    // Extends the expiry by only 10 s over the original — well under the lead time, so the 30 s floor applies.
+    mockForceAuthRefresh.mockImplementationOnce(async () => ({ access_token: jwtExpiringIn(900 - FIRST_FIRE_MS / 1000 + 10) }));
 
     await advance(FIRST_FIRE_MS);
     expect(mockForceAuthRefresh).toHaveBeenCalledTimes(1);
@@ -550,5 +593,40 @@ describe('races between an in-flight refresh and a newer monitor', () => {
     await advance(1);
     expect(mockForceAuthRefresh).toHaveBeenCalledTimes(2);
     expect(fetchMock()).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([403, 404, 410])(
+    'ignores a stale %s response when a follow-up submit confirmed the session is alive while it was in flight',
+    async (terminalStatus) => {
+      const response = deferred<{ ok: boolean; status: number }>();
+      fetchMock().mockReturnValueOnce(response.promise);
+      start('session-1', jwtExpiringIn(900));
+      await advance(FIRST_FIRE_MS); // refresh request now in flight
+
+      // The turn finishes and a follow-up submit starts a new one for the same
+      // session before the (delayed) response below arrives — this is the only
+      // thing that confirms the session is alive again, since ensure is a no-op.
+      start('session-1', jwtExpiringIn(900));
+
+      response.resolve({ ok: false, status: terminalStatus }); // stale answer to the in-flight request
+      await advance(0);
+
+      // Must not retire: the follow-up submit proved the session outlived this request.
+      expect(isTokenRefreshMonitorActive('session-1')).toBe(true);
+      expect(jest.getTimerCount()).toBe(1);
+
+      // It tries again soon rather than waiting out a full cycle.
+      await advance(MIN_REARM_DELAY_MS);
+      expect(mockForceAuthRefresh).toHaveBeenCalledTimes(2);
+    }
+  );
+
+  it('still retires on a terminal response when no submit happened while it was in flight', async () => {
+    fetchMock().mockResolvedValueOnce({ ok: false, status: 410 });
+    start('session-1', jwtExpiringIn(900));
+
+    await advance(FIRST_FIRE_MS);
+
+    expect(isTokenRefreshMonitorActive('session-1')).toBe(false);
   });
 });
