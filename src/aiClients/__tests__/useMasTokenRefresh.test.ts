@@ -207,6 +207,19 @@ describe('ensureTokenRefreshMonitor', () => {
     expect(fetchMock()).toHaveBeenCalledTimes(2);
   });
 
+  it.each([403, 404, 410])(
+    'with syncImmediately, a %s response retires the monitor instead of retrying a terminal failure',
+    async (terminalStatus) => {
+      fetchMock().mockResolvedValueOnce({ ok: false, status: terminalStatus });
+      ensureTokenRefreshMonitor('session-1', jwtExpiringIn(900), BASE_URL, mockChrome, { syncImmediately: true });
+
+      await advance(0); // immediate sync gets the terminal response
+
+      expect(isTokenRefreshMonitorActive('session-1')).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
+    }
+  );
+
   it('runs independent monitors for different sessions', async () => {
     start('session-A', jwtExpiringIn(900));
     start('session-B', jwtExpiringIn(600));
@@ -580,8 +593,11 @@ describe('races between an in-flight refresh and a newer monitor', () => {
     await advance(FIRST_FIRE_MS);
     expect(fetchMock()).toHaveBeenCalledTimes(1);
 
-    start('session-1', jwtExpiringIn(900)); // e.g. a follow-up submit
-    start('session-1', jwtExpiringIn(900));
+    // Offset deliberately shorter than the already-synced expiry, so this ensure
+    // doesn't also update syncedExpMs (that interaction has its own test below) —
+    // isolating this test to just the "no duplicate POST/monitor" guarantee.
+    start('session-1', jwtExpiringIn(100)); // e.g. a follow-up submit
+    start('session-1', jwtExpiringIn(100));
     expect(jest.getTimerCount()).toBe(0); // nothing new armed while the request is in flight
 
     response.resolve({ ok: true, status: 200 });
@@ -628,5 +644,73 @@ describe('races between an in-flight refresh and a newer monitor', () => {
     await advance(FIRST_FIRE_MS);
 
     expect(isTokenRefreshMonitorActive('session-1')).toBe(false);
+  });
+
+  it.each([
+    ['a 503 response', () => fetchMock().mockResolvedValueOnce({ ok: false, status: 503 })],
+    ['a rejected network request', () => fetchMock().mockRejectedValueOnce(new Error('connection lost'))],
+  ])('with syncImmediately, %s retries through the normal backoff instead of waiting for the full scheduled cycle', async (_name, arrange) => {
+    arrange();
+    ensureTokenRefreshMonitor('session-1', jwtExpiringIn(900), BASE_URL, mockChrome, { syncImmediately: true });
+
+    await advance(0); // immediate sync fails with 503
+
+    // Exactly one timer pending: the retry replaced the long-dated scheduled
+    // timer instead of running alongside it (regression test for arm() leaving
+    // a second, stray timer when scheduleRetry re-arms while one is already set).
+    expect(jest.getTimerCount()).toBe(1);
+
+    await advance(5 * SECOND - 1);
+    expect(mockForceAuthRefresh).not.toHaveBeenCalled();
+    await advance(1);
+    expect(mockForceAuthRefresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock()).toHaveBeenCalledTimes(2);
+  });
+
+  it('resets accumulated retry backoff when a follow-up submit supplies a newer accepted token', async () => {
+    fetchMock().mockResolvedValue({ ok: false, status: 503 });
+    start('session-1', jwtExpiringIn(900));
+
+    await advance(FIRST_FIRE_MS); // first failure -> retry in 5 s
+    await advance(5 * SECOND); // second failure -> retry in 15 s
+    expect(mockForceAuthRefresh).toHaveBeenCalledTimes(2);
+
+    await advance(SECOND);
+    ensureTokenRefreshMonitor('session-1', jwtExpiringIn(900), BASE_URL, mockChrome);
+
+    // The already-scheduled retry remains the only timer. When it fails, the
+    // next retry must use the reset 5 s delay, not the accumulated 45 s delay.
+    expect(jest.getTimerCount()).toBe(1);
+    await advance(14 * SECOND);
+    expect(mockForceAuthRefresh).toHaveBeenCalledTimes(3);
+    expect(jest.getTimerCount()).toBe(1);
+
+    await advance(5 * SECOND - 1);
+    expect(mockForceAuthRefresh).toHaveBeenCalledTimes(3);
+    await advance(1);
+    expect(mockForceAuthRefresh).toHaveBeenCalledTimes(4);
+  });
+
+  it('updates the tracked expiry from a follow-up submit, so a later transient failure does not give up using the stale deadline', async () => {
+    // Original 15-minute token: first scheduled refresh at FIRST_FIRE_MS (10 min),
+    // give-up deadline (if nothing updates it) would be its own expiry (15 min) + 10 min = 25 min.
+    start('session-1', jwtExpiringIn(900));
+    fetchMock().mockResolvedValue({ ok: false, status: 503 }); // every refresh attempt fails from here on
+
+    await advance(FIRST_FIRE_MS); // 10 min: first failure, backoff begins
+    expect(mockForceAuthRefresh).toHaveBeenCalledTimes(1);
+
+    // A follow-up submit at the 24-minute mark delivers a token valid for
+    // another 15 minutes (until the 39-minute mark) — well past the original
+    // token's own 15-minute expiry.
+    await advance(14 * 60 * 1000); // now at the 24-minute mark
+    ensureTokenRefreshMonitor('session-1', jwtExpiringIn(900), BASE_URL, mockChrome);
+
+    // Advance to the 35-minute mark: past where the OLD deadline (25 min) would
+    // have given up, but well within the deadline recomputed from the follow-up
+    // submit's token (39 + 10 = 49 min). Refresh attempts keep failing throughout.
+    await advance(11 * 60 * 1000);
+
+    expect(isTokenRefreshMonitorActive('session-1')).toBe(true);
   });
 });

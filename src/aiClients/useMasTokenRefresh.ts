@@ -78,6 +78,7 @@ function retire(monitor: Monitor): void {
 
 function arm(monitor: Monitor, delayMs: number): void {
   if (!isCurrent(monitor)) return;
+  if (monitor.timer !== undefined) clearTimeout(monitor.timer);
   monitor.timer = setTimeout(() => {
     monitor.timer = undefined;
     // runCycle never rejects: every failure path is handled inside it.
@@ -99,12 +100,15 @@ function scheduleRetry(monitor: Monitor, reason: string): void {
 }
 
 /**
- * Sync the given token to the backend right away (fire and forget), bypassing
- * the normal refresh cycle. Called once, when a monitor is created: on submit
- * this just confirms a token the backend already has; on recovery (reload of
- * a still-running session) it delivers the browser's current token immediately
- * instead of waiting for the next scheduled refresh, which could be minutes away.
- * Failures are logged only — the normal refresh cycle will retry.
+ * Sync the given token to the backend right away, bypassing the normal refresh
+ * cycle. Called once, when a monitor is created: on submit this just confirms a
+ * token the backend already has; on recovery (reload of a still-running session)
+ * it delivers the browser's current token immediately instead of waiting for the
+ * next scheduled refresh, which could be minutes away.
+ *
+ * A failure here is routed through the same retry/backoff as a normal refresh
+ * cycle (via scheduleRetry, which re-arms the monitor's one timer) rather than
+ * silently waiting out the full scheduled delay with a stale backend token.
  */
 async function syncTokenImmediately(monitor: Monitor, token: string): Promise<void> {
   if (!isCurrent(monitor)) return;
@@ -119,12 +123,18 @@ async function syncTokenImmediately(monitor: Monitor, token: string): Promise<vo
       signal: monitor.abort.signal,
     });
     if (!isCurrent(monitor)) return;
+    if (response.status === 403 || response.status === 404 || response.status === 410) {
+      // Same as runCycle: retrying cannot change a terminal answer.
+      retire(monitor);
+      return;
+    }
     if (!response.ok) {
-      console.debug(`[MAS token-refresh] immediate sync: endpoint returned ${response.status} — the scheduled refresh will retry`);
+      scheduleRetry(monitor, `immediate sync: endpoint returned ${response.status}`);
     }
   } catch (err) {
     if (!isCurrent(monitor)) return;
-    console.debug('[MAS token-refresh] immediate sync failed — the scheduled refresh will retry', err);
+    console.error('[MAS token-refresh] immediate sync failed', err);
+    scheduleRetry(monitor, 'immediate sync failed');
   }
 }
 
@@ -220,6 +230,15 @@ export function ensureTokenRefreshMonitor(
   const existing = monitors.get(sessionId);
   if (existing) {
     existing.generation += 1;
+    // A follow-up submit may have delivered a token with a later expiry than
+    // what this monitor last synced. Pick it up now so a later transient
+    // failure's give-up deadline (scheduleRetry) is computed from the current
+    // token, not a stale one that may already be past its own give-up window.
+    const expMs = getTokenExpMs(token);
+    if (expMs !== null && expMs > existing.syncedExpMs) {
+      existing.syncedExpMs = expMs;
+      existing.failures = 0;
+    }
     return;
   }
   const syncImmediately = options?.syncImmediately ?? false;
