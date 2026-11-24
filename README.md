@@ -20,6 +20,20 @@ If you want to run your backend locally:
 - Virtual Assistant (Rasa): `USE_LOCAL_RASA=1 npm run start`
 - Multi-Agent System (MAS): `USE_LOCAL_MAS=1 npm run start`
 
+### Preview a federated component in a MAS reply
+
+This developer-only preview works without a MAS backend. Chrome must still provide an authenticated, enabled chat manager (MAS or another available assistant) so the chat can open. Run `npm run start -- --clouddotEnv=stage`, open the chat on `localhost`, `127.0.0.1`, or `stage.foo.redhat.com` with `?masComponentPreview=1`, and dispatch an event in the browser console:
+
+```js
+window.dispatchEvent(new CustomEvent('mas-component-preview', { detail: {
+  scope: 'yourChromeScope', module: './YourExposedModule',
+  importName: 'YourExport', // optional; defaults to default
+  props: '{"example":"value"}' // JSON object string
+} }));
+```
+
+Use a scope already configured by Chrome. Dispatch again with a different module or export to append another reply; no widget registration or provider changes are needed. Invalid JSON is reported in the console. Loading or rendering failures affect only that reply. Previews are in memory, disappear when the chat unmounts, and never send data to MAS. Production builds and non-local hosts ignore the event; MAS response attributes are never used as component targets.
+
 
 ### Static mode
 

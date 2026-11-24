@@ -1,6 +1,6 @@
 import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox } from '@patternfly/chatbot';
 import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
@@ -10,6 +10,13 @@ import { WelcomeConfig } from '../../aiClients/types';
 import UniversalBanner from './UniversalBanner';
 import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
+import MASMessageEntry from '../MASClient/MASMessageEntry';
+import { ComponentPreviewTarget, MAS_PREVIEW_EVENT, isComponentPreviewEnabled, parsePreviewTarget } from '../MASClient/ComponentPreview';
+
+interface PreviewReply {
+  target: ComponentPreviewTarget;
+  date: Date;
+}
 
 function MessageEntry({ message, avatar, isCompact }: { message: MessageType; avatar: string; isCompact?: boolean }) {
   const messageDate = `${message.date?.toLocaleDateString()} ${message.date?.toLocaleTimeString()}`;
@@ -59,6 +66,22 @@ const UniversalMessages = ({
   const messages = useMessages<IFDAdditionalAttributes>();
   const initializingMessages = useIsInitializing();
   const sendMessage = useSendMessage();
+  const [previews, setPreviews] = useState<PreviewReply[]>([]);
+
+  useEffect(() => {
+    if (!isComponentPreviewEnabled()) return;
+    const onPreview = (event: Event) => {
+      try {
+        const target = parsePreviewTarget((event as CustomEvent<unknown>).detail);
+        const date = new Date();
+        setPreviews((previous) => [...previous, { target, date }]);
+      } catch (error) {
+        console.error('Invalid MAS component preview:', error);
+      }
+    };
+    window.addEventListener(MAS_PREVIEW_EVENT, onPreview);
+    return () => window.removeEventListener(MAS_PREVIEW_EVENT, onPreview);
+  }, []);
 
   const welcomeMessageConfig = useMemo(() => {
     return {
@@ -89,7 +112,7 @@ const UniversalMessages = ({
     }
   }, [activeConversation?.id, setIsBannerOpen]);
 
-  if (initializingMessages) {
+  if (initializingMessages && previews.length === 0) {
     return (
       <Bullseye>
         <Spinner />
@@ -115,6 +138,15 @@ const UniversalMessages = ({
         )}
         {messages.map((message, index) => (
           <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} conversationId={activeConversation?.id} />
+        ))}
+        {previews.map(({ target, date }, index) => (
+          <MASMessageEntry
+            key={`preview-${index}`}
+            message={{ id: `preview-${index}`, role: 'bot', answer: 'Local component preview', date }}
+            avatar={avatar}
+            isCompact={isCompact}
+            previewTarget={target}
+          />
         ))}
         <div ref={scrollToBottomRef}></div>
       </MessageBox>

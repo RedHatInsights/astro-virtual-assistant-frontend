@@ -5,8 +5,19 @@ import { MASAdditionalAttributes } from '@redhat-cloud-services/mas-client';
 
 import MASAgentStatusPanel from './MASAgentStatusPanel';
 import MAS_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
+import { ComponentPreview, ComponentPreviewTarget } from './ComponentPreview';
 
-function MASMessageEntry({ message, avatar, isCompact }: { message: MessageType<MASAdditionalAttributes>; avatar: string; isCompact?: boolean }) {
+function MASMessageEntry({
+  message,
+  avatar,
+  isCompact,
+  previewTarget,
+}: {
+  message: MessageType<MASAdditionalAttributes>;
+  avatar: string;
+  isCompact?: boolean;
+  previewTarget?: ComponentPreviewTarget;
+}) {
   const messageDate = message.date ? `${message.date.toLocaleDateString()} ${message.date.toLocaleTimeString()}` : '';
   const activeAgents = message.additionalAttributes?.activeAgents ?? [];
   const isStreaming = message.role === 'bot' && message.answer === '';
@@ -20,6 +31,7 @@ function MASMessageEntry({ message, avatar, isCompact }: { message: MessageType<
         role={message.role}
         avatar={message.role === 'user' ? avatar : MAS_BOT_ICON}
         content={message.answer}
+        extraContent={previewTarget && message.role === 'bot' ? { afterMainContent: <ComponentPreview target={previewTarget} /> } : undefined}
         aria-label={`${message.role === 'user' ? 'Your message' : 'AI response'}: ${message.answer}`}
         timestamp={messageDate}
         isCompact={isCompact}
