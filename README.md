@@ -32,7 +32,21 @@ window.dispatchEvent(new CustomEvent('mas-component-preview', { detail: {
 } }));
 ```
 
-Use a scope already configured by Chrome. Dispatch again with a different module or export to append another reply; no widget registration or provider changes are needed. Invalid JSON is reported in the console. Loading or rendering failures affect only that reply. Previews are in memory, disappear when the chat unmounts, and never send data to MAS. Production builds and non-local hosts ignore the event; MAS response attributes are never used as component targets.
+Use a scope already configured by Chrome. Dispatch again with a different module or export to append another reply; no widget registration or provider changes are needed. Invalid JSON is reported in the console. Loading or rendering failures affect only that reply. Previews are in memory, disappear when the chat unmounts, and never send data to MAS. Production builds and non-local hosts ignore the event.
+
+To exercise the same widget path used by MAS replies, select MAS and an active conversation, then dispatch:
+
+```js
+window.dispatchEvent(new CustomEvent('mas-debug-message', { detail: {
+  answer: 'Here’s a reply from MAS.',
+  widgets: [{ type: 'widget', widget: 'starter.hello-world', schemaVersion: '1.0',
+    instanceId: 'hello-1', props: { text: 'Hello from MAS', runId: 'FooBar' } }],
+} }));
+```
+
+Debug replies are local to the selected conversation and are not sent to MAS or written to history. Both debug and live replies resolve widget names and schema versions through a trusted frontend catalog; reply-provided scope or module fields are never used. The starter widget requires `runId` and optionally accepts `text`. Unknown widgets, versions and invalid props are ignored.
+
+Debug entries are merged at the current in-memory message-list position because the state manager has no local append API. They survive switching conversations while the chat remains mounted; if a history reload changes the number or order of earlier messages, their original position cannot be reconstructed reliably. The current `mas-client` version does not forward widget attributes from streamed or history responses, so live widget delivery requires client support and a defined backend contract.
 
 #### Example: frontend starter app HelloWorld
 

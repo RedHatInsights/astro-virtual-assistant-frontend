@@ -88,6 +88,7 @@ function UniversalChatbot({ setOpen, currentModel, setCurrentModel, managers, di
         scrollToBottomRef={scrollToBottomRef}
         setIsBannerOpen={setIsBannerOpen}
         MessageEntryComponent={manager?.MessageEntryComponent}
+        isMas={manager?.model === Models.MAS}
         isCompact
         welcome={manager?.welcome}
       />

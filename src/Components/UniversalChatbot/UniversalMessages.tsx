@@ -1,6 +1,6 @@
 import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox } from '@patternfly/chatbot';
 import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
@@ -12,10 +12,29 @@ import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg'
 import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
 import MASMessageEntry from '../MASClient/MASMessageEntry';
 import { ComponentPreviewTarget, MAS_PREVIEW_EVENT, isComponentPreviewEnabled, parsePreviewTarget } from '../MASClient/ComponentPreview';
+import { MASWidget, MAS_DEBUG_MESSAGE_EVENT, parseDebugMessage } from '../MASClient/MASWidgets';
 
 interface PreviewReply {
   target: ComponentPreviewTarget;
   date: Date;
+}
+
+interface DebugReply {
+  message: MessageType<{ widgets: MASWidget[] }>;
+  afterMessageCount: number;
+}
+
+// The state manager has no local append API and reloads history on conversation
+// switches. Keep debug entries outside it, anchored at the current list boundary.
+function mergeDebugReplies(messages: MessageType[], replies: DebugReply[]): MessageType[] {
+  const merged: MessageType[] = [];
+  for (let index = 0; index <= messages.length; index++) {
+    replies.forEach(({ message, afterMessageCount }) => {
+      if (Math.min(afterMessageCount, messages.length) === index) merged.push(message);
+    });
+    if (index < messages.length) merged.push(messages[index]);
+  }
+  return merged;
 }
 
 function MessageEntry({ message, avatar, isCompact }: { message: MessageType; avatar: string; isCompact?: boolean }) {
@@ -51,6 +70,7 @@ const UniversalMessages = ({
   MessageEntryComponent = MessageEntry,
   isCompact,
   welcome,
+  isMas = false,
 }: {
   username?: string;
   avatar: string;
@@ -60,6 +80,7 @@ const UniversalMessages = ({
   MessageEntryComponent?: React.ComponentType<any>;
   isCompact?: boolean;
   welcome?: WelcomeConfig;
+  isMas?: boolean;
 }) => {
   const activeConversation = useActiveConversation();
   const initLimitations = useInitLimitation();
@@ -67,6 +88,12 @@ const UniversalMessages = ({
   const initializingMessages = useIsInitializing();
   const sendMessage = useSendMessage();
   const [previews, setPreviews] = useState<PreviewReply[]>([]);
+  const [debugReplies, setDebugReplies] = useState<Record<string, DebugReply[]>>({});
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (!isComponentPreviewEnabled()) return;
@@ -82,6 +109,38 @@ const UniversalMessages = ({
     window.addEventListener(MAS_PREVIEW_EVENT, onPreview);
     return () => window.removeEventListener(MAS_PREVIEW_EVENT, onPreview);
   }, []);
+
+  useEffect(() => {
+    if (!isComponentPreviewEnabled() || !isMas || !activeConversation?.id) return;
+    const conversationId = activeConversation.id;
+    const onDebugMessage = (event: Event) => {
+      try {
+        const { answer, widgets } = parseDebugMessage((event as CustomEvent<unknown>).detail);
+        const date = new Date();
+        const afterMessageCount = messagesRef.current.length;
+        setDebugReplies((previous) => ({
+          ...previous,
+          [conversationId]: [
+            ...(previous[conversationId] || []),
+            {
+              afterMessageCount,
+              message: {
+                id: `debug-${date.getTime()}-${(previous[conversationId] || []).length}`,
+                role: 'bot',
+                answer,
+                date,
+                additionalAttributes: { widgets },
+              },
+            },
+          ],
+        }));
+      } catch (error) {
+        console.error('Invalid MAS debug message:', error);
+      }
+    };
+    window.addEventListener(MAS_DEBUG_MESSAGE_EVENT, onDebugMessage);
+    return () => window.removeEventListener(MAS_DEBUG_MESSAGE_EVENT, onDebugMessage);
+  }, [isMas, activeConversation?.id]);
 
   const welcomeMessageConfig = useMemo(() => {
     return {
@@ -136,7 +195,7 @@ const UniversalMessages = ({
             isCompact={isCompact}
           />
         )}
-        {messages.map((message, index) => (
+        {mergeDebugReplies(messages, isMas && activeConversation?.id ? debugReplies[activeConversation.id] || [] : []).map((message, index) => (
           <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} conversationId={activeConversation?.id} />
         ))}
         {previews.map(({ target, date }, index) => (
