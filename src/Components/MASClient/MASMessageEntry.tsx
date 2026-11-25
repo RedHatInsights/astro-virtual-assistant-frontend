@@ -13,11 +13,13 @@ function MASMessageEntry({
   avatar,
   isCompact,
   previewTarget,
+  conversationId,
 }: {
-  message: MessageType<MASAdditionalAttributes & { widgets?: unknown }>;
+  message: MessageType<MASAdditionalAttributes & { widgets?: unknown; turnId?: string }>;
   avatar: string;
   isCompact?: boolean;
   previewTarget?: ComponentPreviewTarget;
+  conversationId?: string;
 }) {
   const messageDate = message.date ? `${message.date.toLocaleDateString()} ${message.date.toLocaleTimeString()}` : '';
   const activeAgents = message.additionalAttributes?.activeAgents ?? [];
@@ -38,7 +40,11 @@ function MASMessageEntry({
                 afterMainContent: (
                   <>
                     {previewTarget && <ComponentPreview target={previewTarget} />}
-                    <MASWidgets widgets={message.additionalAttributes?.widgets} />
+                    <MASWidgets
+                      widgets={message.additionalAttributes?.widgets}
+                      sessionId={conversationId}
+                      turnId={message.additionalAttributes?.turnId}
+                    />
                   </>
                 ),
               }

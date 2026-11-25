@@ -41,11 +41,18 @@ export function isMASWidget(value: unknown): value is MASWidget {
   );
 }
 
-export function parseDebugMessage(value: unknown): { answer: string; widgets: MASWidget[] } {
-  if (!isRecord(value) || typeof value.answer !== 'string' || !Array.isArray(value.widgets) || !value.widgets.every(isMASWidget)) {
-    throw new Error('Expected an answer and an array of widget descriptors');
+export function parseDebugMessage(value: unknown): { answer: string; turnId: string; widgets: MASWidget[] } {
+  if (
+    !isRecord(value) ||
+    typeof value.answer !== 'string' ||
+    typeof value.turnId !== 'string' ||
+    !value.turnId.trim() ||
+    !Array.isArray(value.widgets) ||
+    !value.widgets.every(isMASWidget)
+  ) {
+    throw new Error('Expected an answer, turnId and an array of widget descriptors');
   }
-  return { answer: value.answer, widgets: value.widgets };
+  return { answer: value.answer, turnId: value.turnId, widgets: value.widgets };
 }
 
 // The qualified ID selects only an existing Chrome-configured scope and exposed module.
@@ -67,7 +74,7 @@ class WidgetErrorBoundary extends React.Component<React.PropsWithChildren, { fai
   }
 }
 
-function MASWidgetLoader({ widget }: { widget: MASWidget }) {
+function MASWidgetLoader({ widget, sessionId, turnId }: { widget: MASWidget; sessionId?: string; turnId?: string }) {
   const [component, setComponent] = useState<React.ComponentType<WidgetProps>>();
   const [failed, setFailed] = useState(false);
 
@@ -98,13 +105,21 @@ function MASWidgetLoader({ widget }: { widget: MASWidget }) {
 
   if (failed) return <span role="alert">Unable to load widget.</span>;
   if (!component) return <span>Loading widget...</span>;
+  const instanceId = widget.instanceId;
   const onOutput = isComponentPreviewEnabled()
-    ? (event: unknown) => console.info('MAS widget output', { widget: widget.widget, instanceId: widget.instanceId, event })
+    ? (output: unknown) =>
+        console.info('[Astro → MAS client] Would send widget action', {
+          sessionId,
+          turnId,
+          instanceId,
+          actionId: crypto.randomUUID(),
+          output,
+        })
     : undefined;
   return React.createElement(component, { input: widget.props, ...(onOutput && { onOutput }) });
 }
 
-export function MASWidgets({ widgets }: { widgets: unknown }) {
+export function MASWidgets({ widgets, sessionId, turnId }: { widgets: unknown; sessionId?: string; turnId?: string }) {
   if (!Array.isArray(widgets)) return null;
   const seen = new Set<string>();
   return (
@@ -120,7 +135,7 @@ export function MASWidgets({ widgets }: { widgets: unknown }) {
         seen.add(widget.instanceId);
         return (
           <WidgetErrorBoundary key={`${widget.instanceId}-${widget.widget}-${widget.schemaVersion}`}>
-            <MASWidgetLoader widget={widget} />
+            <MASWidgetLoader widget={widget} sessionId={sessionId} turnId={turnId} />
           </WidgetErrorBoundary>
         );
       })}

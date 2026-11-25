@@ -102,10 +102,17 @@ it('isolates widget render failures', async () => {
   log.mockRestore();
 });
 
-it('passes output only in local debug mode and logs the provider event without processing it', async () => {
-  const Widget = ({ onOutput }: { onOutput?: (event: unknown) => void }) => (
-    <button onClick={() => onOutput?.({ action: 'done' })}>{onOutput ? 'Output enabled' : 'Output absent'}</button>
-  );
+it('passes one callback for both actions only in debug mode and captures each render origin', async () => {
+  let originalCallback: ((event: unknown) => void) | undefined;
+  const Widget = ({ onOutput }: { onOutput?: (event: unknown) => void }) => {
+    if (onOutput && !originalCallback) originalCallback = onOutput;
+    return (
+      <>
+        <button onClick={() => onOutput?.({ type: 'approve' })}>{onOutput ? 'Approve' : 'Output absent'}</button>
+        <button onClick={() => onOutput?.({ type: 'reject' })}>Reject</button>
+      </>
+    );
+  };
   const log = jest.spyOn(console, 'info').mockImplementation(() => undefined);
   mockGetModule.mockImplementation(async (_scope, _module, name) => (name === 'getContract' ? () => contract : Widget));
   const { unmount } = render(<MASWidgets widgets={[packet]} />);
@@ -113,9 +120,22 @@ it('passes output only in local debug mode and logs the provider event without p
   expect(log).not.toHaveBeenCalled();
   unmount();
   jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
-  render(<MASWidgets widgets={[packet]} />);
-  fireEvent.click(await screen.findByText('Output enabled'));
-  expect(log).toHaveBeenCalledWith('MAS widget output', { widget: packet.widget, instanceId: packet.instanceId, event: { action: 'done' } });
+  const spoofed = { ...packet, props: { sessionId: 'spoof', turnId: 'spoof', instanceId: 'spoof', onOutput: 'spoof' } };
+  const { rerender } = render(<MASWidgets widgets={[spoofed]} sessionId="session-one" turnId="turn-one" />);
+  fireEvent.click(await screen.findByText('Approve'));
+  fireEvent.click(screen.getByText('Reject'));
+  rerender(<MASWidgets widgets={[spoofed]} sessionId="session-two" turnId="turn-two" />);
+  originalCallback?.({ type: 'approve' });
+  fireEvent.click(screen.getByText('Reject'));
+  const calls = log.mock.calls.map(([, payload]) => payload);
+  expect(log.mock.calls.map(([message]) => message)).toEqual(Array(4).fill('[Astro → MAS client] Would send widget action'));
+  expect(calls).toEqual([
+    { sessionId: 'session-one', turnId: 'turn-one', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'approve' } },
+    { sessionId: 'session-one', turnId: 'turn-one', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'reject' } },
+    { sessionId: 'session-one', turnId: 'turn-one', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'approve' } },
+    { sessionId: 'session-two', turnId: 'turn-two', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'reject' } },
+  ]);
+  expect(new Set(calls.map(({ actionId }) => actionId)).size).toBe(4);
 });
 
 it('deduplicates replays within each turn but permits the same instance in a different turn', async () => {

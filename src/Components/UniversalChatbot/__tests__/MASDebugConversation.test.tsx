@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
@@ -62,7 +62,7 @@ it('keeps debug replies out of the real manager and client while merging later r
     </AIStateProvider>
   );
   const historyReads = client.getConversationHistory.mock.calls.length;
-  act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Debug reply', widgets: [] } })));
+  act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Debug reply', turnId: 'debug-turn', widgets: [] } })));
   expect(screen.getByText('Debug reply')).toBeInTheDocument();
   expect(manager.getActiveConversationMessages()).toEqual([]);
   expect(client.sendMessage).not.toHaveBeenCalled();
@@ -86,5 +86,56 @@ it('keeps debug replies out of the real manager and client while merging later r
   expect(screen.getAllByTestId('entry').map((entry) => entry.textContent)).toEqual(['Debug reply', 'Live question', 'Live replyWidget live-id']);
   expect(manager.getActiveConversationMessages().map((message) => message.answer)).toEqual(['Live question', 'Live reply']);
   expect(client.sendMessage).toHaveBeenCalledTimes(1);
+  jest.restoreAllMocks();
+});
+
+it('passes the debug turn and originating session to widget actions after switching conversations', async () => {
+  jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+  const log = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+  const client = { getConversationHistory: jest.fn(async () => []), sendMessage: jest.fn() };
+  const manager = createClientStateManager(client as unknown as Parameters<typeof createClientStateManager>[0]);
+  await manager.setActiveConversationId('origin-session');
+  let savedCallback: ((event: unknown) => void) | undefined;
+  (getModule as jest.Mock).mockImplementation(async (_scope: string, _module: string, name: string) =>
+    name === 'getContract'
+      ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' })
+      : ({ onOutput }: { onOutput?: (event: unknown) => void }) => {
+          savedCallback = onOutput;
+          return <button onClick={() => onOutput?.({ type: 'approve' })}>Approve widget</button>;
+        }
+  );
+  render(
+    <AIStateProvider stateManager={manager}>
+      <UniversalMessages
+        avatar=""
+        setIsBannerOpen={() => undefined}
+        isBannerOpen={false}
+        scrollToBottomRef={React.createRef()}
+        isMas
+        MessageEntryComponent={MASMessageEntry}
+      />
+    </AIStateProvider>
+  );
+  const widget = {
+    type: 'widget',
+    widget: 'frontendStarterApp.HelloWorld',
+    schemaVersion: '1.0',
+    instanceId: 'instance',
+    props: { turnId: 'spoof', sessionId: 'spoof' },
+  };
+  act(() =>
+    window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Debug', turnId: 'origin-turn', widgets: [widget] } }))
+  );
+  fireEvent.click(await screen.findByText('Approve widget'));
+  await act(async () => {
+    await manager.setActiveConversationId('other-session');
+  });
+  savedCallback?.({ type: 'reject' });
+  expect(log.mock.calls.map(([, payload]) => payload)).toEqual([
+    { sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', actionId: expect.any(String), output: { type: 'approve' } },
+    { sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', actionId: expect.any(String), output: { type: 'reject' } },
+  ]);
+  expect(manager.getActiveConversationMessages()).toEqual([]);
+  expect(client.sendMessage).not.toHaveBeenCalled();
   jest.restoreAllMocks();
 });

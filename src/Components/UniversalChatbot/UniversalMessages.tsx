@@ -20,7 +20,7 @@ interface PreviewReply {
 }
 
 interface DebugReply {
-  message: MessageType<{ widgets: MASWidget[] }>;
+  message: MessageType<{ widgets: MASWidget[]; turnId: string }>;
   afterMessageCount: number;
 }
 
@@ -115,7 +115,7 @@ const UniversalMessages = ({
     const conversationId = activeConversation.id;
     const onDebugMessage = (event: Event) => {
       try {
-        const { answer, widgets } = parseDebugMessage((event as CustomEvent<unknown>).detail);
+        const { answer, widgets, turnId } = parseDebugMessage((event as CustomEvent<unknown>).detail);
         const date = new Date();
         const afterMessageCount = messagesRef.current.length;
         setDebugReplies((previous) => ({
@@ -129,7 +129,7 @@ const UniversalMessages = ({
                 role: 'bot',
                 answer,
                 date,
-                additionalAttributes: { widgets },
+                additionalAttributes: { widgets, turnId },
               },
             },
           ],
