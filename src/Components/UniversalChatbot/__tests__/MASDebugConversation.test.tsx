@@ -29,7 +29,7 @@ jest.mock('@patternfly/chatbot', () => ({
 it('keeps debug replies out of the real manager and client while merging later replies and reloaded history', async () => {
   jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
   Object.defineProperty(crypto, 'randomUUID', { configurable: true, value: jest.fn().mockReturnValue('generated-id') });
-  const widget = { type: 'widget', widget: 'starter.hello-world', schemaVersion: '1.0', instanceId: 'live', props: { runId: 'live-id' } };
+  const widget = { type: 'widget', widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', instanceId: 'live', props: { runId: 'live-id' } };
   let hasLiveReply = false;
   const client = {
     getConversationHistory: jest.fn(async (id: string) =>
@@ -44,7 +44,11 @@ it('keeps debug replies out of the real manager and client while merging later r
   };
   const manager = createClientStateManager(client as unknown as Parameters<typeof createClientStateManager>[0]);
   await manager.setActiveConversationId('one');
-  (getModule as jest.Mock).mockResolvedValue(({ runId }: { runId: string }) => <span>Widget {runId}</span>);
+  (getModule as jest.Mock).mockImplementation(async (_scope: string, _module: string, name: string) =>
+    name === 'getContract'
+      ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' })
+      : ({ input }: { input: { runId: string } }) => <span>Widget {input.runId}</span>
+  );
   render(
     <AIStateProvider stateManager={manager}>
       <UniversalMessages

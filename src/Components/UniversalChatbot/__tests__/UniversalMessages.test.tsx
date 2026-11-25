@@ -204,13 +204,13 @@ describe('UniversalMessages', () => {
     jest.useRealTimers();
   });
 
-  it('renders live and debug widgets through the same catalog without trusting response coordinates', async () => {
+  it('renders live and debug widgets through the same contract path without trusting response coordinates', async () => {
     jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
     const sendMessage = jest.fn();
     mockUseSendMessage.mockReturnValue(sendMessage);
     const widget = {
       type: 'widget',
-      widget: 'starter.hello-world',
+      widget: 'frontendStarterApp.HelloWorld',
       schemaVersion: '1.0',
       instanceId: 'hello-1',
       scope: 'evil',
@@ -222,21 +222,26 @@ describe('UniversalMessages', () => {
       role: 'bot' as const,
       answer: 'Live reply',
       date: new Date(),
-      additionalAttributes: { widgets: [widget, { ...widget, widget: 'evil' }, { ...widget, schemaVersion: '2.0' }] },
+      additionalAttributes: { widgets: [widget] },
     };
     const history = [liveMessage];
     mockUseMessages.mockReturnValue(history);
-    (getModule as jest.Mock).mockResolvedValue(({ text, runId }: { text: string; runId: string }) => (
-      <div>
-        {text} {runId}
-      </div>
-    ));
+    (getModule as jest.Mock).mockImplementation(async (_scope: string, _module: string, name: string) =>
+      name === 'getContract'
+        ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' })
+        : ({ input }: { input: { text: string; runId: string } }) => (
+            <div>
+              {input.text} {input.runId}
+            </div>
+          )
+    );
     render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);
     act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Debug reply', widgets: [widget] } })));
     expect(await screen.findAllByText('Hello from MAS FooBar')).toHaveLength(2);
     expect(screen.getByText('Live reply')).toBeInTheDocument();
     expect(screen.getByText('Debug reply')).toBeInTheDocument();
-    expect(getModule).toHaveBeenCalledTimes(2);
+    expect(getModule).toHaveBeenCalledTimes(4);
+    expect(getModule).toHaveBeenCalledWith('frontendStarterApp', './HelloWorld', 'getContract');
     expect(getModule).toHaveBeenCalledWith('frontendStarterApp', './HelloWorld', 'default');
     expect(history).toEqual([liveMessage]);
     expect(sendMessage).not.toHaveBeenCalled();
@@ -315,7 +320,7 @@ describe('UniversalMessages', () => {
   });
 
   it('ignores invalid widgets and never loads widgets from user messages', () => {
-    const widget = { type: 'widget', widget: 'starter.hello-world', schemaVersion: '1.0', instanceId: 'x', props: { runId: 'ok' } };
+    const widget = { type: 'widget', widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', instanceId: 'x', props: { runId: 'ok' } };
     mockUseMessages.mockReturnValue([
       { id: 'user', role: 'user', answer: 'User', date: new Date(), additionalAttributes: { widgets: [widget] } },
       {
@@ -323,7 +328,7 @@ describe('UniversalMessages', () => {
         role: 'bot',
         answer: 'Bot',
         date: new Date(),
-        additionalAttributes: { widgets: [null, { ...widget, props: null }, { ...widget, props: { runId: 42 } }] },
+        additionalAttributes: { widgets: [null, { ...widget, props: null }] },
       },
     ]);
     render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);

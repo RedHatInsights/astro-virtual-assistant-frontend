@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
-import { ComponentPreview, ComponentPreviewTarget } from './ComponentPreview';
+import React, { useEffect, useState } from 'react';
+import { getModule } from '@scalprum/core';
+import { isComponentPreviewEnabled } from './ComponentPreview';
 
 export const MAS_DEBUG_MESSAGE_EVENT = 'mas-debug-message';
 
@@ -9,6 +10,17 @@ export interface MASWidget {
   schemaVersion: string;
   instanceId: string;
   props: Record<string, unknown>;
+}
+
+// Provider-owned contract: input/output schemas and validation remain with the widget.
+export interface MASWidgetContract {
+  widget: string;
+  schemaVersion: string;
+}
+
+interface WidgetProps {
+  input: Record<string, unknown>;
+  onOutput?: (event: unknown) => void;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -36,28 +48,81 @@ export function parseDebugMessage(value: unknown): { answer: string; widgets: MA
   return { answer: value.answer, widgets: value.widgets };
 }
 
-// Coordinates come exclusively from this trusted catalog, never from the response.
-function resolveWidget(widget: MASWidget): ComponentPreviewTarget | undefined {
-  if (widget.widget === 'starter.hello-world' && widget.schemaVersion === '1.0') {
-    const { text, runId } = widget.props;
-    if (typeof runId !== 'string' || (text !== undefined && typeof text !== 'string')) return undefined;
-    return { scope: 'frontendStarterApp', module: './HelloWorld', props: { runId, ...(text !== undefined && { text }) } };
-  }
-  return undefined;
+// The qualified ID selects only an existing Chrome-configured scope and exposed module.
+// It cannot provide a URL, manifest, or separate federation coordinates.
+function resolveWidgetId(id: string): { scope: string; module: string } | undefined {
+  const match = /^([A-Za-z_$][\w$-]*)\.([A-Za-z_$][\w$-]*)$/.exec(id);
+  return match ? { scope: match[1], module: `./${match[2]}` } : undefined;
 }
 
-function MASWidgetEntry({ widget }: { widget: MASWidget }) {
-  const target = useMemo(() => resolveWidget(widget), [widget]);
-  return target ? <ComponentPreview target={target} /> : null;
+class WidgetErrorBoundary extends React.Component<React.PropsWithChildren, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    return this.state.failed ? <span role="alert">Unable to render widget.</span> : this.props.children;
+  }
+}
+
+function MASWidgetLoader({ widget }: { widget: MASWidget }) {
+  const [component, setComponent] = useState<React.ComponentType<WidgetProps>>();
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    setComponent(undefined);
+    setFailed(false);
+    const load = async () => {
+      const target = resolveWidgetId(widget.widget);
+      if (!target) throw new Error('Invalid widget ID');
+      const getContract = await getModule<unknown>(target.scope, target.module, 'getContract');
+      if (typeof getContract !== 'function') throw new Error('Missing widget contract');
+      const contract: unknown = await getContract();
+      if (!isRecord(contract) || contract.widget !== widget.widget || contract.schemaVersion !== widget.schemaVersion) {
+        throw new Error('Widget contract mismatch');
+      }
+      const loaded = await getModule<React.ComponentType<WidgetProps> | undefined>(target.scope, target.module, 'default');
+      if (!loaded) throw new Error('Missing widget component');
+      if (mounted) setComponent(() => loaded);
+    };
+    load().catch(() => {
+      if (mounted) setFailed(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [widget.widget, widget.schemaVersion]);
+
+  if (failed) return <span role="alert">Unable to load widget.</span>;
+  if (!component) return <span>Loading widget...</span>;
+  const onOutput = isComponentPreviewEnabled()
+    ? (event: unknown) => console.info('MAS widget output', { widget: widget.widget, instanceId: widget.instanceId, event })
+    : undefined;
+  return React.createElement(component, { input: widget.props, ...(onOutput && { onOutput }) });
 }
 
 export function MASWidgets({ widgets }: { widgets: unknown }) {
   if (!Array.isArray(widgets)) return null;
+  const seen = new Set<string>();
   return (
     <>
       {widgets.map((widget, index) => {
-        if (!isMASWidget(widget)) return null;
-        return <MASWidgetEntry key={`${widget.instanceId}-${index}`} widget={widget} />;
+        if (!isMASWidget(widget))
+          return (
+            <span key={`invalid-${index}`} role="alert">
+              Unable to load widget.
+            </span>
+          );
+        if (seen.has(widget.instanceId)) return null;
+        seen.add(widget.instanceId);
+        return (
+          <WidgetErrorBoundary key={`${widget.instanceId}-${widget.widget}-${widget.schemaVersion}`}>
+            <MASWidgetLoader widget={widget} />
+          </WidgetErrorBoundary>
+        );
       })}
     </>
   );

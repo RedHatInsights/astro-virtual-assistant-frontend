@@ -34,19 +34,23 @@ window.dispatchEvent(new CustomEvent('mas-component-preview', { detail: {
 
 Use a scope already configured by Chrome. Dispatch again with a different module or export to append another reply; no widget registration or provider changes are needed. Invalid JSON is reported in the console. Loading or rendering failures affect only that reply. Previews are in memory, disappear when the chat unmounts, and never send data to MAS. Production builds and non-local hosts ignore the event.
 
-To exercise the same widget path used by MAS replies, select MAS and an active conversation, then dispatch:
+To exercise the MAS widget path, select MAS and an active conversation, then dispatch:
 
 ```js
 window.dispatchEvent(new CustomEvent('mas-debug-message', { detail: {
   answer: 'Here’s a reply from MAS.',
-  widgets: [{ type: 'widget', widget: 'starter.hello-world', schemaVersion: '1.0',
-    instanceId: 'hello-1', props: { text: 'Hello from MAS', runId: 'FooBar' } }],
+  widgets: [{ type: 'widget', widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0',
+    instanceId: 'hello-1', props: { runId: 'FooBar', text: 'Hello from MAS' } }],
 } }));
 ```
 
-Debug replies are local to the selected conversation and are not sent to MAS or written to history. Both debug and live replies resolve widget names and schema versions through a trusted frontend catalog; reply-provided scope or module fields are never used. The starter widget requires `runId` and optionally accepts `text`. Unknown widgets, versions and invalid props are ignored.
+The widget ID is exactly `app_id.module_id`: Chrome's existing federation configuration resolves the app scope; Scalprum loads the exposed `./module_id`. No packet-supplied URLs, manifests, or separate coordinates are used. The module must export `getContract()` returning at least `{ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' }` and a default React component accepting `{ input, onOutput? }`. Astro checks the exact ID and version, then passes the complete packet `props` as `input`. The provider owns input validation and event `outputSchema` validation. A missing export, failed contract, mismatch, or render error shows an inline error without hiding the answer. Repeated instance IDs in one assistant turn render once; the same ID in another turn is independent.
 
-Debug entries are merged at the current in-memory message-list position because the state manager has no local append API. They survive switching conversations while the chat remains mounted; if a history reload changes the number or order of earlier messages, their original position cannot be reconstructed reliably. The current `mas-client` version does not forward widget attributes from streamed or history responses, so live widget delivery requires client support and a defined backend contract.
+Only local development preview mode supplies `onOutput`; it logs the provider event with widget ID and instance ID to the browser console. It does not send a request or write history. Outside debug mode the callback is omitted entirely. Debug replies are local to the selected conversation and use the same `MASMessageEntry` path as live widget attributes. They are not sent to MAS or written to history.
+
+Debug entries are merged at the current in-memory message-list position because the state manager has no local append API. They survive switching conversations while the chat remains mounted; if a history reload changes the number or order of earlier messages, their original position cannot be reconstructed reliably. The current `mas-client` version does not forward widget attributes from streamed or history responses, so live widget delivery requires a separate client/backend follow-up. The current starter app also needs a separate provider follow-up to export the contract and accept `input`; this Astro change does not implement it.
+
+**Manual contract verification:** With a contract-capable starter module registered in Chrome (see setup below), select MAS, dispatch the debug message above, and check the answer and widget appear. Add the same packet twice to `widgets` and confirm one widget renders; dispatch another message with the same instance ID and confirm it renders in that new turn. Trigger a provider output and check the console log includes the ID, instance ID, and event; using a live-attribute fixture without `?masComponentPreview=1`, confirm the provider receives no callback (the debug event itself is disabled there). Change the schema version or use a provider missing `getContract` or its default export and confirm the answer remains visible with an inline error. Verify widget-owned input/output validation in the provider. Stop local servers afterwards.
 
 #### Example: frontend starter app HelloWorld
 
