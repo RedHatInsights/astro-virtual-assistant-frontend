@@ -34,6 +34,33 @@ window.dispatchEvent(new CustomEvent('mas-component-preview', { detail: {
 
 Use a scope already configured by Chrome. Dispatch again with a different module or export to append another reply; no widget registration or provider changes are needed. Invalid JSON is reported in the console. Loading or rendering failures affect only that reply. Previews are in memory, disappear when the chat unmounts, and never send data to MAS. Production builds and non-local hosts ignore the event; MAS response attributes are never used as component targets.
 
+#### Example: frontend starter app HelloWorld
+
+The [starter app](https://github.com/RedHatInsights/frontend-starter-app) exposes `./HelloWorld` as a default React component under the Chrome scope `frontendStarterApp`. Its `runId` prop is required; `text` is optional. This example loads the remote component at runtime, rather than bundling a copy in Astro.
+
+1. On a machine with the Console hosts setup, a container runtime, stage access, and a Red Hat login, install the starter app dependencies and run `npm run static -- --port=8005` in its checkout. Wait for its build to finish and leave it running.
+2. In this checkout, temporarily add the following route inside `getRoutes()` in `fec.config.js`, keeping any existing routes. It routes the starter manifest and chunks to the local build:
+
+   ```js
+   routes['/apps/frontend-starter-app'] = { host: 'http://127.0.0.1:8005' };
+   ```
+
+   Run `npm install` and `npm run start -- --clouddotEnv=stage`. Revert the local-only route when finished.
+3. Open `https://stage.foo.redhat.com:1337/staging/starter?masComponentPreview=1`, authenticate, and open an enabled chat. In DevTools, disable the cache and reload. Confirm `/apps/frontend-starter-app/fed-mods.json` is the local manifest with `name: "frontendStarterApp"` and `baseURL: "/apps/frontend-starter-app/"`. Chrome's `/api/chrome-service/v1/static/fed-modules-generated.json` must register `frontendStarterApp` with that manifest location; the manifest's name alone does not register the scope.
+4. With the chat open, paste this into the browser console:
+
+   ```js
+   window.dispatchEvent(new CustomEvent('mas-component-preview', {
+     detail: {
+       scope: 'frontendStarterApp',
+       module: './HelloWorld',
+       props: JSON.stringify({ text: 'Hello from the starter app', runId: 'preview-123' }),
+     },
+   }));
+   ```
+
+   Omitting `importName` selects the default export. The reply should display `Hello from the starter app preview-123`. Check the network and console for loading errors, and stop both servers after testing.
+
 
 ### Static mode
 

@@ -159,6 +159,31 @@ describe('UniversalMessages', () => {
     jest.restoreAllMocks();
   });
 
+  it('loads the documented starter app example with its props', async () => {
+    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+    const mockGetModule = getModule as jest.Mock;
+    mockGetModule.mockResolvedValue(({ text, runId }: { text: string; runId: string }) => (
+      <div>
+        {text} {runId}
+      </div>
+    ));
+    render(<UniversalMessages {...defaultProps} />);
+    act(() =>
+      window.dispatchEvent(
+        new CustomEvent(preview.MAS_PREVIEW_EVENT, {
+          detail: {
+            scope: 'frontendStarterApp',
+            module: './HelloWorld',
+            props: JSON.stringify({ text: 'Hello from the starter app', runId: 'preview-123' }),
+          },
+        })
+      )
+    );
+    expect(await screen.findByText('Hello from the starter app preview-123')).toBeInTheDocument();
+    expect(mockGetModule).toHaveBeenCalledWith('frontendStarterApp', './HelloWorld', 'default');
+    jest.restoreAllMocks();
+  });
+
   it('keeps each preview timestamp when later replies arrive', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-01-01T00:00:00Z'));
