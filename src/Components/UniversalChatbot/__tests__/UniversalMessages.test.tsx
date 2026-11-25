@@ -4,10 +4,10 @@ import '@testing-library/jest-dom';
 import UniversalMessages from '../UniversalMessages';
 import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import useArhMessageQuota from '../../ARHClient/useArhMessageQuota';
-import * as preview from '../../MASClient/ComponentPreview';
+import * as debug from '../../MASClient/MASDebug';
 import { getModule } from '@scalprum/core';
 import MASMessageEntry from '../../MASClient/MASMessageEntry';
-import { MAS_DEBUG_MESSAGE_EVENT } from '../../MASClient/MASWidgets';
+import { MAS_DEBUG_MESSAGE_EVENT } from '../../MASClient/MASDebug';
 
 // Mock hooks used by UniversalMessages
 const mockUseMessages = useMessages as jest.MockedFunction<typeof useMessages>;
@@ -121,91 +121,41 @@ describe('UniversalMessages', () => {
     expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
   });
 
-  it('injects local replies into the real message list without trusting message attributes', async () => {
-    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
-    const mockGetModule = getModule as jest.Mock;
-    mockGetModule.mockImplementation(async (_scope: string, module: string, name: string) => {
-      if (module === './bad') throw new Error('missing');
-      return function PreviewExport() {
-        return <div>{name}</div>;
-      };
-    });
-    mockUseMessages.mockReturnValue([
-      { id: 'server', role: 'bot', answer: 'Server response', date: new Date(), additionalAttributes: { scope: 'untrusted', module: './bad' } },
-    ]);
-    render(<UniversalMessages {...defaultProps} />);
-    act(() => {
-      for (const target of [
-        { scope: 'demo', module: './Widget', props: '{}' },
-        { scope: 'demo', module: './bad', props: '{}' },
-        { scope: 'demo', module: './Widget', importName: 'Second', props: '{}' },
-      ])
-        window.dispatchEvent(new CustomEvent(preview.MAS_PREVIEW_EVENT, { detail: target }));
-    });
-    expect(await screen.findByText('default')).toBeInTheDocument();
-    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load');
-    expect(await screen.findByText('Second')).toBeInTheDocument();
-    expect(screen.getByText('Server response')).toBeInTheDocument();
-    expect(mockGetModule).toHaveBeenCalledTimes(3);
-    jest.restoreAllMocks();
-  });
-
-  it('ignores preview events when the local preview is disabled', () => {
-    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(false);
-    const mockGetModule = getModule as jest.Mock;
-    mockGetModule.mockClear();
-    render(<UniversalMessages {...defaultProps} />);
-    act(() => window.dispatchEvent(new CustomEvent(preview.MAS_PREVIEW_EVENT, { detail: { scope: 'test', module: './Widget' } })));
-    expect(mockGetModule).not.toHaveBeenCalled();
+  it('ignores the removed arbitrary-component event even in debug mode', () => {
+    jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+    render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);
+    act(() => window.dispatchEvent(new CustomEvent('mas-component-preview', { detail: { scope: 'demo', module: './Widget' } })));
+    expect(getModule).not.toHaveBeenCalled();
     expect(screen.queryByText('Local component preview')).not.toBeInTheDocument();
     jest.restoreAllMocks();
   });
 
-  it('loads the documented starter app example with its props', async () => {
-    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
-    const mockGetModule = getModule as jest.Mock;
-    mockGetModule.mockResolvedValue(({ text, runId }: { text: string; runId: string }) => (
-      <div>
-        {text} {runId}
-      </div>
-    ));
-    render(<UniversalMessages {...defaultProps} />);
-    act(() =>
-      window.dispatchEvent(
-        new CustomEvent(preview.MAS_PREVIEW_EVENT, {
-          detail: {
-            scope: 'frontendStarterApp',
-            module: './HelloWorld',
-            props: JSON.stringify({ text: 'Hello from the starter app', runId: 'preview-123' }),
-          },
-        })
-      )
-    );
-    expect(await screen.findByText('Hello from the starter app preview-123')).toBeInTheDocument();
-    expect(mockGetModule).toHaveBeenCalledWith('frontendStarterApp', './HelloWorld', 'default');
+  it('retains debug replies while messages initialize', () => {
+    jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+    mockUseIsInitializing.mockReturnValue(true);
+    const { rerender } = render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);
+    act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Queued debug', turnId: 'turn', widgets: [] } })));
+    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+    mockUseIsInitializing.mockReturnValue(false);
+    rerender(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);
+    expect(screen.getByText('Queued debug')).toBeInTheDocument();
     jest.restoreAllMocks();
   });
 
-  it('keeps each preview timestamp when later replies arrive', () => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date('2026-01-01T00:00:00Z'));
-    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
-    (getModule as jest.Mock).mockImplementation(() => new Promise(() => undefined));
-    render(<UniversalMessages {...defaultProps} />);
-    const send = () => window.dispatchEvent(new CustomEvent(preview.MAS_PREVIEW_EVENT, { detail: { scope: 'demo', module: './Widget' } }));
-    act(send);
-    const firstTimestamp = screen.getByTestId('message-bot').getAttribute('data-timestamp');
-    jest.setSystemTime(new Date('2026-01-01T01:00:00Z'));
-    act(send);
-    const replies = screen.getAllByTestId('message-bot');
-    expect(replies[0]).toHaveAttribute('data-timestamp', firstTimestamp);
-    expect(replies[1].getAttribute('data-timestamp')).not.toEqual(firstTimestamp);
+  it('removes the debug listener when unmounted', () => {
+    jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+    const add = jest.spyOn(window, 'addEventListener');
+    const remove = jest.spyOn(window, 'removeEventListener');
+    const { unmount } = render(<UniversalMessages {...defaultProps} isMas />);
+    const listener = add.mock.calls.find((call: unknown[]) => call[0] === MAS_DEBUG_MESSAGE_EVENT)?.[1];
+    expect(listener).toBeDefined();
+    unmount();
+    expect(remove).toHaveBeenCalledWith(MAS_DEBUG_MESSAGE_EVENT, listener);
     jest.restoreAllMocks();
-    jest.useRealTimers();
   });
 
   it('renders live and debug widgets through the same contract path without trusting response coordinates', async () => {
-    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+    jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
     const sendMessage = jest.fn();
     mockUseSendMessage.mockReturnValue(sendMessage);
     const widget = {
@@ -251,7 +201,7 @@ describe('UniversalMessages', () => {
   });
 
   it('merges debug replies chronologically with subsequent live messages through the configured message entry', () => {
-    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+    jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
     const sendMessage = jest.fn();
     mockUseSendMessage.mockReturnValue(sendMessage);
     const before = { id: 'before', role: 'bot' as const, answer: 'Before', date: new Date() };
@@ -261,13 +211,13 @@ describe('UniversalMessages', () => {
     mockUseMessages.mockReturnValue(history);
     const Entry = ({ message }: { message: { answer: string } }) => <div data-testid="merged-entry">{message.answer}</div>;
     const { rerender } = render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={Entry} />);
-    const debug = (answer: string) =>
+    const sendDebug = (answer: string) =>
       act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer, turnId: 'debug-turn', widgets: [] } })));
-    debug('Debug 1');
-    debug('Debug 2');
+    sendDebug('Debug 1');
+    sendDebug('Debug 2');
     mockUseMessages.mockReturnValue([before, after]);
     rerender(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={Entry} />);
-    debug('Debug 3');
+    sendDebug('Debug 3');
     mockUseMessages.mockReturnValue([before, after, { ...after, id: 'last', answer: 'Last' }]);
     rerender(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={Entry} />);
     expect(screen.getAllByTestId('merged-entry').map((element) => element.textContent)).toEqual([
@@ -284,7 +234,7 @@ describe('UniversalMessages', () => {
   });
 
   it('isolates debug replies by conversation and ignores events outside MAS or without an active conversation', () => {
-    jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+    jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
     const event = () =>
       window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Local debug', turnId: 'debug-turn', widgets: [] } }));
     const { rerender } = render(<UniversalMessages {...defaultProps} isMas />);
@@ -307,7 +257,7 @@ describe('UniversalMessages', () => {
   });
 
   it('rejects malformed debug payloads and ignores debug events when disabled', () => {
-    const enabled = jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+    const enabled = jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
     const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const { unmount } = render(<UniversalMessages {...defaultProps} isMas />);
     for (const detail of [

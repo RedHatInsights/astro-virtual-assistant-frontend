@@ -6,8 +6,8 @@ import { createClientStateManager } from '@redhat-cloud-services/ai-client-state
 import { getModule } from '@scalprum/core';
 import UniversalMessages from '../UniversalMessages';
 import MASMessageEntry from '../../MASClient/MASMessageEntry';
-import * as preview from '../../MASClient/ComponentPreview';
-import { MAS_DEBUG_MESSAGE_EVENT } from '../../MASClient/MASWidgets';
+import * as debug from '../../MASClient/MASDebug';
+import { MAS_DEBUG_MESSAGE_EVENT } from '../../MASClient/MASDebug';
 
 jest.unmock('@redhat-cloud-services/ai-react-state');
 jest.unmock('@redhat-cloud-services/ai-client-state');
@@ -27,7 +27,7 @@ jest.mock('@patternfly/chatbot', () => ({
 }));
 
 it('keeps debug replies out of the real manager and client while merging later replies and reloaded history', async () => {
-  jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
   Object.defineProperty(crypto, 'randomUUID', { configurable: true, value: jest.fn().mockReturnValue('generated-id') });
   const widget = { type: 'widget', widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', instanceId: 'live', props: { runId: 'live-id' } };
   let hasLiveReply = false;
@@ -90,7 +90,7 @@ it('keeps debug replies out of the real manager and client while merging later r
 });
 
 it('passes the debug turn and originating session to widget actions after switching conversations', async () => {
-  jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
   const log = jest.spyOn(console, 'info').mockImplementation(() => undefined);
   const client = { getConversationHistory: jest.fn(async () => []), sendMessage: jest.fn() };
   const manager = createClientStateManager(client as unknown as Parameters<typeof createClientStateManager>[0]);

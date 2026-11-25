@@ -5,20 +5,17 @@ import { MASAdditionalAttributes } from '@redhat-cloud-services/mas-client';
 
 import MASAgentStatusPanel from './MASAgentStatusPanel';
 import MAS_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
-import { ComponentPreview, ComponentPreviewTarget } from './ComponentPreview';
 import { MASWidgets } from './MASWidgets';
 
 function MASMessageEntry({
   message,
   avatar,
   isCompact,
-  previewTarget,
   conversationId,
 }: {
   message: MessageType<MASAdditionalAttributes & { widgets?: unknown; turnId?: string }>;
   avatar: string;
   isCompact?: boolean;
-  previewTarget?: ComponentPreviewTarget;
   conversationId?: string;
 }) {
   const messageDate = message.date ? `${message.date.toLocaleDateString()} ${message.date.toLocaleTimeString()}` : '';
@@ -38,14 +35,11 @@ function MASMessageEntry({
           message.role === 'bot'
             ? {
                 afterMainContent: (
-                  <>
-                    {previewTarget && <ComponentPreview target={previewTarget} />}
-                    <MASWidgets
-                      widgets={message.additionalAttributes?.widgets}
-                      sessionId={conversationId}
-                      turnId={message.additionalAttributes?.turnId}
-                    />
-                  </>
+                  <MASWidgets
+                    widgets={message.additionalAttributes?.widgets}
+                    sessionId={conversationId}
+                    turnId={message.additionalAttributes?.turnId}
+                  />
                 ),
               }
             : undefined

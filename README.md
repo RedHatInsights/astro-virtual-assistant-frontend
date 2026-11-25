@@ -20,21 +20,9 @@ If you want to run your backend locally:
 - Virtual Assistant (Rasa): `USE_LOCAL_RASA=1 npm run start`
 - Multi-Agent System (MAS): `USE_LOCAL_MAS=1 npm run start`
 
-### Preview a federated component in a MAS reply
+### Simulate a MAS reply with a federated widget
 
-This developer-only preview works without a MAS backend. Chrome must still provide an authenticated, enabled chat manager (MAS or another available assistant) so the chat can open. Run `npm run start -- --clouddotEnv=stage`, open the chat on `localhost`, `127.0.0.1`, or `stage.foo.redhat.com` with `?masComponentPreview=1`, and dispatch an event in the browser console:
-
-```js
-window.dispatchEvent(new CustomEvent('mas-component-preview', { detail: {
-  scope: 'yourChromeScope', module: './YourExposedModule',
-  importName: 'YourExport', // optional; defaults to default
-  props: '{"example":"value"}' // JSON object string
-} }));
-```
-
-Use a scope already configured by Chrome. Dispatch again with a different module or export to append another reply; no widget registration or provider changes are needed. Invalid JSON is reported in the console. Loading or rendering failures affect only that reply. Previews are in memory, disappear when the chat unmounts, and never send data to MAS. Production builds and non-local hosts ignore the event.
-
-To exercise the MAS widget path, create and register the hypothetical provider in [the worked example](#create-a-federated-widget-and-render-it-in-an-astro-message) below. The existing `HelloWorld` component is an arbitrary-component preview, not a contract-capable MAS widget.
+The single `mas-debug-message` event simulates delivery in local development. It requires an authenticated, enabled MAS chat with an active conversation and a Chrome-registered provider exporting the matching contract and component. The retained `?masComponentPreview=1` flag opts in to this debug path only; despite its name it does not enable arbitrary component previews. Production builds and non-local hosts ignore the event. For a complete hypothetical provider and event, see the worked example below.
 
 The widget ID is exactly `app_id.module_id`: Chrome's existing federation configuration resolves the app scope; Scalprum loads the exposed `./module_id`. No packet-supplied URLs, manifests, or separate coordinates are used. The module must export `getContract()` returning at least its exact widget ID and schema version, for example `{ widget: 'frontendStarterApp.StartApp', schemaVersion: '1.0' }`, and a default React component accepting `{ input, onOutput? }`. Astro checks the exact ID and version, then passes the complete packet `props` as `input`. The provider owns input validation and event `outputSchema` validation. A missing export, failed contract, mismatch, or render error shows an inline error without hiding the answer. Repeated instance IDs in one assistant turn render once; the same ID in another turn is independent.
 
@@ -44,7 +32,7 @@ Debug entries are merged at the current in-memory message-list position because 
 
 **Manual contract verification:** With the example provider registered in Chrome, select MAS, dispatch its debug message below, and check the answer and widget appear. Add the same packet twice to `widgets` and confirm one widget renders; dispatch another message with the same instance ID and confirm it renders in that new turn. Trigger approve and reject, checking each console log contains the originating session and turn, instance ID, fresh action ID, and emitted output; switch conversations and verify any retained callback still uses its original context. Using a live-attribute fixture without `?masComponentPreview=1`, confirm the provider receives no callback (the debug event itself is disabled there). Change the schema version or use a provider missing `getContract` or its default export and confirm the answer remains visible with an inline error. Verify widget-owned input/output validation in the provider. Stop local servers afterwards.
 
-#### Create a federated widget and render it in an Astro message
+#### Create a federated widget and render it in an Astro message.
 
 This is a **hypothetical provider example**, not a shipped starter-app module. It describes provider files to create separately; Astro only loads the resulting federation module. The example asks “Start Inventory in staging?” and emits Approve or Reject.
 
@@ -75,7 +63,31 @@ export const startAppContract = {
 } as const;
 ```
 
-These schemas describe the **contents of `input`** and the **emitted event**, not the React props object or callback itself. Valid inputs include `{ appName: 'Inventory', environment: 'staging' }` and `{ appName: 'Inventory', environment: 'staging', text: 'Start the inventory service now?' }`; `{ environment: 'staging' }` is invalid. Valid outputs are `{ type: 'approve' }` and `{ type: 'reject' }`.
+These schemas describe the **contents of `input`** and the **emitted event**, not the React props object or callback itself. Valid inputs:
+
+```json
+{"appName":"Inventory","environment":"staging"}
+```
+
+```json
+{"appName":"Inventory","environment":"staging","text":"Start the inventory service now?"}
+```
+
+The first renders “Start Inventory in staging?”; the second renders “Start the inventory service now?”. Missing `appName` is invalid:
+
+```json
+{"environment":"staging"}
+```
+
+Valid emitted outputs:
+
+```json
+{"type":"approve"}
+```
+
+```json
+{"type":"reject"}
+```
 
 Create `src/Components/StartApp/StartApp.tsx` alongside the contract:
 
@@ -145,16 +157,33 @@ export default function StartApp({ input, onOutput }: StartAppProps) {
 }
 ```
 
-These dependency-free validators enforce the example schemas; `Object.hasOwn` requires ES2022-compatible typings and runtime support. The provider knows nothing about a MAS client, session, or endpoint. Extend the existing provider `fec.config.js` exposes map, retaining its root entry:
+These dependency-free validators enforce the example schemas; `Object.hasOwn` requires ES2022-compatible typings and runtime support. Without `onOutput`, the question remains readable but no buttons appear. The provider knows nothing about a MAS client, session, or endpoint. Extend the existing provider `fec.config.js` configuration, retaining its root entry and other settings:
 
 ```js
-exposes: {
-  './RootApp': './src/AppEntry',
-  './StartApp': './src/Components/StartApp/StartApp',
+moduleFederation: {
+  // Keep the provider's other moduleFederation settings.
+  exposes: {
+    './RootApp': './src/AppEntry',
+    './StartApp': './src/Components/StartApp/StartApp',
+  },
 },
 ```
 
-This **single exposure** provides both the named `getContract` export and the default `StartApp` export. Its Chrome scope is `frontendStarterApp` and its module is `./StartApp`. Rebuild the provider and verify Chrome's `/api/chrome-service/v1/static/fed-modules-generated.json` registers that scope to the intended provider manifest. Inspect `/apps/frontend-starter-app/fed-mods.json` and its loaded federation entry/chunks in DevTools to confirm the rebuilt deployment contains `./StartApp` and both exports. A correct widget ID cannot load a module absent from the registered provider; a manifest name alone is not registration. The local routing and authentication setup in the [HelloWorld example](#example-frontend-starter-app-helloworld) can be used for a local provider build.
+This **single exposure** provides both the named `getContract` export and the default `StartApp` export:
+
+| Packet widget | Chrome scope | Exposed module | Contract version |
+| --- | --- | --- | --- |
+| `frontendStarterApp.StartApp` | `frontendStarterApp` | `./StartApp` | `1.0` |
+
+Rebuild the provider and verify Chrome's `/api/chrome-service/v1/static/fed-modules-generated.json` registers that scope to the intended provider manifest. Inspect `/apps/frontend-starter-app/fed-mods.json` and its loaded federation entry/chunks in DevTools to confirm the rebuilt deployment contains `./StartApp` and both exports. A correct widget ID cannot load a module absent from the registered provider; a manifest name alone is not registration. The existing starter app does **not** ship this hypothetical `StartApp` or its contract.
+
+For a local provider build, use a machine with the Console hosts setup, container runtime, stage access, and Red Hat login. Install provider dependencies, implement the files and exposure above, then run `npm run static -- --port=8005` in its checkout. Wait for its build. In the Astro checkout temporarily add this route inside `getRoutes()` in `fec.config.js`, retaining existing routes:
+
+```js
+routes['/apps/frontend-starter-app'] = { host: 'http://127.0.0.1:8005' };
+```
+
+Run `npm run start -- --clouddotEnv=stage`, open `https://stage.foo.redhat.com:1337/staging/starter?masComponentPreview=1`, authenticate, disable cache in DevTools, and reload. Confirm the local manifest has `name: "frontendStarterApp"` and `baseURL: "/apps/frontend-starter-app/"`, Chrome registers it, and its federation entry/chunks contain the new exposure. Stop both servers and revert the local-only route after testing.
 
 Astro's `MASWidgets` loader does the following (excerpt; `widget` is the packet and `sessionId`/`turnId` come from the originating reply):
 
@@ -171,7 +200,7 @@ if (mounted) setComponent(() => loaded);
 
 // After loading, in local preview mode only:
 const instanceId = widget.instanceId;
-const onOutput = isComponentPreviewEnabled()
+const onOutput = isMASDebugEnabled()
   ? (output: unknown) =>
       console.info('[Astro → MAS client] Would send widget action', {
         sessionId, turnId, instanceId, actionId: crypto.randomUUID(), output,
@@ -219,7 +248,7 @@ To reproduce provider validation failure, dispatch a new reply with a fresh inst
 ```js
 window.dispatchEvent(new CustomEvent('mas-debug-message', {
   detail: {
-    turnId: 'turn-8',
+    turnId: 'turn-7',
     answer: 'Starting this application requires your approval.',
     widgets: [{
       type: 'widget',
@@ -235,34 +264,6 @@ window.dispatchEvent(new CustomEvent('mas-debug-message', {
 The answer remains visible and the provider displays “Cannot display start request: invalid input.” A missing module or contract mismatch instead shows Astro's “Unable to load widget.” error, distinct from provider validation.
 
 The console event only simulates delivery; the callback logs a proposed mas-client payload. It sends no MAS action request, starts or rejects no application, and writes no history. Loading the provider may still make federation network requests. Local debug support does not imply live MAS support: the current mas-client does not forward live widget attributes, and transport requires separate work.
-
-#### Example: frontend starter app HelloWorld
-
-The [starter app](https://github.com/RedHatInsights/frontend-starter-app) exposes `./HelloWorld` as a default React component under the Chrome scope `frontendStarterApp`. Its `runId` prop is required; `text` is optional. This example loads the remote component at runtime, rather than bundling a copy in Astro.
-
-1. On a machine with the Console hosts setup, a container runtime, stage access, and a Red Hat login, install the starter app dependencies and run `npm run static -- --port=8005` in its checkout. Wait for its build to finish and leave it running.
-2. In this checkout, temporarily add the following route inside `getRoutes()` in `fec.config.js`, keeping any existing routes. It routes the starter manifest and chunks to the local build:
-
-   ```js
-   routes['/apps/frontend-starter-app'] = { host: 'http://127.0.0.1:8005' };
-   ```
-
-   Run `npm install` and `npm run start -- --clouddotEnv=stage`. Revert the local-only route when finished.
-3. Open `https://stage.foo.redhat.com:1337/staging/starter?masComponentPreview=1`, authenticate, and open an enabled chat. In DevTools, disable the cache and reload. Confirm `/apps/frontend-starter-app/fed-mods.json` is the local manifest with `name: "frontendStarterApp"` and `baseURL: "/apps/frontend-starter-app/"`. Chrome's `/api/chrome-service/v1/static/fed-modules-generated.json` must register `frontendStarterApp` with that manifest location; the manifest's name alone does not register the scope.
-4. With the chat open, paste this into the browser console:
-
-   ```js
-   window.dispatchEvent(new CustomEvent('mas-component-preview', {
-     detail: {
-       scope: 'frontendStarterApp',
-       module: './HelloWorld',
-       props: JSON.stringify({ text: 'Hello from the starter app', runId: 'preview-123' }),
-     },
-   }));
-   ```
-
-   Omitting `importName` selects the default export. The reply should display `Hello from the starter app preview-123`. Check the network and console for loading errors, and stop both servers after testing.
-
 
 ### Static mode
 

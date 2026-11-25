@@ -10,14 +10,8 @@ import { WelcomeConfig } from '../../aiClients/types';
 import UniversalBanner from './UniversalBanner';
 import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
-import MASMessageEntry from '../MASClient/MASMessageEntry';
-import { ComponentPreviewTarget, MAS_PREVIEW_EVENT, isComponentPreviewEnabled, parsePreviewTarget } from '../MASClient/ComponentPreview';
-import { MASWidget, MAS_DEBUG_MESSAGE_EVENT, parseDebugMessage } from '../MASClient/MASWidgets';
-
-interface PreviewReply {
-  target: ComponentPreviewTarget;
-  date: Date;
-}
+import { MAS_DEBUG_MESSAGE_EVENT, isMASDebugEnabled } from '../MASClient/MASDebug';
+import { MASWidget, parseDebugMessage } from '../MASClient/MASWidgets';
 
 interface DebugReply {
   message: MessageType<{ widgets: MASWidget[]; turnId: string }>;
@@ -87,7 +81,6 @@ const UniversalMessages = ({
   const messages = useMessages<IFDAdditionalAttributes>();
   const initializingMessages = useIsInitializing();
   const sendMessage = useSendMessage();
-  const [previews, setPreviews] = useState<PreviewReply[]>([]);
   const [debugReplies, setDebugReplies] = useState<Record<string, DebugReply[]>>({});
   const messagesRef = useRef(messages);
 
@@ -96,22 +89,7 @@ const UniversalMessages = ({
   }, [messages]);
 
   useEffect(() => {
-    if (!isComponentPreviewEnabled()) return;
-    const onPreview = (event: Event) => {
-      try {
-        const target = parsePreviewTarget((event as CustomEvent<unknown>).detail);
-        const date = new Date();
-        setPreviews((previous) => [...previous, { target, date }]);
-      } catch (error) {
-        console.error('Invalid MAS component preview:', error);
-      }
-    };
-    window.addEventListener(MAS_PREVIEW_EVENT, onPreview);
-    return () => window.removeEventListener(MAS_PREVIEW_EVENT, onPreview);
-  }, []);
-
-  useEffect(() => {
-    if (!isComponentPreviewEnabled() || !isMas || !activeConversation?.id) return;
+    if (!isMASDebugEnabled() || !isMas || !activeConversation?.id) return;
     const conversationId = activeConversation.id;
     const onDebugMessage = (event: Event) => {
       try {
@@ -171,7 +149,7 @@ const UniversalMessages = ({
     }
   }, [activeConversation?.id, setIsBannerOpen]);
 
-  if (initializingMessages && previews.length === 0) {
+  if (initializingMessages) {
     return (
       <Bullseye>
         <Spinner />
@@ -197,15 +175,6 @@ const UniversalMessages = ({
         )}
         {mergeDebugReplies(messages, isMas && activeConversation?.id ? debugReplies[activeConversation.id] || [] : []).map((message, index) => (
           <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} conversationId={activeConversation?.id} />
-        ))}
-        {previews.map(({ target, date }, index) => (
-          <MASMessageEntry
-            key={`preview-${index}`}
-            message={{ id: `preview-${index}`, role: 'bot', answer: 'Local component preview', date }}
-            avatar={avatar}
-            isCompact={isCompact}
-            previewTarget={target}
-          />
         ))}
         <div ref={scrollToBottomRef}></div>
       </MessageBox>

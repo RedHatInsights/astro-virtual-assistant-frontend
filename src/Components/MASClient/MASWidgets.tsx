@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getModule } from '@scalprum/core';
-import { isComponentPreviewEnabled } from './ComponentPreview';
-
-export const MAS_DEBUG_MESSAGE_EVENT = 'mas-debug-message';
+import { isMASDebugEnabled } from './MASDebug';
 
 export interface MASWidget {
   type: 'widget';
@@ -106,7 +104,7 @@ function MASWidgetLoader({ widget, sessionId, turnId }: { widget: MASWidget; ses
   if (failed) return <span role="alert">Unable to load widget.</span>;
   if (!component) return <span>Loading widget...</span>;
   const instanceId = widget.instanceId;
-  const onOutput = isComponentPreviewEnabled()
+  const onOutput = isMASDebugEnabled()
     ? (output: unknown) =>
         console.info('[Astro → MAS client] Would send widget action', {
           sessionId,

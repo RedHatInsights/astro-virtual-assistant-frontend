@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { getModule } from '@scalprum/core';
-import * as preview from '../ComponentPreview';
+import * as debug from '../MASDebug';
 import { MASWidgets } from '../MASWidgets';
 
 jest.mock('@scalprum/core', () => ({ getModule: jest.fn() }));
@@ -19,7 +19,7 @@ const mockGetModule = getModule as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(false);
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(false);
 });
 afterEach(() => jest.restoreAllMocks());
 
@@ -119,7 +119,7 @@ it('passes one callback for both actions only in debug mode and captures each re
   fireEvent.click(await screen.findByText('Output absent'));
   expect(log).not.toHaveBeenCalled();
   unmount();
-  jest.spyOn(preview, 'isComponentPreviewEnabled').mockReturnValue(true);
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
   const spoofed = { ...packet, props: { sessionId: 'spoof', turnId: 'spoof', instanceId: 'spoof', onOutput: 'spoof' } };
   const { rerender } = render(<MASWidgets widgets={[spoofed]} sessionId="session-one" turnId="turn-one" />);
   fireEvent.click(await screen.findByText('Approve'));
