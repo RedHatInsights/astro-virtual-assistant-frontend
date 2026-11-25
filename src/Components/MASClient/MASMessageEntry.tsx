@@ -12,11 +12,13 @@ function MASMessageEntry({
   avatar,
   isCompact,
   conversationId,
+  source,
 }: {
   message: MessageType<MASAdditionalAttributes & { widgets?: unknown; turnId?: string }>;
   avatar: string;
   isCompact?: boolean;
   conversationId?: string;
+  source?: 'debug';
 }) {
   const messageDate = message.date ? `${message.date.toLocaleDateString()} ${message.date.toLocaleTimeString()}` : '';
   const activeAgents = message.additionalAttributes?.activeAgents ?? [];
@@ -39,6 +41,7 @@ function MASMessageEntry({
                     widgets={message.additionalAttributes?.widgets}
                     sessionId={conversationId}
                     turnId={message.additionalAttributes?.turnId}
+                    source={source}
                   />
                 ),
               }

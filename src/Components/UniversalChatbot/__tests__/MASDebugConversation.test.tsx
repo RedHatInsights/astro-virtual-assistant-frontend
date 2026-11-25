@@ -8,6 +8,7 @@ import UniversalMessages from '../UniversalMessages';
 import MASMessageEntry from '../../MASClient/MASMessageEntry';
 import * as debug from '../../MASClient/MASDebug';
 import { MAS_DEBUG_MESSAGE_EVENT } from '../../MASClient/MASDebug';
+import { WidgetMeta } from '../../MASClient/types';
 
 jest.unmock('@redhat-cloud-services/ai-react-state');
 jest.unmock('@redhat-cloud-services/ai-client-state');
@@ -52,10 +53,14 @@ it('keeps debug replies out of the real manager and client while merging later r
   };
   const manager = createClientStateManager(client as unknown as Parameters<typeof createClientStateManager>[0]);
   await manager.setActiveConversationId('one');
+  const liveMeta: WidgetMeta[] = [];
   (getModule as jest.Mock).mockImplementation(async (_scope: string, _module: string, name: string) =>
     name === 'getContract'
       ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' })
-      : ({ input }: { input: { runId: string } }) => <span>Widget {input.runId}</span>
+      : ({ input, meta }: { input: { runId: string }; meta: WidgetMeta }) => {
+          liveMeta.push(meta);
+          return <span>Widget {input.runId}</span>;
+        }
   );
   render(
     <AIStateProvider stateManager={manager}>
@@ -80,6 +85,7 @@ it('keeps debug replies out of the real manager and client while merging later r
     await manager.sendMessage('Live question', { stream: true });
   });
   expect(await screen.findByText('Widget live-id')).toBeInTheDocument();
+  expect(liveMeta[0]).toEqual({ sessionId: 'one', instanceId: 'live' });
   expect(screen.getAllByTestId('entry').map((entry) => entry.textContent)).toEqual(['Debug reply', 'Live question', 'Live replyWidget live-id']);
   expect(manager.getActiveConversationMessages().map((message) => message.answer)).toEqual(['Live question', 'Live reply']);
 
@@ -104,11 +110,13 @@ it('passes the debug turn and originating session to widget actions after switch
   const manager = createClientStateManager(client as unknown as Parameters<typeof createClientStateManager>[0]);
   await manager.setActiveConversationId('origin-session');
   let savedCallback: ((event: unknown) => void) | undefined;
+  let savedMeta: WidgetMeta | undefined;
   (getModule as jest.Mock).mockImplementation(async (_scope: string, _module: string, name: string) =>
     name === 'getContract'
       ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' })
-      : ({ onOutput }: { onOutput?: (event: unknown) => void }) => {
+      : ({ onOutput, meta }: { onOutput?: (event: unknown) => void; meta: WidgetMeta }) => {
           savedCallback = onOutput;
+          savedMeta = meta;
           return <button onClick={() => onOutput?.({ type: 'approve' })}>Approve widget</button>;
         }
   );
@@ -129,16 +137,23 @@ it('passes the debug turn and originating session to widget actions after switch
     widget: 'frontendStarterApp.HelloWorld',
     schemaVersion: '1.0',
     instanceId: 'instance',
-    props: { turnId: 'spoof', sessionId: 'spoof' },
+    source: 'history',
+    props: { turnId: 'spoof', sessionId: 'spoof', instanceId: 'spoof', source: 'live', meta: { source: 'history' } },
   };
   act(() =>
-    window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Debug', turnId: 'origin-turn', widgets: [widget] } }))
+    window.dispatchEvent(
+      new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, {
+        detail: { answer: 'Debug', turnId: 'origin-turn', sessionId: 'spoof', source: 'live', widgets: [widget] },
+      })
+    )
   );
   fireEvent.click(await screen.findByText('Approve widget'));
+  expect(savedMeta).toEqual({ sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', source: 'debug' });
   await act(async () => {
     await manager.setActiveConversationId('other-session');
   });
   savedCallback?.({ type: 'reject' });
+  expect(savedMeta).toEqual({ sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', source: 'debug' });
   expect(log.mock.calls.map(([, payload]) => payload)).toEqual([
     { sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', actionId: expect.any(String), output: { type: 'approve' } },
     { sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', actionId: expect.any(String), output: { type: 'reject' } },
@@ -175,7 +190,10 @@ it('renders a read-only widget in a debug reply without providing an action call
   );
   expect(await screen.findByText('Read-only widget')).toBeInTheDocument();
   expect(screen.getByText('Answer remains')).toBeInTheDocument();
-  expect(Widget.mock.calls[0][0]).toEqual({ input: widget.props });
+  expect(Widget.mock.calls[0][0]).toEqual({
+    input: widget.props,
+    meta: { sessionId: 'session', turnId: 'turn', instanceId: 'read-only', source: 'debug' },
+  });
   expect(log).not.toHaveBeenCalled();
   expect(client.sendMessage).not.toHaveBeenCalled();
   expect(manager.getActiveConversationMessages()).toEqual([]);

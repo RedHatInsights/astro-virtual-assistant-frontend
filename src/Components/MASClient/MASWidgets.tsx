@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getModule, getScalprum } from '@scalprum/core';
 import { isMASDebugEnabled } from './MASDebug';
+import { WidgetMeta } from './types';
 
 export interface MASWidget {
   type: 'widget';
@@ -18,6 +19,7 @@ export interface MASWidgetContract {
 
 interface WidgetProps {
   input: Record<string, unknown>;
+  meta: WidgetMeta;
   onOutput?: (event: unknown) => void;
 }
 
@@ -72,7 +74,17 @@ class WidgetErrorBoundary extends React.Component<React.PropsWithChildren, { fai
   }
 }
 
-function MASWidgetLoader({ widget, sessionId, turnId }: { widget: MASWidget; sessionId?: string; turnId?: string }) {
+function MASWidgetLoader({
+  widget,
+  sessionId,
+  turnId,
+  source,
+}: {
+  widget: MASWidget;
+  sessionId?: string;
+  turnId?: string;
+  source?: WidgetMeta['source'];
+}) {
   const [loadedWidget, setLoadedWidget] = useState<{ component: React.ComponentType<WidgetProps>; interactive: boolean }>();
   const [failed, setFailed] = useState(false);
 
@@ -111,6 +123,12 @@ function MASWidgetLoader({ widget, sessionId, turnId }: { widget: MASWidget; ses
   if (failed) return <span role="alert">Unable to load widget.</span>;
   if (!loadedWidget) return <span>Loading widget...</span>;
   const instanceId = widget.instanceId;
+  const meta: WidgetMeta = {
+    instanceId,
+    ...(sessionId !== undefined && { sessionId }),
+    ...(turnId !== undefined && { turnId }),
+    ...(source !== undefined && { source }),
+  };
   const onOutput =
     loadedWidget.interactive && isMASDebugEnabled()
       ? (output: unknown) =>
@@ -122,10 +140,20 @@ function MASWidgetLoader({ widget, sessionId, turnId }: { widget: MASWidget; ses
             output,
           })
       : undefined;
-  return React.createElement(loadedWidget.component, { input: widget.props, ...(onOutput && { onOutput }) });
+  return React.createElement(loadedWidget.component, { input: widget.props, meta, ...(onOutput && { onOutput }) });
 }
 
-export function MASWidgets({ widgets, sessionId, turnId }: { widgets: unknown; sessionId?: string; turnId?: string }) {
+export function MASWidgets({
+  widgets,
+  sessionId,
+  turnId,
+  source,
+}: {
+  widgets: unknown;
+  sessionId?: string;
+  turnId?: string;
+  source?: WidgetMeta['source'];
+}) {
   if (!Array.isArray(widgets)) return null;
   const seen = new Set<string>();
   return (
@@ -141,7 +169,7 @@ export function MASWidgets({ widgets, sessionId, turnId }: { widgets: unknown; s
         seen.add(widget.instanceId);
         return (
           <WidgetErrorBoundary key={`${widget.instanceId}-${widget.widget}-${widget.schemaVersion}`}>
-            <MASWidgetLoader widget={widget} sessionId={sessionId} turnId={turnId} />
+            <MASWidgetLoader widget={widget} sessionId={sessionId} turnId={turnId} source={source} />
           </WidgetErrorBoundary>
         );
       })}

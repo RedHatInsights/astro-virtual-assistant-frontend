@@ -16,17 +16,18 @@ import { MASWidget, parseDebugMessage } from '../MASClient/MASWidgets';
 interface DebugReply {
   message: MessageType<{ widgets: MASWidget[]; turnId: string }>;
   afterMessageCount: number;
+  source: 'debug';
 }
 
 // The state manager has no local append API and reloads history on conversation
 // switches. Keep debug entries outside it, anchored at the current list boundary.
-function mergeDebugReplies(messages: MessageType[], replies: DebugReply[]): MessageType[] {
-  const merged: MessageType[] = [];
+function mergeDebugReplies(messages: MessageType[], replies: DebugReply[]): { message: MessageType; source?: 'debug' }[] {
+  const merged: { message: MessageType; source?: 'debug' }[] = [];
   for (let index = 0; index <= messages.length; index++) {
-    replies.forEach(({ message, afterMessageCount }) => {
-      if (Math.min(afterMessageCount, messages.length) === index) merged.push(message);
+    replies.forEach(({ message, afterMessageCount, source }) => {
+      if (Math.min(afterMessageCount, messages.length) === index) merged.push({ message, source });
     });
-    if (index < messages.length) merged.push(messages[index]);
+    if (index < messages.length) merged.push({ message: messages[index] });
   }
   return merged;
 }
@@ -102,6 +103,7 @@ const UniversalMessages = ({
             ...(previous[conversationId] || []),
             {
               afterMessageCount,
+              source: 'debug',
               message: {
                 id: `debug-${date.getTime()}-${(previous[conversationId] || []).length}`,
                 role: 'bot',
@@ -173,9 +175,18 @@ const UniversalMessages = ({
             isCompact={isCompact}
           />
         )}
-        {mergeDebugReplies(messages, isMas && activeConversation?.id ? debugReplies[activeConversation.id] || [] : []).map((message, index) => (
-          <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} conversationId={activeConversation?.id} />
-        ))}
+        {mergeDebugReplies(messages, isMas && activeConversation?.id ? debugReplies[activeConversation.id] || [] : []).map(
+          ({ message, source }, index) => (
+            <MessageEntryComponent
+              key={index}
+              message={message}
+              avatar={avatar}
+              isCompact={isCompact}
+              conversationId={activeConversation?.id}
+              source={source}
+            />
+          )
+        )}
         <div ref={scrollToBottomRef}></div>
       </MessageBox>
     </ChatbotContent>

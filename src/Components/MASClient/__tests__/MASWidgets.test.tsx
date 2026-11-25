@@ -40,7 +40,7 @@ it('loads the module and validates the contract before rendering unchanged input
     ['frontendStarterApp', './HelloWorld', 'default'],
     ['frontendStarterApp', './HelloWorld', 'getContract'],
   ]);
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props });
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { instanceId: 'hello-1' } });
 });
 
 it.each([
@@ -88,7 +88,7 @@ it.each([false, true])('renders an absent contract read-only with debug=%s', asy
   );
   expect(await screen.findByText('Read-only widget')).toBeInTheDocument();
   expect(screen.getByText('Answer remains')).toBeInTheDocument();
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props });
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { sessionId: 'session', turnId: 'turn', instanceId: 'hello-1' } });
   expect(Object.prototype.hasOwnProperty.call(Widget.mock.calls[0][0], 'onOutput')).toBe(false);
   expect(log).not.toHaveBeenCalled();
 });
@@ -145,7 +145,7 @@ it('accepts an asynchronous matching contract', async () => {
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
   render(<MASWidgets widgets={[packet]} />);
   expect(await screen.findByText('Interactive widget')).toBeInTheDocument();
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, onOutput: expect.any(Function) });
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { instanceId: 'hello-1' }, onOutput: expect.any(Function) });
 });
 
 it('isolates widget render failures', async () => {
@@ -170,7 +170,9 @@ it('isolates widget render failures', async () => {
 
 it('passes one callback for both actions only in debug mode and captures each render origin', async () => {
   let originalCallback: ((event: unknown) => void) | undefined;
-  const Widget = ({ onOutput }: { onOutput?: (event: unknown) => void }) => {
+  const metas: unknown[] = [];
+  const Widget = ({ onOutput, meta }: { onOutput?: (event: unknown) => void; meta: unknown }) => {
+    metas.push(meta);
     if (onOutput && !originalCallback) originalCallback = onOutput;
     return (
       <>
@@ -186,11 +188,14 @@ it('passes one callback for both actions only in debug mode and captures each re
   expect(log).not.toHaveBeenCalled();
   unmount();
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
-  const spoofed = { ...packet, props: { sessionId: 'spoof', turnId: 'spoof', instanceId: 'spoof', onOutput: 'spoof' } };
-  const { rerender } = render(<MASWidgets widgets={[spoofed]} sessionId="session-one" turnId="turn-one" />);
+  const spoofed = {
+    ...packet,
+    props: { sessionId: 'spoof', turnId: 'spoof', instanceId: 'spoof', source: 'live', meta: 'spoof', onOutput: 'spoof' },
+  };
+  const { rerender } = render(<MASWidgets widgets={[spoofed]} sessionId="session-one" turnId="turn-one" source="debug" />);
   fireEvent.click(await screen.findByText('Approve'));
   fireEvent.click(screen.getByText('Reject'));
-  rerender(<MASWidgets widgets={[spoofed]} sessionId="session-two" turnId="turn-two" />);
+  rerender(<MASWidgets widgets={[spoofed]} sessionId="session-two" turnId="turn-two" source="debug" />);
   originalCallback?.({ type: 'approve' });
   fireEvent.click(screen.getByText('Reject'));
   const calls = log.mock.calls.map(([, payload]) => payload);
@@ -202,6 +207,9 @@ it('passes one callback for both actions only in debug mode and captures each re
     { sessionId: 'session-two', turnId: 'turn-two', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'reject' } },
   ]);
   expect(new Set(calls.map(({ actionId }) => actionId)).size).toBe(4);
+  expect(metas).toContainEqual({ sessionId: 'session-one', turnId: 'turn-one', instanceId: 'hello-1', source: 'debug' });
+  expect(metas).toContainEqual({ sessionId: 'session-two', turnId: 'turn-two', instanceId: 'hello-1', source: 'debug' });
+  expect(metas.every((meta) => !Object.prototype.hasOwnProperty.call(meta, 'actionId'))).toBe(true);
 });
 
 it('deduplicates replays within each turn but permits the same instance in a different turn', async () => {
@@ -241,5 +249,5 @@ it('loads another configured widget without a catalog and does not promote input
   expect(await screen.findByText('Other widget')).toBeInTheDocument();
   expect(mockGetModule).toHaveBeenCalledWith('otherApp', './OtherWidget', 'getContract');
   expect(mockGetModule).toHaveBeenCalledWith('otherApp', './OtherWidget', 'default');
-  expect(Widget.mock.calls[0][0]).toEqual({ input: { onOutput: 'untrusted' } });
+  expect(Widget.mock.calls[0][0]).toEqual({ input: { onOutput: 'untrusted' }, meta: { instanceId: 'other' } });
 });
