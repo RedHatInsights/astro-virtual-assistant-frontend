@@ -45,7 +45,15 @@ jest.mock('@patternfly/chatbot', () => ({
   ),
 }));
 
-jest.mock('@scalprum/core', () => ({ getModule: jest.fn() }));
+jest.mock('@scalprum/core', () => {
+  const getModule = jest.fn();
+  return {
+    getModule,
+    getScalprum: () => ({
+      pluginStore: { getExposedModule: async (scope: string, module: string) => ({ getContract: await getModule(scope, module, 'getContract') }) },
+    }),
+  };
+});
 jest.mock('../../MASClient/MASAgentStatusPanel', () => () => null);
 
 jest.mock('@patternfly/react-core', () => ({

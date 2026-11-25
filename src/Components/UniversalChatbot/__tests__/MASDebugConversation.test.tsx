@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { AIStateProvider } from '@redhat-cloud-services/ai-react-state';
 import { createClientStateManager } from '@redhat-cloud-services/ai-client-state';
-import { getModule } from '@scalprum/core';
+import { getModule, getScalprum } from '@scalprum/core';
 import UniversalMessages from '../UniversalMessages';
 import MASMessageEntry from '../../MASClient/MASMessageEntry';
 import * as debug from '../../MASClient/MASDebug';
@@ -11,7 +11,15 @@ import { MAS_DEBUG_MESSAGE_EVENT } from '../../MASClient/MASDebug';
 
 jest.unmock('@redhat-cloud-services/ai-react-state');
 jest.unmock('@redhat-cloud-services/ai-client-state');
-jest.mock('@scalprum/core', () => ({ getModule: jest.fn() }));
+jest.mock('@scalprum/core', () => {
+  const getModule = jest.fn();
+  return {
+    getModule,
+    getScalprum: jest.fn(() => ({
+      pluginStore: { getExposedModule: async (scope: string, module: string) => ({ getContract: await getModule(scope, module, 'getContract') }) },
+    })),
+  };
+});
 jest.mock('../../MASClient/MASAgentStatusPanel', () => () => null);
 jest.mock('../UniversalBanner', () => () => null);
 jest.mock('@patternfly/chatbot', () => ({
@@ -137,5 +145,39 @@ it('passes the debug turn and originating session to widget actions after switch
   ]);
   expect(manager.getActiveConversationMessages()).toEqual([]);
   expect(client.sendMessage).not.toHaveBeenCalled();
+  jest.restoreAllMocks();
+});
+
+it('renders a read-only widget in a debug reply without providing an action callback', async () => {
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+  const log = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+  const client = { getConversationHistory: jest.fn(async () => []), sendMessage: jest.fn() };
+  const manager = createClientStateManager(client as unknown as Parameters<typeof createClientStateManager>[0]);
+  await manager.setActiveConversationId('session');
+  const Widget = jest.fn<React.ReactElement, [{ input: unknown; onOutput?: (output: unknown) => void }]>(() => <span>Read-only widget</span>);
+  (getModule as jest.Mock).mockResolvedValue(Widget);
+  (getScalprum as jest.Mock).mockReturnValueOnce({ pluginStore: { getExposedModule: async () => ({ default: Widget }) } });
+  render(
+    <AIStateProvider stateManager={manager}>
+      <UniversalMessages
+        avatar=""
+        setIsBannerOpen={() => undefined}
+        isBannerOpen={false}
+        scrollToBottomRef={React.createRef()}
+        isMas
+        MessageEntryComponent={MASMessageEntry}
+      />
+    </AIStateProvider>
+  );
+  const widget = { type: 'widget', widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', instanceId: 'read-only', props: { text: 'hello' } };
+  act(() =>
+    window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Answer remains', turnId: 'turn', widgets: [widget] } }))
+  );
+  expect(await screen.findByText('Read-only widget')).toBeInTheDocument();
+  expect(screen.getByText('Answer remains')).toBeInTheDocument();
+  expect(Widget.mock.calls[0][0]).toEqual({ input: widget.props });
+  expect(log).not.toHaveBeenCalled();
+  expect(client.sendMessage).not.toHaveBeenCalled();
+  expect(manager.getActiveConversationMessages()).toEqual([]);
   jest.restoreAllMocks();
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getModule } from '@scalprum/core';
+import { getModule, getScalprum } from '@scalprum/core';
 import { isMASDebugEnabled } from './MASDebug';
 
 export interface MASWidget {
@@ -73,25 +73,32 @@ class WidgetErrorBoundary extends React.Component<React.PropsWithChildren, { fai
 }
 
 function MASWidgetLoader({ widget, sessionId, turnId }: { widget: MASWidget; sessionId?: string; turnId?: string }) {
-  const [component, setComponent] = useState<React.ComponentType<WidgetProps>>();
+  const [loadedWidget, setLoadedWidget] = useState<{ component: React.ComponentType<WidgetProps>; interactive: boolean }>();
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    setComponent(undefined);
+    setLoadedWidget(undefined);
     setFailed(false);
     const load = async () => {
       const target = resolveWidgetId(widget.widget);
       if (!target) throw new Error('Invalid widget ID');
-      const getContract = await getModule<unknown>(target.scope, target.module, 'getContract');
-      if (typeof getContract !== 'function') throw new Error('Missing widget contract');
-      const contract: unknown = await getContract();
-      if (!isRecord(contract) || contract.widget !== widget.widget || contract.schemaVersion !== widget.schemaVersion) {
-        throw new Error('Widget contract mismatch');
+      // getModule selects one export; inspect the actual namespace to distinguish an absent
+      // contract from an explicitly exported undefined value, without hiding load errors.
+      const component = await getModule<React.ComponentType<WidgetProps> | undefined>(target.scope, target.module, 'default');
+      if (!component) throw new Error('Missing widget component');
+      const namespace: unknown = await getScalprum().pluginStore.getExposedModule(target.scope, target.module);
+      if (!isRecord(namespace)) throw new Error('Invalid widget module');
+      const interactive = Object.prototype.hasOwnProperty.call(namespace, 'getContract');
+      if (interactive) {
+        const getContract: unknown = namespace.getContract;
+        if (typeof getContract !== 'function') throw new Error('Invalid widget contract');
+        const contract: unknown = await getContract();
+        if (!isRecord(contract) || contract.widget !== widget.widget || contract.schemaVersion !== widget.schemaVersion) {
+          throw new Error('Widget contract mismatch');
+        }
       }
-      const loaded = await getModule<React.ComponentType<WidgetProps> | undefined>(target.scope, target.module, 'default');
-      if (!loaded) throw new Error('Missing widget component');
-      if (mounted) setComponent(() => loaded);
+      if (mounted) setLoadedWidget({ component, interactive });
     };
     load().catch(() => {
       if (mounted) setFailed(true);
@@ -102,19 +109,20 @@ function MASWidgetLoader({ widget, sessionId, turnId }: { widget: MASWidget; ses
   }, [widget.widget, widget.schemaVersion]);
 
   if (failed) return <span role="alert">Unable to load widget.</span>;
-  if (!component) return <span>Loading widget...</span>;
+  if (!loadedWidget) return <span>Loading widget...</span>;
   const instanceId = widget.instanceId;
-  const onOutput = isMASDebugEnabled()
-    ? (output: unknown) =>
-        console.info('[Astro → MAS client] Would send widget action', {
-          sessionId,
-          turnId,
-          instanceId,
-          actionId: crypto.randomUUID(),
-          output,
-        })
-    : undefined;
-  return React.createElement(component, { input: widget.props, ...(onOutput && { onOutput }) });
+  const onOutput =
+    loadedWidget.interactive && isMASDebugEnabled()
+      ? (output: unknown) =>
+          console.info('[Astro → MAS client] Would send widget action', {
+            sessionId,
+            turnId,
+            instanceId,
+            actionId: crypto.randomUUID(),
+            output,
+          })
+      : undefined;
+  return React.createElement(loadedWidget.component, { input: widget.props, ...(onOutput && { onOutput }) });
 }
 
 export function MASWidgets({ widgets, sessionId, turnId }: { widgets: unknown; sessionId?: string; turnId?: string }) {

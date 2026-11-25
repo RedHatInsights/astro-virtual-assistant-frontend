@@ -1,11 +1,11 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { getModule } from '@scalprum/core';
+import { getModule, getScalprum } from '@scalprum/core';
 import * as debug from '../MASDebug';
 import { MASWidgets } from '../MASWidgets';
 
-jest.mock('@scalprum/core', () => ({ getModule: jest.fn() }));
+jest.mock('@scalprum/core', () => ({ getModule: jest.fn(), getScalprum: jest.fn() }));
 
 const packet = {
   type: 'widget',
@@ -16,14 +16,18 @@ const packet = {
 };
 const contract = { widget: packet.widget, schemaVersion: packet.schemaVersion };
 const mockGetModule = getModule as jest.Mock;
+const mockGetNamespace = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (getScalprum as jest.Mock).mockReturnValue({ pluginStore: { getExposedModule: mockGetNamespace } });
+  mockGetNamespace.mockReset();
+  mockGetNamespace.mockImplementation(async (scope, module) => ({ getContract: await mockGetModule(scope, module, 'getContract') }));
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(false);
 });
 afterEach(() => jest.restoreAllMocks());
 
-it('loads the contract then renders the default export with unchanged input', async () => {
+it('loads the module and validates the contract before rendering unchanged input', async () => {
   const Widget = jest.fn(({ input }: { input: typeof packet.props }) => (
     <span>
       {input.text} {input.runId}
@@ -33,14 +37,15 @@ it('loads the contract then renders the default export with unchanged input', as
   render(<MASWidgets widgets={[{ ...packet, scope: 'evil', module: './evil', manifest: 'https://evil' }]} />);
   expect(await screen.findByText('Hello from MAS FooBar')).toBeInTheDocument();
   expect(mockGetModule.mock.calls).toEqual([
-    ['frontendStarterApp', './HelloWorld', 'getContract'],
     ['frontendStarterApp', './HelloWorld', 'default'],
+    ['frontendStarterApp', './HelloWorld', 'getContract'],
   ]);
   expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props });
 });
 
 it.each([
-  ['missing contract', undefined],
+  ['undefined contract export', undefined],
+  ['null contract export', null],
   ['non-function contract', {}],
   ['wrong widget', () => ({ ...contract, widget: 'other.Widget' })],
   ['wrong version', () => ({ ...contract, schemaVersion: '2.0' })],
@@ -51,8 +56,11 @@ it.each([
       throw new Error('bad');
     },
   ],
-])('shows an inline error for %s without loading the component', async (_description, result) => {
-  mockGetModule.mockResolvedValue(result);
+  ['rejecting contract', () => Promise.reject(new Error('bad'))],
+])('shows an inline error for %s without rendering the component', async (_description, result) => {
+  const Widget = jest.fn(() => <span>Widget</span>);
+  mockGetModule.mockResolvedValue(Widget);
+  mockGetNamespace.mockResolvedValue({ getContract: result });
   render(
     <>
       <span>Answer remains</span>
@@ -61,7 +69,28 @@ it.each([
   );
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
   expect(screen.getByText('Answer remains')).toBeInTheDocument();
-  expect(mockGetModule).toHaveBeenCalledTimes(1);
+  expect(Widget).not.toHaveBeenCalled();
+});
+
+it.each([false, true])('renders an absent contract read-only with debug=%s', async (enabled) => {
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(enabled);
+  const Widget = jest.fn<React.ReactElement, [{ input: typeof packet.props; onOutput?: (event: unknown) => void }]>(() => (
+    <span>Read-only widget</span>
+  ));
+  const log = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+  mockGetModule.mockResolvedValue(Widget);
+  mockGetNamespace.mockResolvedValue({ default: Widget });
+  render(
+    <>
+      <span>Answer remains</span>
+      <MASWidgets widgets={[packet]} sessionId="session" turnId="turn" />
+    </>
+  );
+  expect(await screen.findByText('Read-only widget')).toBeInTheDocument();
+  expect(screen.getByText('Answer remains')).toBeInTheDocument();
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props });
+  expect(Object.prototype.hasOwnProperty.call(Widget.mock.calls[0][0], 'onOutput')).toBe(false);
+  expect(log).not.toHaveBeenCalled();
 });
 
 it.each(['https://evil/Widget', 'evil', 'app./Widget', 'app.Widget.extra', '../Widget', 'app.Widget/other'])(
@@ -80,6 +109,43 @@ it('reports missing exports and registry failures', async () => {
   mockGetModule.mockRejectedValue(new Error('scope absent'));
   rerender(<MASWidgets widgets={[{ ...packet, instanceId: 'two' }]} />);
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
+});
+
+it('does not mistake namespace load failures for an absent contract', async () => {
+  mockGetModule.mockResolvedValue(() => <span>Widget</span>);
+  mockGetNamespace.mockRejectedValue(new Error('module load failed'));
+  render(
+    <>
+      <span>Answer remains</span>
+      <MASWidgets widgets={[packet]} />
+    </>
+  );
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
+  expect(screen.getByText('Answer remains')).toBeInTheDocument();
+  expect(screen.queryByText('Widget')).not.toBeInTheDocument();
+});
+
+it('rejects a throwing contract export getter', async () => {
+  mockGetModule.mockResolvedValue(() => <span>Widget</span>);
+  mockGetNamespace.mockResolvedValue({
+    get getContract() {
+      throw new Error('broken export');
+    },
+  });
+  render(<MASWidgets widgets={[packet]} />);
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
+});
+
+it('accepts an asynchronous matching contract', async () => {
+  const Widget = jest.fn<React.ReactElement, [{ input: typeof packet.props; onOutput?: (event: unknown) => void }]>(() => (
+    <span>Interactive widget</span>
+  ));
+  mockGetModule.mockResolvedValue(Widget);
+  mockGetNamespace.mockResolvedValue({ getContract: async () => contract });
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+  render(<MASWidgets widgets={[packet]} />);
+  expect(await screen.findByText('Interactive widget')).toBeInTheDocument();
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, onOutput: expect.any(Function) });
 });
 
 it('isolates widget render failures', async () => {
