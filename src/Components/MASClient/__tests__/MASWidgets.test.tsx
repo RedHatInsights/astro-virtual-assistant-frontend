@@ -48,8 +48,6 @@ it.each([
   ['undefined contract export', undefined],
   ['null contract export', null],
   ['non-function contract', {}],
-  ['wrong widget', () => ({ ...contract, widget: 'other.Widget' })],
-  ['wrong version', () => ({ ...contract, schemaVersion: '2.0' })],
   ['null contract', () => null],
   [
     'throwing contract',
@@ -71,6 +69,49 @@ it.each([
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
   expect(screen.getByText('Answer remains')).toBeInTheDocument();
   expect(Widget).not.toHaveBeenCalled();
+});
+
+it.each([false, true])('reports a nested widget ID mismatch with debug=%s and isolates the failure', async (enabled) => {
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(enabled);
+  const nested = { ...packet, widget: 'frontendStarterApp.widgets/HelloWorld' };
+  const Widget = jest.fn(() => <span>Matching widget</span>);
+  mockGetModule.mockResolvedValue(Widget);
+  mockGetNamespace.mockResolvedValue({ getContract: () => ({ ...contract, schemaVersion: '2.0' }) });
+  render(
+    <>
+      <span>Answer remains</span>
+      <MASWidgets widgets={[nested]} />
+    </>
+  );
+  const alert = await screen.findByRole('alert');
+  if (enabled) {
+    expect(alert).toHaveTextContent('Widget ID mismatch.');
+    expect(alert).toHaveTextContent('Requested by message: frontendStarterApp.widgets/HelloWorld');
+    expect(alert).toHaveTextContent('Returned by getContract(): frontendStarterApp.HelloWorld');
+    expect(alert).not.toHaveTextContent('schema version mismatch');
+  } else {
+    expect(alert).toHaveTextContent('This widget doesn’t match the reply’s contract.');
+    expect(alert).not.toHaveTextContent('frontendStarterApp');
+  }
+  expect(screen.getByText('Answer remains')).toBeInTheDocument();
+  expect(Widget).not.toHaveBeenCalled();
+});
+
+it.each([false, true])('reports a schema version mismatch with debug=%s', async (enabled) => {
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(enabled);
+  mockGetModule.mockResolvedValue(() => <span>Widget</span>);
+  mockGetNamespace.mockResolvedValue({ getContract: () => ({ ...contract, schemaVersion: '2.0' }) });
+  render(<MASWidgets widgets={[packet]} />);
+  const alert = await screen.findByRole('alert');
+  if (enabled) {
+    expect(alert).toHaveTextContent('Widget schema version mismatch.');
+    expect(alert).toHaveTextContent('Requested by message: 1.0');
+    expect(alert).toHaveTextContent('Returned by getContract(): 2.0');
+  } else {
+    expect(alert).toHaveTextContent('This widget doesn’t match the reply’s contract.');
+    expect(alert).not.toHaveTextContent('2.0');
+  }
+  expect(screen.queryByText('Widget')).not.toBeInTheDocument();
 });
 
 it.each([false, true])('renders an absent contract read-only with debug=%s', async (enabled) => {
@@ -128,7 +169,7 @@ it('loads nested exposure paths and checks the full widget ID', async () => {
   ]);
   mockGetModule.mockImplementation(async (_scope, _module, name) => (name === 'getContract' ? () => contract : () => <span>Nested widget</span>));
   rerender(<MASWidgets widgets={[{ ...widget, instanceId: 'other' }]} />);
-  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
+  expect(await screen.findByRole('alert')).toHaveTextContent('This widget doesn’t match the reply’s contract.');
 });
 
 it('reports missing exports and registry failures', async () => {

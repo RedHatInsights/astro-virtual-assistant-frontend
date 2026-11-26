@@ -272,7 +272,17 @@ window.dispatchEvent(new CustomEvent('mas-debug-message', {
 }));
 ```
 
-The answer remains visible and the provider displays “Cannot display start request: invalid input.” A missing module or contract mismatch instead shows Astro's “Unable to load widget.” error, distinct from provider validation.
+The answer remains visible and the provider displays “Cannot display start request: invalid input.” A missing module instead shows Astro's “Unable to load widget.” error, distinct from provider validation.
+
+For a contract mismatch on a stage debug host, Astro shows the requested and returned values. For example, if the message requests the nested exposure `frontendStarterApp.widgets/HelloWorld` but `getContract()` returns the flat ID, the widget shows:
+
+```text
+Widget ID mismatch.
+Requested by message: frontendStarterApp.widgets/HelloWorld
+Returned by getContract(): frontendStarterApp.HelloWorld
+```
+
+Check the provider's exposure path and make its contract ID match the full message ID. If IDs match but schema versions differ, the error reports the requested and returned versions instead. Outside debug mode, Astro shows “This widget doesn’t match the reply’s contract.” The error affects only that widget; the assistant answer remains visible. An absent `getContract` still renders read-only without an action callback.
 
 The console event only simulates delivery; the callback logs a proposed mas-client payload. It sends no MAS action request, starts or rejects no application, and writes no history. Loading the provider may still make federation network requests. Local debug support does not imply live MAS support: the current mas-client does not forward live widget attributes, and transport requires separate work.
 

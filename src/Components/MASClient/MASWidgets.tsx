@@ -23,6 +23,8 @@ interface WidgetProps {
   onOutput?: (event: unknown) => void;
 }
 
+type WidgetLoadError = { kind: 'load' } | { kind: 'mismatch'; field: 'widget' | 'schemaVersion'; requested: string; returned: string };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
@@ -86,12 +88,12 @@ function MASWidgetLoader({
   source?: WidgetMeta['source'];
 }) {
   const [loadedWidget, setLoadedWidget] = useState<{ component: React.ComponentType<WidgetProps>; interactive: boolean }>();
-  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState<WidgetLoadError>();
 
   useEffect(() => {
     let mounted = true;
     setLoadedWidget(undefined);
-    setFailed(false);
+    setError(undefined);
     const load = async () => {
       const target = resolveWidgetId(widget.widget);
       if (!target) throw new Error('Invalid widget ID');
@@ -106,22 +108,41 @@ function MASWidgetLoader({
         const getContract: unknown = namespace.getContract;
         if (typeof getContract !== 'function') throw new Error('Invalid widget contract');
         const contract: unknown = await getContract();
-        if (!isRecord(contract) || contract.widget !== widget.widget || contract.schemaVersion !== widget.schemaVersion) {
-          throw new Error('Widget contract mismatch');
+        if (!isRecord(contract) || typeof contract.widget !== 'string') throw new Error('Invalid widget contract');
+        if (contract.widget !== widget.widget) {
+          if (mounted) setError({ kind: 'mismatch', field: 'widget', requested: widget.widget, returned: contract.widget });
+          return;
+        }
+        if (typeof contract.schemaVersion !== 'string') throw new Error('Invalid widget contract');
+        if (contract.schemaVersion !== widget.schemaVersion) {
+          if (mounted) setError({ kind: 'mismatch', field: 'schemaVersion', requested: widget.schemaVersion, returned: contract.schemaVersion });
+          return;
         }
         interactive = contract.outputSchema !== undefined && contract.outputSchema !== null;
       }
       if (mounted) setLoadedWidget({ component, interactive });
     };
     load().catch(() => {
-      if (mounted) setFailed(true);
+      if (mounted) setError({ kind: 'load' });
     });
     return () => {
       mounted = false;
     };
   }, [widget.widget, widget.schemaVersion]);
 
-  if (failed) return <span role="alert">Unable to load widget.</span>;
+  if (error) {
+    if (error.kind === 'load') return <span role="alert">Unable to load widget.</span>;
+    if (!isMASDebugEnabled()) return <span role="alert">This widget doesn’t match the reply’s contract.</span>;
+    return (
+      <span role="alert">
+        {error.field === 'widget' ? 'Widget ID mismatch.' : 'Widget schema version mismatch.'}
+        <br />
+        Requested by message: {error.requested}
+        <br />
+        Returned by getContract(): {error.returned}
+      </span>
+    );
+  }
   if (!loadedWidget) return <span>Loading widget...</span>;
   const instanceId = widget.instanceId;
   const meta: WidgetMeta = {

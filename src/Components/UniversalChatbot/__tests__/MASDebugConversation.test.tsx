@@ -103,6 +103,50 @@ it('keeps debug replies out of the real manager and client while merging later r
   jest.restoreAllMocks();
 });
 
+it('keeps the assistant answer and other widgets visible for a nested contract mismatch', async () => {
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+  const client = { getConversationHistory: jest.fn(async () => []), sendMessage: jest.fn() };
+  const manager = createClientStateManager(client as unknown as Parameters<typeof createClientStateManager>[0]);
+  await manager.setActiveConversationId('session');
+  (getModule as jest.Mock).mockImplementation(async (_scope: string, _module: string, name: string) =>
+    name === 'getContract' ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' }) : () => <span>Working widget</span>
+  );
+  render(
+    <AIStateProvider stateManager={manager}>
+      <UniversalMessages
+        avatar=""
+        setIsBannerOpen={() => undefined}
+        isBannerOpen={false}
+        scrollToBottomRef={React.createRef()}
+        isMas
+        MessageEntryComponent={MASMessageEntry}
+      />
+    </AIStateProvider>
+  );
+  const widget = { type: 'widget', widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', instanceId: 'one', props: {} };
+  act(() =>
+    window.dispatchEvent(
+      new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, {
+        detail: {
+          answer: 'Answer remains',
+          turnId: 'turn',
+          widgets: [
+            { ...widget, widget: 'frontendStarterApp.widgets/HelloWorld' },
+            { ...widget, instanceId: 'two' },
+          ],
+        },
+      })
+    )
+  );
+  const alert = await screen.findByRole('alert');
+  expect(alert).toHaveTextContent('Requested by message: frontendStarterApp.widgets/HelloWorld');
+  expect(alert).toHaveTextContent('Returned by getContract(): frontendStarterApp.HelloWorld');
+  expect(await screen.findByText('Working widget')).toBeInTheDocument();
+  expect(screen.getByText('Answer remains')).toBeInTheDocument();
+  expect(client.sendMessage).not.toHaveBeenCalled();
+  jest.restoreAllMocks();
+});
+
 it('passes the debug turn and originating session to widget actions after switching conversations', async () => {
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
   const log = jest.spyOn(console, 'info').mockImplementation(() => undefined);
