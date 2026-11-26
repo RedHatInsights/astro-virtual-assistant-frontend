@@ -58,7 +58,7 @@ export function parseDebugMessage(value: unknown): { answer: string; turnId: str
 // The qualified ID selects only an existing Chrome-configured scope and exposed module.
 // It cannot provide a URL, manifest, or separate federation coordinates.
 function resolveWidgetId(id: string): { scope: string; module: string } | undefined {
-  const match = /^([A-Za-z_$][\w$-]*)\.([A-Za-z_$][\w$-]*)$/.exec(id);
+  const match = /^([A-Za-z_$][\w$-]*)\.([A-Za-z_$][\w$-]*(?:\/[A-Za-z_$][\w$-]*)*)$/.exec(id);
   return match ? { scope: match[1], module: `./${match[2]}` } : undefined;
 }
 
@@ -101,14 +101,15 @@ function MASWidgetLoader({
       if (!component) throw new Error('Missing widget component');
       const namespace: unknown = await getScalprum().pluginStore.getExposedModule(target.scope, target.module);
       if (!isRecord(namespace)) throw new Error('Invalid widget module');
-      const interactive = Object.prototype.hasOwnProperty.call(namespace, 'getContract');
-      if (interactive) {
+      let interactive = false;
+      if (Object.prototype.hasOwnProperty.call(namespace, 'getContract')) {
         const getContract: unknown = namespace.getContract;
         if (typeof getContract !== 'function') throw new Error('Invalid widget contract');
         const contract: unknown = await getContract();
         if (!isRecord(contract) || contract.widget !== widget.widget || contract.schemaVersion !== widget.schemaVersion) {
           throw new Error('Widget contract mismatch');
         }
+        interactive = contract.outputSchema !== undefined && contract.outputSchema !== null;
       }
       if (mounted) setLoadedWidget({ component, interactive });
     };
@@ -124,18 +125,22 @@ function MASWidgetLoader({
   if (!loadedWidget) return <span>Loading widget...</span>;
   const instanceId = widget.instanceId;
   const meta: WidgetMeta = {
+    widget: widget.widget,
+    schemaVersion: widget.schemaVersion,
     instanceId,
     ...(sessionId !== undefined && { sessionId }),
     ...(turnId !== undefined && { turnId }),
     ...(source !== undefined && { source }),
   };
   const onOutput =
-    loadedWidget.interactive && isMASDebugEnabled()
+    loadedWidget.interactive && source === 'debug' && isMASDebugEnabled()
       ? (output: unknown) =>
           console.info('[Astro → MAS client] Would send widget action', {
             sessionId,
             turnId,
             instanceId,
+            widget: widget.widget,
+            schemaVersion: widget.schemaVersion,
             actionId: crypto.randomUUID(),
             output,
           })

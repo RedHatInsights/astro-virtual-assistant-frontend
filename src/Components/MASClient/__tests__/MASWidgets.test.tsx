@@ -14,7 +14,8 @@ const packet = {
   instanceId: 'hello-1',
   props: { runId: 'FooBar', text: 'Hello from MAS' },
 };
-const contract = { widget: packet.widget, schemaVersion: packet.schemaVersion };
+const contract = { widget: packet.widget, schemaVersion: packet.schemaVersion, outputSchema: { type: 'object' } };
+const identity = { widget: packet.widget, schemaVersion: packet.schemaVersion };
 const mockGetModule = getModule as jest.Mock;
 const mockGetNamespace = jest.fn();
 
@@ -40,7 +41,7 @@ it('loads the module and validates the contract before rendering unchanged input
     ['frontendStarterApp', './HelloWorld', 'default'],
     ['frontendStarterApp', './HelloWorld', 'getContract'],
   ]);
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { instanceId: 'hello-1' } });
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { ...identity, instanceId: 'hello-1' } });
 });
 
 it.each([
@@ -88,19 +89,47 @@ it.each([false, true])('renders an absent contract read-only with debug=%s', asy
   );
   expect(await screen.findByText('Read-only widget')).toBeInTheDocument();
   expect(screen.getByText('Answer remains')).toBeInTheDocument();
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { sessionId: 'session', turnId: 'turn', instanceId: 'hello-1' } });
+  expect(Widget.mock.calls[0][0]).toEqual({
+    input: packet.props,
+    meta: { ...identity, sessionId: 'session', turnId: 'turn', instanceId: 'hello-1' },
+  });
   expect(Object.prototype.hasOwnProperty.call(Widget.mock.calls[0][0], 'onOutput')).toBe(false);
   expect(log).not.toHaveBeenCalled();
 });
 
-it.each(['https://evil/Widget', 'evil', 'app./Widget', 'app.Widget.extra', '../Widget', 'app.Widget/other'])(
-  'rejects unsafe widget ID %s',
-  async (widget) => {
-    render(<MASWidgets widgets={[{ ...packet, widget }]} />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
-    expect(mockGetModule).not.toHaveBeenCalled();
-  }
-);
+it.each([
+  'https://evil/Widget',
+  'evil',
+  'app./Widget',
+  'app.Widget.extra',
+  '../Widget',
+  'app.Widget/',
+  'app.Widget//Other',
+  'app.Widget/../Other',
+  'app.Widget/./Other',
+  'app.Widget/https://evil',
+  'app.Widget/2invalid',
+])('rejects unsafe widget ID %s', async (widget) => {
+  render(<MASWidgets widgets={[{ ...packet, widget }]} />);
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
+  expect(mockGetModule).not.toHaveBeenCalled();
+});
+
+it('loads nested exposure paths and checks the full widget ID', async () => {
+  const widget = { ...packet, widget: 'frontendStarterApp.widgets/HelloWorld' };
+  mockGetModule.mockImplementation(async (_scope, _module, name) =>
+    name === 'getContract' ? () => ({ ...contract, widget: widget.widget }) : () => <span>Nested widget</span>
+  );
+  const { rerender } = render(<MASWidgets widgets={[widget]} />);
+  expect(await screen.findByText('Nested widget')).toBeInTheDocument();
+  expect(mockGetModule.mock.calls).toEqual([
+    ['frontendStarterApp', './widgets/HelloWorld', 'default'],
+    ['frontendStarterApp', './widgets/HelloWorld', 'getContract'],
+  ]);
+  mockGetModule.mockImplementation(async (_scope, _module, name) => (name === 'getContract' ? () => contract : () => <span>Nested widget</span>));
+  rerender(<MASWidgets widgets={[{ ...widget, instanceId: 'other' }]} />);
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
+});
 
 it('reports missing exports and registry failures', async () => {
   mockGetModule.mockImplementation(async (_scope, _module, name) => (name === 'getContract' ? () => contract : undefined));
@@ -143,9 +172,33 @@ it('accepts an asynchronous matching contract', async () => {
   mockGetModule.mockResolvedValue(Widget);
   mockGetNamespace.mockResolvedValue({ getContract: async () => contract });
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
-  render(<MASWidgets widgets={[packet]} />);
+  render(<MASWidgets widgets={[packet]} source="debug" />);
   expect(await screen.findByText('Interactive widget')).toBeInTheDocument();
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { instanceId: 'hello-1' }, onOutput: expect.any(Function) });
+  expect(Widget.mock.calls[0][0]).toEqual({
+    input: packet.props,
+    meta: { ...identity, instanceId: 'hello-1', source: 'debug' },
+    onOutput: expect.any(Function),
+  });
+});
+
+it.each([undefined, null])('omits debug output when outputSchema is %s', async (outputSchema) => {
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+  const Widget = jest.fn<React.ReactElement, [{ input: unknown; meta: unknown }]>(() => <span>No output</span>);
+  mockGetModule.mockResolvedValue(Widget);
+  mockGetNamespace.mockResolvedValue({ getContract: () => ({ ...identity, outputSchema }) });
+  render(<MASWidgets widgets={[packet]} source="debug" />);
+  expect(await screen.findByText('No output')).toBeInTheDocument();
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { ...identity, instanceId: 'hello-1', source: 'debug' } });
+});
+
+it('does not give live widgets a debug output callback on a stage host', async () => {
+  jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
+  const Widget = jest.fn<React.ReactElement, [{ input: unknown; meta: unknown }]>(() => <span>Live widget</span>);
+  mockGetModule.mockResolvedValue(Widget);
+  mockGetNamespace.mockResolvedValue({ getContract: () => contract });
+  render(<MASWidgets widgets={[packet]} />);
+  expect(await screen.findByText('Live widget')).toBeInTheDocument();
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { ...identity, instanceId: 'hello-1' } });
 });
 
 it('isolates widget render failures', async () => {
@@ -201,14 +254,42 @@ it('passes one callback for both actions only in debug mode and captures each re
   const calls = log.mock.calls.map(([, payload]) => payload);
   expect(log.mock.calls.map(([message]) => message)).toEqual(Array(4).fill('[Astro → MAS client] Would send widget action'));
   expect(calls).toEqual([
-    { sessionId: 'session-one', turnId: 'turn-one', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'approve' } },
-    { sessionId: 'session-one', turnId: 'turn-one', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'reject' } },
-    { sessionId: 'session-one', turnId: 'turn-one', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'approve' } },
-    { sessionId: 'session-two', turnId: 'turn-two', instanceId: packet.instanceId, actionId: expect.any(String), output: { type: 'reject' } },
+    {
+      ...identity,
+      sessionId: 'session-one',
+      turnId: 'turn-one',
+      instanceId: packet.instanceId,
+      actionId: expect.any(String),
+      output: { type: 'approve' },
+    },
+    {
+      ...identity,
+      sessionId: 'session-one',
+      turnId: 'turn-one',
+      instanceId: packet.instanceId,
+      actionId: expect.any(String),
+      output: { type: 'reject' },
+    },
+    {
+      ...identity,
+      sessionId: 'session-one',
+      turnId: 'turn-one',
+      instanceId: packet.instanceId,
+      actionId: expect.any(String),
+      output: { type: 'approve' },
+    },
+    {
+      ...identity,
+      sessionId: 'session-two',
+      turnId: 'turn-two',
+      instanceId: packet.instanceId,
+      actionId: expect.any(String),
+      output: { type: 'reject' },
+    },
   ]);
   expect(new Set(calls.map(({ actionId }) => actionId)).size).toBe(4);
-  expect(metas).toContainEqual({ sessionId: 'session-one', turnId: 'turn-one', instanceId: 'hello-1', source: 'debug' });
-  expect(metas).toContainEqual({ sessionId: 'session-two', turnId: 'turn-two', instanceId: 'hello-1', source: 'debug' });
+  expect(metas).toContainEqual({ ...identity, sessionId: 'session-one', turnId: 'turn-one', instanceId: 'hello-1', source: 'debug' });
+  expect(metas).toContainEqual({ ...identity, sessionId: 'session-two', turnId: 'turn-two', instanceId: 'hello-1', source: 'debug' });
   expect(metas.every((meta) => !Object.prototype.hasOwnProperty.call(meta, 'actionId'))).toBe(true);
 });
 
@@ -249,5 +330,8 @@ it('loads another configured widget without a catalog and does not promote input
   expect(await screen.findByText('Other widget')).toBeInTheDocument();
   expect(mockGetModule).toHaveBeenCalledWith('otherApp', './OtherWidget', 'getContract');
   expect(mockGetModule).toHaveBeenCalledWith('otherApp', './OtherWidget', 'default');
-  expect(Widget.mock.calls[0][0]).toEqual({ input: { onOutput: 'untrusted' }, meta: { instanceId: 'other' } });
+  expect(Widget.mock.calls[0][0]).toEqual({
+    input: { onOutput: 'untrusted' },
+    meta: { widget: other.widget, schemaVersion: other.schemaVersion, instanceId: 'other' },
+  });
 });

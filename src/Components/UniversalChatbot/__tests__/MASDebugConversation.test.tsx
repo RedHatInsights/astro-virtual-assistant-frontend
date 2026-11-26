@@ -85,7 +85,7 @@ it('keeps debug replies out of the real manager and client while merging later r
     await manager.sendMessage('Live question', { stream: true });
   });
   expect(await screen.findByText('Widget live-id')).toBeInTheDocument();
-  expect(liveMeta[0]).toEqual({ sessionId: 'one', instanceId: 'live' });
+  expect(liveMeta[0]).toEqual({ widget: widget.widget, schemaVersion: widget.schemaVersion, sessionId: 'one', instanceId: 'live' });
   expect(screen.getAllByTestId('entry').map((entry) => entry.textContent)).toEqual(['Debug reply', 'Live question', 'Live replyWidget live-id']);
   expect(manager.getActiveConversationMessages().map((message) => message.answer)).toEqual(['Live question', 'Live reply']);
 
@@ -113,10 +113,11 @@ it('passes the debug turn and originating session to widget actions after switch
   let savedMeta: WidgetMeta | undefined;
   (getModule as jest.Mock).mockImplementation(async (_scope: string, _module: string, name: string) =>
     name === 'getContract'
-      ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0' })
-      : ({ onOutput, meta }: { onOutput?: (event: unknown) => void; meta: WidgetMeta }) => {
+      ? () => ({ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', outputSchema: { type: 'object' } })
+      : ({ input, onOutput, meta }: { input: unknown; onOutput?: (event: unknown) => void; meta: WidgetMeta }) => {
           savedCallback = onOutput;
           savedMeta = meta;
+          expect(input).toEqual(widgetInput);
           return <button onClick={() => onOutput?.({ type: 'approve' })}>Approve widget</button>;
         }
   );
@@ -132,13 +133,14 @@ it('passes the debug turn and originating session to widget actions after switch
       />
     </AIStateProvider>
   );
+  const widgetInput = { turnId: 'spoof', sessionId: 'spoof', instanceId: 'spoof', source: 'live', meta: { source: 'history' } };
   const widget = {
     type: 'widget',
     widget: 'frontendStarterApp.HelloWorld',
     schemaVersion: '1.0',
     instanceId: 'instance',
     source: 'history',
-    props: { turnId: 'spoof', sessionId: 'spoof', instanceId: 'spoof', source: 'live', meta: { source: 'history' } },
+    props: widgetInput,
   };
   act(() =>
     window.dispatchEvent(
@@ -148,15 +150,45 @@ it('passes the debug turn and originating session to widget actions after switch
     )
   );
   fireEvent.click(await screen.findByText('Approve widget'));
-  expect(savedMeta).toEqual({ sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', source: 'debug' });
+  expect(savedMeta).toEqual({
+    widget: widget.widget,
+    schemaVersion: widget.schemaVersion,
+    sessionId: 'origin-session',
+    turnId: 'origin-turn',
+    instanceId: 'instance',
+    source: 'debug',
+  });
   await act(async () => {
     await manager.setActiveConversationId('other-session');
   });
   savedCallback?.({ type: 'reject' });
-  expect(savedMeta).toEqual({ sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', source: 'debug' });
+  expect(savedMeta).toEqual({
+    widget: widget.widget,
+    schemaVersion: widget.schemaVersion,
+    sessionId: 'origin-session',
+    turnId: 'origin-turn',
+    instanceId: 'instance',
+    source: 'debug',
+  });
   expect(log.mock.calls.map(([, payload]) => payload)).toEqual([
-    { sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', actionId: expect.any(String), output: { type: 'approve' } },
-    { sessionId: 'origin-session', turnId: 'origin-turn', instanceId: 'instance', actionId: expect.any(String), output: { type: 'reject' } },
+    {
+      widget: widget.widget,
+      schemaVersion: widget.schemaVersion,
+      sessionId: 'origin-session',
+      turnId: 'origin-turn',
+      instanceId: 'instance',
+      actionId: expect.any(String),
+      output: { type: 'approve' },
+    },
+    {
+      widget: widget.widget,
+      schemaVersion: widget.schemaVersion,
+      sessionId: 'origin-session',
+      turnId: 'origin-turn',
+      instanceId: 'instance',
+      actionId: expect.any(String),
+      output: { type: 'reject' },
+    },
   ]);
   expect(manager.getActiveConversationMessages()).toEqual([]);
   expect(client.sendMessage).not.toHaveBeenCalled();
@@ -192,7 +224,14 @@ it('renders a read-only widget in a debug reply without providing an action call
   expect(screen.getByText('Answer remains')).toBeInTheDocument();
   expect(Widget.mock.calls[0][0]).toEqual({
     input: widget.props,
-    meta: { sessionId: 'session', turnId: 'turn', instanceId: 'read-only', source: 'debug' },
+    meta: {
+      widget: widget.widget,
+      schemaVersion: widget.schemaVersion,
+      sessionId: 'session',
+      turnId: 'turn',
+      instanceId: 'read-only',
+      source: 'debug',
+    },
   });
   expect(log).not.toHaveBeenCalled();
   expect(client.sendMessage).not.toHaveBeenCalled();
