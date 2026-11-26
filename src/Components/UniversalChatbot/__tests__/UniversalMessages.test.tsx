@@ -8,6 +8,7 @@ import * as debug from '../../MASClient/MASDebug';
 import { getModule } from '@scalprum/core';
 import MASMessageEntry from '../../MASClient/MASMessageEntry';
 import { MAS_DEBUG_MESSAGE_EVENT } from '../../MASClient/MASDebug';
+import { chunk } from '../../MASClient/testFixtures/chunkFixture';
 
 // Mock hooks used by UniversalMessages
 const mockUseMessages = useMessages as jest.MockedFunction<typeof useMessages>;
@@ -142,7 +143,11 @@ describe('UniversalMessages', () => {
     jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
     mockUseIsInitializing.mockReturnValue(true);
     const { rerender } = render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);
-    act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Queued debug', turnId: 'turn', widgets: [] } })));
+    act(() =>
+      window.dispatchEvent(
+        new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { ...chunk, conversationId: 'test-conversation', answer: 'Queued debug' } })
+      )
+    );
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
     mockUseIsInitializing.mockReturnValue(false);
     rerender(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);
@@ -166,15 +171,7 @@ describe('UniversalMessages', () => {
     jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
     const sendMessage = jest.fn();
     mockUseSendMessage.mockReturnValue(sendMessage);
-    const widget = {
-      type: 'widget',
-      widget: 'frontendStarterApp.HelloWorld',
-      schemaVersion: '1.0',
-      instanceId: 'hello-1',
-      scope: 'evil',
-      module: './evil',
-      props: { text: 'Hello from MAS', runId: 'FooBar', scope: 'evil' },
-    };
+    const widget = chunk.additionalAttributes.widgets[0];
     const liveMessage = {
       id: 'live',
       role: 'bot' as const,
@@ -195,7 +192,9 @@ describe('UniversalMessages', () => {
     );
     render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);
     act(() =>
-      window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Debug reply', turnId: 'debug-turn', widgets: [widget] } }))
+      window.dispatchEvent(
+        new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { ...chunk, conversationId: 'test-conversation', answer: 'Debug reply' } })
+      )
     );
     expect(await screen.findAllByText('Hello from MAS FooBar')).toHaveLength(2);
     expect(screen.getByText('Live reply')).toBeInTheDocument();
@@ -220,7 +219,13 @@ describe('UniversalMessages', () => {
     const Entry = ({ message }: { message: { answer: string } }) => <div data-testid="merged-entry">{message.answer}</div>;
     const { rerender } = render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={Entry} />);
     const sendDebug = (answer: string) =>
-      act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer, turnId: 'debug-turn', widgets: [] } })));
+      act(() =>
+        window.dispatchEvent(
+          new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, {
+            detail: { ...chunk, conversationId: 'test-conversation', messageId: answer, answer, additionalAttributes: {} },
+          })
+        )
+      );
     sendDebug('Debug 1');
     sendDebug('Debug 2');
     mockUseMessages.mockReturnValue([before, after]);
@@ -244,7 +249,11 @@ describe('UniversalMessages', () => {
   it('isolates debug replies by conversation and ignores events outside MAS or without an active conversation', () => {
     jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
     const event = () =>
-      window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'Local debug', turnId: 'debug-turn', widgets: [] } }));
+      window.dispatchEvent(
+        new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, {
+          detail: { ...chunk, conversationId: 'test-conversation', answer: 'Local debug', additionalAttributes: {} },
+        })
+      );
     const { rerender } = render(<UniversalMessages {...defaultProps} isMas />);
     act(event);
     expect(screen.getByText('Local debug')).toBeInTheDocument();
@@ -283,13 +292,17 @@ describe('UniversalMessages', () => {
     unmount();
     enabled.mockReturnValue(false);
     render(<UniversalMessages {...defaultProps} isMas />);
-    act(() => window.dispatchEvent(new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { answer: 'disabled', turnId: 'debug-turn', widgets: [] } })));
+    act(() =>
+      window.dispatchEvent(
+        new CustomEvent(MAS_DEBUG_MESSAGE_EVENT, { detail: { ...chunk, conversationId: 'test-conversation', answer: 'disabled' } })
+      )
+    );
     expect(screen.queryByText('disabled')).not.toBeInTheDocument();
     jest.restoreAllMocks();
   });
 
   it('ignores invalid widgets and never loads widgets from user messages', () => {
-    const widget = { type: 'widget', widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', instanceId: 'x', props: { runId: 'ok' } };
+    const widget = chunk.additionalAttributes.widgets[0];
     mockUseMessages.mockReturnValue([
       { id: 'user', role: 'user', answer: 'User', date: new Date(), additionalAttributes: { widgets: [widget] } },
       {
@@ -297,7 +310,7 @@ describe('UniversalMessages', () => {
         role: 'bot',
         answer: 'Bot',
         date: new Date(),
-        additionalAttributes: { widgets: [null, { ...widget, props: null }] },
+        additionalAttributes: { widgets: [null, { ...widget, envelope: { ...widget.envelope, input: null } }] },
       },
     ]);
     render(<UniversalMessages {...defaultProps} isMas MessageEntryComponent={MASMessageEntry} />);

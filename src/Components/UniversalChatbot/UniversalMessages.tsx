@@ -10,11 +10,11 @@ import { WelcomeConfig } from '../../aiClients/types';
 import UniversalBanner from './UniversalBanner';
 import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
-import { MAS_DEBUG_MESSAGE_EVENT, isMASDebugEnabled } from '../MASClient/MASDebug';
-import { MASWidget, parseDebugMessage } from '../MASClient/MASWidgets';
+import { MAS_DEBUG_MESSAGE_EVENT, isMASChunk, isMASDebugEnabled } from '../MASClient/MASDebug';
 
 interface DebugReply {
-  message: MessageType<{ widgets: MASWidget[]; turnId: string }>;
+  message: MessageType;
+  chunkMessageId: string;
   afterMessageCount: number;
   source: 'debug';
 }
@@ -94,26 +94,20 @@ const UniversalMessages = ({
     const conversationId = activeConversation.id;
     const onDebugMessage = (event: Event) => {
       try {
-        const { answer, widgets, turnId } = parseDebugMessage((event as CustomEvent<unknown>).detail);
+        const chunk: unknown = (event as CustomEvent<unknown>).detail;
+        if (!isMASChunk(chunk) || chunk.conversationId !== conversationId) throw new Error('Expected a MAS chunk for the active conversation');
+        const { messageId, answer, additionalAttributes } = chunk;
         const date = new Date();
         const afterMessageCount = messagesRef.current.length;
-        setDebugReplies((previous) => ({
-          ...previous,
-          [conversationId]: [
-            ...(previous[conversationId] || []),
-            {
-              afterMessageCount,
-              source: 'debug',
-              message: {
-                id: `debug-${date.getTime()}-${(previous[conversationId] || []).length}`,
-                role: 'bot',
-                answer,
-                date,
-                additionalAttributes: { widgets, turnId },
-              },
-            },
-          ],
-        }));
+        setDebugReplies((previous) => {
+          const replies = previous[conversationId] || [];
+          const existing = replies.findIndex((reply) => reply.chunkMessageId === messageId);
+          const message = { id: `debug-${messageId}`, role: 'bot' as const, answer, date, additionalAttributes };
+          const next = [...replies];
+          if (existing < 0) next.push({ afterMessageCount, chunkMessageId: messageId, source: 'debug', message });
+          else next[existing] = { ...next[existing], message: { ...message, date: next[existing].message.date } };
+          return { ...previous, [conversationId]: next };
+        });
       } catch (error) {
         console.error('Invalid MAS debug message:', error);
       }

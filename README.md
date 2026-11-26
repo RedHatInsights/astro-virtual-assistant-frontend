@@ -22,43 +22,55 @@ If you want to run your backend locally:
 
 ### Simulate a MAS reply with a federated widget
 
-Astro already passes widget packet `props` as the React `input` prop, alongside host-owned `meta`. The starter app's existing `HelloWorld` exports `getContract()`, but returns the ID `starter.hello-world` and accepts flat `runId` and `text` props. To work with this renderer, its contract must return `frontendStarterApp.HelloWorld` and its component must read those fields from `input`. That is separate provider work; the `StartApp` example below is a worked example, not a shipped module.
+Astro passes `item.envelope.input` directly as the React `input` prop, alongside host-owned `meta`. The starter app's existing `HelloWorld` exports `getContract()`, but returns the ID `starter.hello-world` and accepts flat `runId` and `text` props. A provider wrapper must declare `frontendStarterApp.HelloWorld`, validate `input`, and forward `runId` and `text` to that component. That is separate provider work; `StartApp` below is a worked example, not a shipped module.
 
-The example below uses the existing debug descriptor, **not** a MAS `widget.upserted` wire event. Pasting real events, replay/update semantics, and live interaction replies are not implemented: they require the shared store helpers from [ai-web-clients #73](https://github.com/RedHatInsights/ai-web-clients/pull/73) in an installable mas-client release.
+The event accepts the **chunk emitted by `handleChunk`**, not a wire event. In [ai-web-clients #73](https://github.com/RedHatInsights/ai-web-clients/pull/73), mas-client has already processed the wire events into `additionalAttributes.widgets`.
 
 #### Try the example
 
-First build and register the hypothetical `StartApp` provider described below, including its `./StartApp` exposure. Open Astro on `stage.foo.redhat.com` (the development proxy) or `console.stage.redhat.com`, authenticate, enable and select MAS, and open an active MAS conversation. The debug path is enabled on those stage hosts only, regardless of build mode or query parameters; other hosts ignore the event. Dispatch in DevTools:
+Register the contract-compatible HelloWorld provider in Chrome. Open Astro on `stage.foo.redhat.com` (the development proxy) or `console.stage.redhat.com`, authenticate, enable and select MAS, and open an active MAS conversation. The debug path is enabled on those stage hosts only; other hosts ignore the event. A captured chunk can be dispatched unchanged. The complete example below is also the integration-test fixture; replace `session-1` with the active conversation ID when trying it:
 
 ```js
-window.dispatchEvent(new CustomEvent('mas-debug-message', {
-  detail: {
-    turnId: 'turn-7',
-    answer: 'Starting this application requires your approval.',
+const chunk = {
+  messageId: 'message-1',
+  conversationId: 'session-1',
+  answer: 'Here is the starter widget.',
+  additionalAttributes: {
+    activeAgents: [],
+    hasPendingInteraction: false,
     widgets: [{
-      type: 'widget',
-      widget: 'frontendStarterApp.StartApp',
-      schemaVersion: '1.0',
-      instanceId: 'start-app-1',
-      props: { appName: 'Inventory', environment: 'staging' },
+      key: 'exec-7::inv-2::hello-1',
+      executionId: 'exec-7',
+      invocationId: 'inv-2',
+      widgetId: 'hello-1',
+      revision: 1,
+      envelope: {
+        type: 'widget',
+        widgetId: 'hello-1',
+        widget: 'frontendStarterApp.HelloWorld',
+        schemaVersion: '1.0',
+        revision: 1,
+        input: { runId: 'FooBar', text: 'Hello from MAS' },
+      },
     }],
   },
-}));
+};
+window.dispatchEvent(new CustomEvent('mas-debug-message', { detail: chunk }));
 ```
 
-The reply shows “Starting this application requires your approval.” followed by “Start Inventory in staging?” and Approve/Reject buttons. The provider receives `input={{ appName: 'Inventory', environment: 'staging' }}` and host-owned `meta`:
+The reply shows “Here is the starter widget.” and “Hello from MAS FooBar”. The provider receives `input={{ runId: 'FooBar', text: 'Hello from MAS' }}` and host-owned `meta`:
 
 ```js
-{ widget: 'frontendStarterApp.StartApp', schemaVersion: '1.0', sessionId: '<active MAS conversation>', turnId: 'turn-7', instanceId: 'start-app-1', source: 'debug' }
+{ widget: 'frontendStarterApp.HelloWorld', schemaVersion: '1.0', sessionId: '<active MAS conversation>', turnId: 'exec-7', instanceId: 'exec-7::inv-2::hello-1', source: 'debug' }
 ```
 
-Clicking Approve emits `{ type: 'approve' }` and produces a host `console.info` entry:
+Dispatching the same chunk again updates the same reply rather than appending another. A later chunk for the same `messageId`, with the same widget key and a higher revision, updates its input in place. These are already-processed snapshots; Astro does not parse wire events or implement the mas-client store. For an output-capable provider such as the hypothetical StartApp below, clicking Approve emits `{ type: 'approve' }` and produces a host `console.info` entry:
 
 ```js
 '[Astro → MAS client] Would send widget action', {
-  sessionId: '<session ID owning turn-7>',
-  turnId: 'turn-7',
-  instanceId: 'start-app-1',
+  sessionId: '<active MAS conversation>',
+  turnId: 'exec-7',
+  instanceId: 'exec-7::inv-2::hello-1',
   widget: 'frontendStarterApp.StartApp',
   schemaVersion: '1.0',
   actionId: '<fresh generated UUID>',
@@ -70,13 +82,13 @@ Reject emits `{ type: 'reject' }` through the same callback with a fresh `action
 
 #### How the host loads widgets
 
-The widget ID is `app_id.module_path`: Chrome's existing federation configuration resolves the app scope; Scalprum loads the exposed `./module_path`. Slash-separated module segments use identifier characters and cannot contain empty, `.` or `..` segments. No packet-supplied URLs, manifests, or separate coordinates are used. The module must export a default React component accepting `{ input, meta, onOutput? }`. An optional `getContract()` returns at least its exact widget ID and schema version, for example `{ widget: 'frontendStarterApp.StartApp', schemaVersion: '1.0' }`. When present, Astro checks that `getContract` is callable and that its result matches the full requested widget ID and `schemaVersion`; the provider validates input and output. An absent export, or an absent/null `outputSchema`, omits `onOutput`. A broken or mismatched contract shows an inline error. Read-only means Astro provides no action callback, **not** that the provider is security-sandboxed. The provider must accept `input` and `meta` and hide or disable action buttons when `onOutput` is absent. A failed module load, missing default, or render error also shows an inline error without hiding the answer. Both modes use the same message format and renderer. Duplicate `instanceId`s within one message's `widgets` array render once. Separate `mas-debug-message` dispatches append separate replies even with the same `turnId`.
+The widget ID is `app_id.module_path`: Chrome's existing federation configuration resolves the app scope; Scalprum loads the exposed `./module_path`. Slash-separated module segments use identifier characters and cannot contain empty, `.` or `..` segments. No packet-supplied URLs, manifests, or separate coordinates are used. The module must export a default React component accepting `{ input, meta, onOutput? }`. An optional `getContract()` returns at least its exact widget ID and schema version, for example `{ widget: 'frontendStarterApp.StartApp', schemaVersion: '1.0' }`. When present, Astro checks that `getContract` is callable and that its result matches the full requested widget ID and `schemaVersion`; the provider validates input and output. An absent export, or an absent/null `outputSchema`, omits `onOutput`. A broken or mismatched contract shows an inline error. Read-only means Astro provides no action callback, **not** that the provider is security-sandboxed. The provider must accept `input` and `meta` and hide or disable action buttons when `onOutput` is absent. A failed module load, missing default, or render error also shows an inline error without hiding the answer. Both modes use the same message format and renderer. Duplicate keys within one message's `widgets` array render once.
 
-Only a stage debug reply supplies one `onOutput` callback per widget declaring a non-null `outputSchema`, for all its actions. Each event logs `[Astro → MAS client] Would send widget action` with the originating widget ID, schema version, session ID, assistant turn ID, packet instance ID, a fresh action ID and the provider output. Context comes from the message and selected conversation, never widget props. The debug event requires a nonempty `turnId`. No request or history write occurs. Live replies currently receive no callback, even on a stage host: live interaction reply support is still pending. Debug replies are local to the selected conversation and use the same `MASMessageEntry` path as live widget attributes. They are not sent to MAS or written to history.
+Only a stage debug reply supplies one `onOutput` callback per widget declaring a non-null `outputSchema`, for all its actions. Each event logs `[Astro → MAS client] Would send widget action` with the originating widget ID, schema version, session ID, execution ID, instance key, a fresh action ID and the provider output. Context comes from the message and selected conversation, never widget input. Live replies currently receive no callback, even on a stage host: live interaction reply support is still pending. Debug replies are local to the selected conversation and use the same `MASMessageEntry` path as live widget attributes. They are not sent to MAS or written to history.
 
 Debug entries are merged at the current in-memory message-list position because the state manager has no local append API. They survive switching conversations while the chat remains mounted; if a history reload changes the number or order of earlier messages, their original position cannot be reconstructed reliably. The current `mas-client` version does not forward widget attributes from streamed or history responses, so live widget delivery requires a separate client/backend follow-up.
 
-**Manual contract verification:** With the example provider registered in Chrome on a stage host, select MAS, dispatch the debug message above, and check the answer and widget appear. Add the same packet twice to `widgets` and confirm one widget renders; dispatch another message with the same instance ID and turn ID and confirm it renders in a separate reply. Trigger approve and reject, checking each console log contains the originating session and turn, instance ID, fresh action ID, and emitted output; switch conversations and verify any retained callback still uses its original context. Using a live-attribute fixture on a non-stage host, confirm the provider receives no callback (the debug event itself is disabled there). Rebuild the provider without exporting `getContract` and verify the same message renders the question with no buttons or callback, even in debug mode. Change the schema version, export an invalid or failing contract, or remove the default export and confirm the answer remains visible with an inline error. Verify widget-owned input/output validation in the provider. Stop local servers afterwards.
+**Manual contract verification:** Register the provider, dispatch the chunk, replay it, and confirm one reply/widget; dispatch a newer snapshot with changed input and confirm an in-place update. For StartApp, change the envelope widget and input to the provider example below; click Approve/Reject and check the originating context and output in the logs. Switch conversations and verify retained callbacks use their original context. Remove `getContract` and verify read-only rendering; introduce a mismatched contract and verify the answer stays visible with an inline error. Stop local servers afterwards.
 
 #### Create a federated widget and render it in an Astro message.
 
@@ -109,7 +121,7 @@ export const startAppContract = {
 } as const;
 ```
 
-These schemas describe the **contents of `input`** and the **emitted event**, not the React props object, host-owned `meta`, or callback itself. Do not put `meta` in `inputSchema` or the console packet `props`. Valid inputs:
+These schemas describe the **contents of `input`** and the **emitted event**, not the React props object, host-owned `meta`, or callback itself. Do not put `meta` in `inputSchema` or the envelope's `input`. Valid inputs:
 
 ```json
 {"appName":"Inventory","environment":"staging"}
@@ -243,34 +255,18 @@ routes['/apps/frontend-starter-app'] = { host: 'http://127.0.0.1:8005' };
 
 Run `npm run start -- --clouddotEnv=stage`, open `https://stage.foo.redhat.com:1337/staging/starter`, authenticate, disable cache in DevTools, and reload. Confirm the local manifest has `name: "frontendStarterApp"` and `baseURL: "/apps/frontend-starter-app/"`, Chrome registers it, and its federation entry/chunks contain the new exposure. Stop both servers and revert the local-only route after testing.
 
-Astro's host render passes packet props directly as input:
+Astro's host render passes the stored envelope input directly:
 
 ```tsx
 // Both modes receive the same input and host-owned metadata.
-<Widget input={packet.props} meta={meta} />
+<Widget input={item.envelope.input} meta={meta} />
 // A debug widget declaring outputSchema on a stage host gets the callback.
-<Widget input={packet.props} meta={meta} onOutput={debugOutputHandler} />
+<Widget input={item.envelope.input} meta={meta} onOutput={debugOutputHandler} />
 ```
 
-Packet `props` becomes `input` directly: do **not** double-wrap it as `props: { input: ... }`. Astro builds `meta` from the owning conversation, reply, and descriptor, omitting unavailable optional properties. Debug ingress stamps `source: 'debug'`; other replies have no source until mas-client provides a live/history distinction. Neither input nor event-supplied source overrides this context, and `actionId` is not part of `meta`.
+`item.envelope.input` becomes `input` directly, without spreading or double-wrapping. Astro builds `meta` from the owning conversation and stored instance (`key`, `executionId`, and envelope identity). Debug ingress stamps `source: 'debug'`; other replies have no source until mas-client provides a live/history distinction. Neither input nor event-supplied source overrides this context, and `actionId` is not part of `meta`.
 
-To reproduce provider validation failure, dispatch a new reply with a fresh instance ID and missing `appName`:
-
-```js
-window.dispatchEvent(new CustomEvent('mas-debug-message', {
-  detail: {
-    turnId: 'turn-8',
-    answer: 'Starting this application requires your approval.',
-    widgets: [{
-      type: 'widget',
-      widget: 'frontendStarterApp.StartApp',
-      schemaVersion: '1.0',
-      instanceId: 'start-app-invalid',
-      props: { environment: 'staging' },
-    }],
-  },
-}));
-```
+To reproduce provider validation failure with StartApp, change the example chunk's envelope widget to `frontendStarterApp.StartApp` and its input to `{ environment: 'staging' }` (missing `appName`), then dispatch it.
 
 The answer remains visible and the provider displays “Cannot display start request: invalid input.” A missing module instead shows Astro's “Unable to load widget.” error, distinct from provider validation.
 

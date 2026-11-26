@@ -3,12 +3,16 @@ import { getModule, getScalprum } from '@scalprum/core';
 import { isMASDebugEnabled } from './MASDebug';
 import { WidgetMeta } from './types';
 
-export interface MASWidget {
-  type: 'widget';
-  widget: string;
-  schemaVersion: string;
-  instanceId: string;
-  props: Record<string, unknown>;
+// The fields consumed from mas-client's StoredWidgetInstance. The installed
+// client predates its export; use its published type when that version lands.
+interface StoredWidgetInstance {
+  key: string;
+  executionId: string;
+  envelope: {
+    widget: string;
+    schemaVersion: string;
+    input: Record<string, unknown>;
+  };
 }
 
 // Provider-owned contract: input/output schemas and validation remain with the widget.
@@ -29,32 +33,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-export function isMASWidget(value: unknown): value is MASWidget {
+function isMASWidget(value: unknown): value is StoredWidgetInstance {
   return (
     isRecord(value) &&
-    value.type === 'widget' &&
-    typeof value.widget === 'string' &&
-    value.widget.length > 0 &&
-    typeof value.schemaVersion === 'string' &&
-    value.schemaVersion.length > 0 &&
-    typeof value.instanceId === 'string' &&
-    value.instanceId.length > 0 &&
-    isRecord(value.props)
+    typeof value.key === 'string' &&
+    value.key.length > 0 &&
+    typeof value.executionId === 'string' &&
+    value.executionId.length > 0 &&
+    isRecord(value.envelope) &&
+    typeof value.envelope.widget === 'string' &&
+    value.envelope.widget.length > 0 &&
+    typeof value.envelope.schemaVersion === 'string' &&
+    value.envelope.schemaVersion.length > 0 &&
+    isRecord(value.envelope.input)
   );
-}
-
-export function parseDebugMessage(value: unknown): { answer: string; turnId: string; widgets: MASWidget[] } {
-  if (
-    !isRecord(value) ||
-    typeof value.answer !== 'string' ||
-    typeof value.turnId !== 'string' ||
-    !value.turnId.trim() ||
-    !Array.isArray(value.widgets) ||
-    !value.widgets.every(isMASWidget)
-  ) {
-    throw new Error('Expected an answer, turnId and an array of widget descriptors');
-  }
-  return { answer: value.answer, turnId: value.turnId, widgets: value.widgets };
 }
 
 // The qualified ID selects only an existing Chrome-configured scope and exposed module.
@@ -76,17 +68,8 @@ class WidgetErrorBoundary extends React.Component<React.PropsWithChildren, { fai
   }
 }
 
-function MASWidgetLoader({
-  widget,
-  sessionId,
-  turnId,
-  source,
-}: {
-  widget: MASWidget;
-  sessionId?: string;
-  turnId?: string;
-  source?: WidgetMeta['source'];
-}) {
+function MASWidgetLoader({ widget, sessionId, source }: { widget: StoredWidgetInstance; sessionId?: string; source?: WidgetMeta['source'] }) {
+  const { envelope, key: instanceId, executionId: turnId } = widget;
   const [loadedWidget, setLoadedWidget] = useState<{ component: React.ComponentType<WidgetProps>; interactive: boolean }>();
   const [error, setError] = useState<WidgetLoadError>();
 
@@ -95,7 +78,7 @@ function MASWidgetLoader({
     setLoadedWidget(undefined);
     setError(undefined);
     const load = async () => {
-      const target = resolveWidgetId(widget.widget);
+      const target = resolveWidgetId(envelope.widget);
       if (!target) throw new Error('Invalid widget ID');
       // getModule selects one export; inspect the actual namespace to distinguish an absent
       // contract from an explicitly exported undefined value, without hiding load errors.
@@ -109,13 +92,13 @@ function MASWidgetLoader({
         if (typeof getContract !== 'function') throw new Error('Invalid widget contract');
         const contract: unknown = await getContract();
         if (!isRecord(contract) || typeof contract.widget !== 'string') throw new Error('Invalid widget contract');
-        if (contract.widget !== widget.widget) {
-          if (mounted) setError({ kind: 'mismatch', field: 'widget', requested: widget.widget, returned: contract.widget });
+        if (contract.widget !== envelope.widget) {
+          if (mounted) setError({ kind: 'mismatch', field: 'widget', requested: envelope.widget, returned: contract.widget });
           return;
         }
         if (typeof contract.schemaVersion !== 'string') throw new Error('Invalid widget contract');
-        if (contract.schemaVersion !== widget.schemaVersion) {
-          if (mounted) setError({ kind: 'mismatch', field: 'schemaVersion', requested: widget.schemaVersion, returned: contract.schemaVersion });
+        if (contract.schemaVersion !== envelope.schemaVersion) {
+          if (mounted) setError({ kind: 'mismatch', field: 'schemaVersion', requested: envelope.schemaVersion, returned: contract.schemaVersion });
           return;
         }
         interactive = contract.outputSchema !== undefined && contract.outputSchema !== null;
@@ -128,7 +111,7 @@ function MASWidgetLoader({
     return () => {
       mounted = false;
     };
-  }, [widget.widget, widget.schemaVersion]);
+  }, [envelope.widget, envelope.schemaVersion]);
 
   if (error) {
     if (error.kind === 'load') return <span role="alert">Unable to load widget.</span>;
@@ -144,10 +127,9 @@ function MASWidgetLoader({
     );
   }
   if (!loadedWidget) return <span>Loading widget...</span>;
-  const instanceId = widget.instanceId;
   const meta: WidgetMeta = {
-    widget: widget.widget,
-    schemaVersion: widget.schemaVersion,
+    widget: envelope.widget,
+    schemaVersion: envelope.schemaVersion,
     instanceId,
     ...(sessionId !== undefined && { sessionId }),
     ...(turnId !== undefined && { turnId }),
@@ -160,26 +142,16 @@ function MASWidgetLoader({
             sessionId,
             turnId,
             instanceId,
-            widget: widget.widget,
-            schemaVersion: widget.schemaVersion,
+            widget: envelope.widget,
+            schemaVersion: envelope.schemaVersion,
             actionId: crypto.randomUUID(),
             output,
           })
       : undefined;
-  return React.createElement(loadedWidget.component, { input: widget.props, meta, ...(onOutput && { onOutput }) });
+  return React.createElement(loadedWidget.component, { input: envelope.input, meta, ...(onOutput && { onOutput }) });
 }
 
-export function MASWidgets({
-  widgets,
-  sessionId,
-  turnId,
-  source,
-}: {
-  widgets: unknown;
-  sessionId?: string;
-  turnId?: string;
-  source?: WidgetMeta['source'];
-}) {
+export function MASWidgets({ widgets, sessionId, source }: { widgets: unknown; sessionId?: string; source?: WidgetMeta['source'] }) {
   if (!Array.isArray(widgets)) return null;
   const seen = new Set<string>();
   return (
@@ -191,11 +163,11 @@ export function MASWidgets({
               Unable to load widget.
             </span>
           );
-        if (seen.has(widget.instanceId)) return null;
-        seen.add(widget.instanceId);
+        if (seen.has(widget.key)) return null;
+        seen.add(widget.key);
         return (
-          <WidgetErrorBoundary key={`${widget.instanceId}-${widget.widget}-${widget.schemaVersion}`}>
-            <MASWidgetLoader widget={widget} sessionId={sessionId} turnId={turnId} source={source} />
+          <WidgetErrorBoundary key={`${widget.key}-${widget.envelope.widget}-${widget.envelope.schemaVersion}`}>
+            <MASWidgetLoader widget={widget} sessionId={sessionId} source={source} />
           </WidgetErrorBoundary>
         );
       })}

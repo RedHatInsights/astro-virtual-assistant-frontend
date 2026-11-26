@@ -8,14 +8,22 @@ import { MASWidgets } from '../MASWidgets';
 jest.mock('@scalprum/core', () => ({ getModule: jest.fn(), getScalprum: jest.fn() }));
 
 const packet = {
-  type: 'widget',
-  widget: 'frontendStarterApp.HelloWorld',
-  schemaVersion: '1.0',
-  instanceId: 'hello-1',
-  props: { runId: 'FooBar', text: 'Hello from MAS' },
+  key: 'hello-1',
+  executionId: 'turn',
+  invocationId: 'inv',
+  widgetId: 'hello-1',
+  revision: 1,
+  envelope: {
+    type: 'widget',
+    widgetId: 'hello-1',
+    widget: 'frontendStarterApp.HelloWorld',
+    schemaVersion: '1.0',
+    revision: 1,
+    input: { runId: 'FooBar', text: 'Hello from MAS' },
+  },
 };
-const contract = { widget: packet.widget, schemaVersion: packet.schemaVersion, outputSchema: { type: 'object' } };
-const identity = { widget: packet.widget, schemaVersion: packet.schemaVersion };
+const contract = { widget: packet.envelope.widget, schemaVersion: packet.envelope.schemaVersion, outputSchema: { type: 'object' } };
+const identity = { widget: packet.envelope.widget, schemaVersion: packet.envelope.schemaVersion };
 const mockGetModule = getModule as jest.Mock;
 const mockGetNamespace = jest.fn();
 
@@ -29,7 +37,7 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 it('loads the module and validates the contract before rendering unchanged input', async () => {
-  const Widget = jest.fn(({ input }: { input: typeof packet.props }) => (
+  const Widget = jest.fn(({ input }: { input: typeof packet.envelope.input }) => (
     <span>
       {input.text} {input.runId}
     </span>
@@ -41,7 +49,7 @@ it('loads the module and validates the contract before rendering unchanged input
     ['frontendStarterApp', './HelloWorld', 'default'],
     ['frontendStarterApp', './HelloWorld', 'getContract'],
   ]);
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { ...identity, instanceId: 'hello-1' } });
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.envelope.input, meta: { ...identity, turnId: 'turn', instanceId: 'hello-1' } });
 });
 
 it.each([
@@ -73,7 +81,7 @@ it.each([
 
 it.each([false, true])('reports a nested widget ID mismatch with debug=%s and isolates the failure', async (enabled) => {
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(enabled);
-  const nested = { ...packet, widget: 'frontendStarterApp.widgets/HelloWorld' };
+  const nested = { ...packet, envelope: { ...packet.envelope, widget: 'frontendStarterApp.widgets/HelloWorld' } };
   const Widget = jest.fn(() => <span>Matching widget</span>);
   mockGetModule.mockResolvedValue(Widget);
   mockGetNamespace.mockResolvedValue({ getContract: () => ({ ...contract, schemaVersion: '2.0' }) });
@@ -116,7 +124,7 @@ it.each([false, true])('reports a schema version mismatch with debug=%s', async 
 
 it.each([false, true])('renders an absent contract read-only with debug=%s', async (enabled) => {
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(enabled);
-  const Widget = jest.fn<React.ReactElement, [{ input: typeof packet.props; onOutput?: (event: unknown) => void }]>(() => (
+  const Widget = jest.fn<React.ReactElement, [{ input: typeof packet.envelope.input; onOutput?: (event: unknown) => void }]>(() => (
     <span>Read-only widget</span>
   ));
   const log = jest.spyOn(console, 'info').mockImplementation(() => undefined);
@@ -125,13 +133,13 @@ it.each([false, true])('renders an absent contract read-only with debug=%s', asy
   render(
     <>
       <span>Answer remains</span>
-      <MASWidgets widgets={[packet]} sessionId="session" turnId="turn" />
+      <MASWidgets widgets={[packet]} sessionId="session" />
     </>
   );
   expect(await screen.findByText('Read-only widget')).toBeInTheDocument();
   expect(screen.getByText('Answer remains')).toBeInTheDocument();
   expect(Widget.mock.calls[0][0]).toEqual({
-    input: packet.props,
+    input: packet.envelope.input,
     meta: { ...identity, sessionId: 'session', turnId: 'turn', instanceId: 'hello-1' },
   });
   expect(Object.prototype.hasOwnProperty.call(Widget.mock.calls[0][0], 'onOutput')).toBe(false);
@@ -151,15 +159,15 @@ it.each([
   'app.Widget/https://evil',
   'app.Widget/2invalid',
 ])('rejects unsafe widget ID %s', async (widget) => {
-  render(<MASWidgets widgets={[{ ...packet, widget }]} />);
+  render(<MASWidgets widgets={[{ ...packet, envelope: { ...packet.envelope, widget } }]} />);
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
   expect(mockGetModule).not.toHaveBeenCalled();
 });
 
 it('loads nested exposure paths and checks the full widget ID', async () => {
-  const widget = { ...packet, widget: 'frontendStarterApp.widgets/HelloWorld' };
+  const widget = { ...packet, envelope: { ...packet.envelope, widget: 'frontendStarterApp.widgets/HelloWorld' } };
   mockGetModule.mockImplementation(async (_scope, _module, name) =>
-    name === 'getContract' ? () => ({ ...contract, widget: widget.widget }) : () => <span>Nested widget</span>
+    name === 'getContract' ? () => ({ ...contract, widget: widget.envelope.widget }) : () => <span>Nested widget</span>
   );
   const { rerender } = render(<MASWidgets widgets={[widget]} />);
   expect(await screen.findByText('Nested widget')).toBeInTheDocument();
@@ -168,7 +176,7 @@ it('loads nested exposure paths and checks the full widget ID', async () => {
     ['frontendStarterApp', './widgets/HelloWorld', 'getContract'],
   ]);
   mockGetModule.mockImplementation(async (_scope, _module, name) => (name === 'getContract' ? () => contract : () => <span>Nested widget</span>));
-  rerender(<MASWidgets widgets={[{ ...widget, instanceId: 'other' }]} />);
+  rerender(<MASWidgets widgets={[{ ...widget, key: 'other' }]} />);
   expect(await screen.findByRole('alert')).toHaveTextContent('This widget doesn’t match the reply’s contract.');
 });
 
@@ -177,7 +185,7 @@ it('reports missing exports and registry failures', async () => {
   const { rerender } = render(<MASWidgets widgets={[packet]} />);
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
   mockGetModule.mockRejectedValue(new Error('scope absent'));
-  rerender(<MASWidgets widgets={[{ ...packet, instanceId: 'two' }]} />);
+  rerender(<MASWidgets widgets={[{ ...packet, key: 'two' }]} />);
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load widget');
 });
 
@@ -207,7 +215,7 @@ it('rejects a throwing contract export getter', async () => {
 });
 
 it('accepts an asynchronous matching contract', async () => {
-  const Widget = jest.fn<React.ReactElement, [{ input: typeof packet.props; onOutput?: (event: unknown) => void }]>(() => (
+  const Widget = jest.fn<React.ReactElement, [{ input: typeof packet.envelope.input; onOutput?: (event: unknown) => void }]>(() => (
     <span>Interactive widget</span>
   ));
   mockGetModule.mockResolvedValue(Widget);
@@ -216,8 +224,8 @@ it('accepts an asynchronous matching contract', async () => {
   render(<MASWidgets widgets={[packet]} source="debug" />);
   expect(await screen.findByText('Interactive widget')).toBeInTheDocument();
   expect(Widget.mock.calls[0][0]).toEqual({
-    input: packet.props,
-    meta: { ...identity, instanceId: 'hello-1', source: 'debug' },
+    input: packet.envelope.input,
+    meta: { ...identity, turnId: 'turn', instanceId: 'hello-1', source: 'debug' },
     onOutput: expect.any(Function),
   });
 });
@@ -229,7 +237,10 @@ it.each([undefined, null])('omits debug output when outputSchema is %s', async (
   mockGetNamespace.mockResolvedValue({ getContract: () => ({ ...identity, outputSchema }) });
   render(<MASWidgets widgets={[packet]} source="debug" />);
   expect(await screen.findByText('No output')).toBeInTheDocument();
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { ...identity, instanceId: 'hello-1', source: 'debug' } });
+  expect(Widget.mock.calls[0][0]).toEqual({
+    input: packet.envelope.input,
+    meta: { ...identity, turnId: 'turn', instanceId: 'hello-1', source: 'debug' },
+  });
 });
 
 it('does not give live widgets a debug output callback on a stage host', async () => {
@@ -239,7 +250,7 @@ it('does not give live widgets a debug output callback on a stage host', async (
   mockGetNamespace.mockResolvedValue({ getContract: () => contract });
   render(<MASWidgets widgets={[packet]} />);
   expect(await screen.findByText('Live widget')).toBeInTheDocument();
-  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.props, meta: { ...identity, instanceId: 'hello-1' } });
+  expect(Widget.mock.calls[0][0]).toEqual({ input: packet.envelope.input, meta: { ...identity, turnId: 'turn', instanceId: 'hello-1' } });
 });
 
 it('isolates widget render failures', async () => {
@@ -284,12 +295,16 @@ it('passes one callback for both actions only in debug mode and captures each re
   jest.spyOn(debug, 'isMASDebugEnabled').mockReturnValue(true);
   const spoofed = {
     ...packet,
-    props: { sessionId: 'spoof', turnId: 'spoof', instanceId: 'spoof', source: 'live', meta: 'spoof', onOutput: 'spoof' },
+    executionId: 'turn-one',
+    envelope: {
+      ...packet.envelope,
+      input: { sessionId: 'spoof', turnId: 'spoof', instanceId: 'spoof', source: 'live', meta: 'spoof', onOutput: 'spoof' },
+    },
   };
-  const { rerender } = render(<MASWidgets widgets={[spoofed]} sessionId="session-one" turnId="turn-one" source="debug" />);
+  const { rerender } = render(<MASWidgets widgets={[spoofed]} sessionId="session-one" source="debug" />);
   fireEvent.click(await screen.findByText('Approve'));
   fireEvent.click(screen.getByText('Reject'));
-  rerender(<MASWidgets widgets={[spoofed]} sessionId="session-two" turnId="turn-two" source="debug" />);
+  rerender(<MASWidgets widgets={[{ ...spoofed, executionId: 'turn-two' }]} sessionId="session-two" source="debug" />);
   originalCallback?.({ type: 'approve' });
   fireEvent.click(screen.getByText('Reject'));
   const calls = log.mock.calls.map(([, payload]) => payload);
@@ -299,7 +314,7 @@ it('passes one callback for both actions only in debug mode and captures each re
       ...identity,
       sessionId: 'session-one',
       turnId: 'turn-one',
-      instanceId: packet.instanceId,
+      instanceId: packet.key,
       actionId: expect.any(String),
       output: { type: 'approve' },
     },
@@ -307,7 +322,7 @@ it('passes one callback for both actions only in debug mode and captures each re
       ...identity,
       sessionId: 'session-one',
       turnId: 'turn-one',
-      instanceId: packet.instanceId,
+      instanceId: packet.key,
       actionId: expect.any(String),
       output: { type: 'reject' },
     },
@@ -315,7 +330,7 @@ it('passes one callback for both actions only in debug mode and captures each re
       ...identity,
       sessionId: 'session-one',
       turnId: 'turn-one',
-      instanceId: packet.instanceId,
+      instanceId: packet.key,
       actionId: expect.any(String),
       output: { type: 'approve' },
     },
@@ -323,7 +338,7 @@ it('passes one callback for both actions only in debug mode and captures each re
       ...identity,
       sessionId: 'session-two',
       turnId: 'turn-two',
-      instanceId: packet.instanceId,
+      instanceId: packet.key,
       actionId: expect.any(String),
       output: { type: 'reject' },
     },
@@ -356,16 +371,24 @@ it('deduplicates replays within each turn but permits the same instance in a dif
 it('passes structurally valid input without validating provider fields', async () => {
   const Widget = ({ input }: { input: Record<string, unknown> }) => <span>{String(input.runId)}</span>;
   mockGetModule.mockImplementation(async (_scope, _module, name) => (name === 'getContract' ? () => contract : Widget));
-  render(<MASWidgets widgets={[{ ...packet, props: { runId: 42 } }, null, { ...packet, props: null }]} />);
+  render(
+    <MASWidgets
+      widgets={[
+        { ...packet, envelope: { ...packet.envelope, input: { runId: 42 } } },
+        null,
+        { ...packet, envelope: { ...packet.envelope, input: null } },
+      ]}
+    />
+  );
   expect(await screen.findByText('42')).toBeInTheDocument();
   expect(screen.getAllByRole('alert')).toHaveLength(2);
 });
 
 it('loads another configured widget without a catalog and does not promote input callbacks to host props', async () => {
-  const other = { ...packet, widget: 'otherApp.OtherWidget', instanceId: 'other', props: { onOutput: 'untrusted' } };
+  const other = { ...packet, key: 'other', envelope: { ...packet.envelope, widget: 'otherApp.OtherWidget', input: { onOutput: 'untrusted' } } };
   const Widget = jest.fn<React.ReactElement, [{ input: Record<string, unknown> }]>(() => <span>Other widget</span>);
   mockGetModule.mockImplementation(async (_scope, _module, name) =>
-    name === 'getContract' ? () => ({ widget: other.widget, schemaVersion: other.schemaVersion }) : Widget
+    name === 'getContract' ? () => ({ widget: other.envelope.widget, schemaVersion: other.envelope.schemaVersion }) : Widget
   );
   render(<MASWidgets widgets={[other]} />);
   expect(await screen.findByText('Other widget')).toBeInTheDocument();
@@ -373,6 +396,6 @@ it('loads another configured widget without a catalog and does not promote input
   expect(mockGetModule).toHaveBeenCalledWith('otherApp', './OtherWidget', 'default');
   expect(Widget.mock.calls[0][0]).toEqual({
     input: { onOutput: 'untrusted' },
-    meta: { widget: other.widget, schemaVersion: other.schemaVersion, instanceId: 'other' },
+    meta: { widget: other.envelope.widget, schemaVersion: other.envelope.schemaVersion, turnId: 'turn', instanceId: 'other' },
   });
 });

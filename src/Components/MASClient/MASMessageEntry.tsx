@@ -14,7 +14,7 @@ function MASMessageEntry({
   conversationId,
   source,
 }: {
-  message: MessageType<MASAdditionalAttributes & { widgets?: unknown; turnId?: string }>;
+  message: MessageType<MASAdditionalAttributes & { widgets?: unknown }>;
   avatar: string;
   isCompact?: boolean;
   conversationId?: string;
@@ -36,14 +36,7 @@ function MASMessageEntry({
         extraContent={
           message.role === 'bot'
             ? {
-                afterMainContent: (
-                  <MASWidgets
-                    widgets={message.additionalAttributes?.widgets}
-                    sessionId={conversationId}
-                    turnId={message.additionalAttributes?.turnId}
-                    source={source}
-                  />
-                ),
+                afterMainContent: <MASWidgets widgets={message.additionalAttributes?.widgets} sessionId={conversationId} source={source} />,
               }
             : undefined
         }
