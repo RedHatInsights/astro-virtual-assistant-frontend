@@ -25,6 +25,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:playwright": "playwright test",
+    "typecheck": "tsc --noEmit",
     "postinstall": "ts-patch install && rimraf .cache",
     "verify": "npm-run-all build lint",
     "static": "fec static --port=8004"

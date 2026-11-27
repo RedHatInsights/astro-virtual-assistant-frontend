@@ -1,6 +1,6 @@
 import { ChatbotContent, ChatbotWelcomePrompt, Message, MessageBox } from '@patternfly/chatbot';
 import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useActiveConversation, useInitLimitation, useIsInitializing, useMessages, useSendMessage } from '@redhat-cloud-services/ai-react-state';
 import { Message as MessageType } from '@redhat-cloud-services/ai-client-state';
 import { IFDAdditionalAttributes } from '@redhat-cloud-services/arh-client';
@@ -10,6 +10,27 @@ import { WelcomeConfig } from '../../aiClients/types';
 import UniversalBanner from './UniversalBanner';
 import ARH_BOT_ICON from '../../assets/Ask_Red_Hat_OFFICIAL-whitebackground.svg';
 import useArhMessageQuota from '../ARHClient/useArhMessageQuota';
+import { MAS_DEBUG_MESSAGE_EVENT, isMASChunk, isMASDebugEnabled } from '../MASClient/MASDebug';
+
+interface DebugReply {
+  message: MessageType;
+  chunkMessageId: string;
+  afterMessageCount: number;
+  source: 'debug';
+}
+
+// The state manager has no local append API and reloads history on conversation
+// switches. Keep debug entries outside it, anchored at the current list boundary.
+function mergeDebugReplies(messages: MessageType[], replies: DebugReply[]): { message: MessageType; source?: 'debug' }[] {
+  const merged: { message: MessageType; source?: 'debug' }[] = [];
+  for (let index = 0; index <= messages.length; index++) {
+    replies.forEach(({ message, afterMessageCount, source }) => {
+      if (Math.min(afterMessageCount, messages.length) === index) merged.push({ message, source });
+    });
+    if (index < messages.length) merged.push({ message: messages[index] });
+  }
+  return merged;
+}
 
 function MessageEntry({ message, avatar, isCompact }: { message: MessageType; avatar: string; isCompact?: boolean }) {
   const messageDate = `${message.date?.toLocaleDateString()} ${message.date?.toLocaleTimeString()}`;
@@ -44,6 +65,7 @@ const UniversalMessages = ({
   MessageEntryComponent = MessageEntry,
   isCompact,
   welcome,
+  isMas = false,
 }: {
   username?: string;
   avatar: string;
@@ -53,12 +75,46 @@ const UniversalMessages = ({
   MessageEntryComponent?: React.ComponentType<any>;
   isCompact?: boolean;
   welcome?: WelcomeConfig;
+  isMas?: boolean;
 }) => {
   const activeConversation = useActiveConversation();
   const initLimitations = useInitLimitation();
   const messages = useMessages<IFDAdditionalAttributes>();
   const initializingMessages = useIsInitializing();
   const sendMessage = useSendMessage();
+  const [debugReplies, setDebugReplies] = useState<Record<string, DebugReply[]>>({});
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    if (!isMASDebugEnabled() || !isMas || !activeConversation?.id) return;
+    const conversationId = activeConversation.id;
+    const onDebugMessage = (event: Event) => {
+      try {
+        const chunk: unknown = (event as CustomEvent<unknown>).detail;
+        if (!isMASChunk(chunk) || chunk.conversationId !== conversationId) throw new Error('Expected a MAS chunk for the active conversation');
+        const { messageId, answer, additionalAttributes } = chunk;
+        const date = new Date();
+        const afterMessageCount = messagesRef.current.length;
+        setDebugReplies((previous) => {
+          const replies = previous[conversationId] || [];
+          const existing = replies.findIndex((reply) => reply.chunkMessageId === messageId);
+          const message = { id: `debug-${messageId}`, role: 'bot' as const, answer, date, additionalAttributes };
+          const next = [...replies];
+          if (existing < 0) next.push({ afterMessageCount, chunkMessageId: messageId, source: 'debug', message });
+          else next[existing] = { ...next[existing], message: { ...message, date: next[existing].message.date } };
+          return { ...previous, [conversationId]: next };
+        });
+      } catch (error) {
+        console.error('Invalid MAS debug message:', error);
+      }
+    };
+    window.addEventListener(MAS_DEBUG_MESSAGE_EVENT, onDebugMessage);
+    return () => window.removeEventListener(MAS_DEBUG_MESSAGE_EVENT, onDebugMessage);
+  }, [isMas, activeConversation?.id]);
 
   const welcomeMessageConfig = useMemo(() => {
     return {
@@ -113,9 +169,18 @@ const UniversalMessages = ({
             isCompact={isCompact}
           />
         )}
-        {messages.map((message, index) => (
-          <MessageEntryComponent key={index} message={message} avatar={avatar} isCompact={isCompact} conversationId={activeConversation?.id} />
-        ))}
+        {mergeDebugReplies(messages, isMas && activeConversation?.id ? debugReplies[activeConversation.id] || [] : []).map(
+          ({ message, source }, index) => (
+            <MessageEntryComponent
+              key={index}
+              message={message}
+              avatar={avatar}
+              isCompact={isCompact}
+              conversationId={activeConversation?.id}
+              source={source}
+            />
+          )
+        )}
         <div ref={scrollToBottomRef}></div>
       </MessageBox>
     </ChatbotContent>
